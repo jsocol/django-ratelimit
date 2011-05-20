@@ -21,7 +21,7 @@ class CacheBackend(BaseBackend):
     def count(self, request, ip=True, field=None):
         for key in self._keys(request, ip, field):
             curr = cache.get(key, 0)
-                cache.set(key, curr + 1, 60)
+            cache.set(key, curr + 1, 60)
 
     def limit(self, request, ip=True, field=None, rate=5):
         for key in self._keys(request, ip, field):
