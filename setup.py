@@ -1,8 +1,10 @@
 from setuptools import setup, find_packages
 
+from ratelimit import VERSION
+
 setup(
     name='django-ratelimit',
-    version='0.1',
+    version='.'.join(map(str, VERSION)),
     description='Cache-based rate-limiting for Django.',
     long_description=open('README.rst').read(),
     author='James Socol',
