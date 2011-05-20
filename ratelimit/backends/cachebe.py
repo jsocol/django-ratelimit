@@ -15,16 +15,17 @@ class CacheBackend(BaseBackend):
             if not isinstance(field, list):
                 field = [field]
             for f in field:
-                keys.append('field:' + f)
-        return keys
+                val = getattr(request, request.method).get(f)
+                keys.append(u'field:%s:%s' % (f, val))
+        return [CACHE_PREFIX + k for k in keys]
 
-    def count(self, request, ip=True, field=None):
+    def count(self, request, ip=True, field=None, period=60):
         for key in self._keys(request, ip, field):
             curr = cache.get(key, 0)
-            cache.set(key, curr + 1, 60)
+            cache.set(key, curr + 1, period)
 
-    def limit(self, request, ip=True, field=None, rate=5):
+    def limit(self, request, ip=True, field=None, count=5):
         for key in self._keys(request, ip, field):
-            if cache.get(key, 0) > rate:
+            if cache.get(key, 0) > count:
                 return True
         return False
