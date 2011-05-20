@@ -67,3 +67,13 @@ Examples
     def slow(request):
         # Allow 4 reqs/hour.
         return HttpResponse()
+
+
+Acknowledgements
+================
+
+I would be remiss not to mention `Simon Willison`'s ratelimitcache_, on which
+this is largely based.
+
+.. _Simon Willison: http://simonwillison.net/
+.. _ratelimitcache: https://github.com/simonw/ratelimitcache
