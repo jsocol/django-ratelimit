@@ -72,7 +72,7 @@ Examples
 Acknowledgements
 ================
 
-I would be remiss not to mention `Simon Willison`'s ratelimitcache_, on which
+I would be remiss not to mention `Simon Willison`_'s ratelimitcache_, on which
 this is largely based.
 
 .. _Simon Willison: http://simonwillison.net/

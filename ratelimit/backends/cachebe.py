@@ -11,8 +11,8 @@ class CacheBackend(BaseBackend):
         keys = []
         if ip:
             keys.append('ip:' + request.META['REMOTE_ADDR'])
-        if not field is None:
-            if not isinstance(field, list):
+        if field is not None:
+            if not isinstance(field, (list, tuple)):
                 field = [field]
             for f in field:
                 val = getattr(request, request.method).get(f)
@@ -20,12 +20,16 @@ class CacheBackend(BaseBackend):
         return [CACHE_PREFIX + k for k in keys]
 
     def count(self, request, ip=True, field=None, period=60):
-        for key in self._keys(request, ip, field):
-            curr = cache.get(key, 0)
-            cache.set(key, curr + 1, period)
+        counters = dict((key, 0) for key in self._keys(request, ip, field))
+        counters.update(cache.get_many(counters.keys()))
+        for key in counters:
+            counters[key] += 1
+        cache.set_many(counters, timeout=period)
 
     def limit(self, request, ip=True, field=None, count=5):
-        for key in self._keys(request, ip, field):
-            if cache.get(key, 0) > count:
+        counters = dict((key, 0) for key in self._keys(request, ip, field))
+        counters.update(cache.get_many(counters.keys()))
+        for key in counters:
+            if counters[key] > count:
                 return True
         return False
