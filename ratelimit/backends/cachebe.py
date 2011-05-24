@@ -29,7 +29,4 @@ class CacheBackend(BaseBackend):
     def limit(self, request, ip=True, field=None, count=5):
         counters = dict((key, 0) for key in self._keys(request, ip, field))
         counters.update(cache.get_many(counters.keys()))
-        for key in counters:
-            if counters[key] > count:
-                return True
-        return False
+        return any((v > count) for v in counters.values())
