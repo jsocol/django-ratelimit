@@ -1,3 +1,4 @@
+import re
 from functools import wraps
 
 from django.http import HttpResponseForbidden
@@ -20,11 +21,16 @@ _PERIODS = {
     'd': 24 * 60 * 60,
 }
 
+rate_re = re.compile('([\d]+)/([\d]*)([smhd])')
+
 
 def _split_rate(rate):
-    count, period = rate.split('/')
+    count, multi, period = rate_re.match(rate).groups()
     count = int(count)
-    return count, _PERIODS[period.lower()]
+    time = _PERIODS[period.lower()]
+    if multi:
+        time = time * int(multi)
+    return count, time
 
 
 _backend = CacheBackend()
@@ -33,6 +39,7 @@ _backend = CacheBackend()
 def ratelimit(ip=True, block=False, method=None, field=None, rate='5/m'):
     def decorator(fn):
         count, period = _split_rate(rate)
+
         @wraps(fn)
         def _wrapped(request, *args, **kw):
             if _method_match(request, method):
