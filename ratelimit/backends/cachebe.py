@@ -1,3 +1,5 @@
+import hashlib
+
 from django.core.cache import cache
 
 from ratelimit.backends import BaseBackend
@@ -16,6 +18,9 @@ class CacheBackend(BaseBackend):
                 field = [field]
             for f in field:
                 val = getattr(request, request.method).get(f)
+                # Convert value to hexdigest as cache backend doesn't allow
+                # certain characters.
+                val = hashlib.sha1(val).hexdigest()
                 keys.append(u'field:%s:%s' % (f, val))
         return [CACHE_PREFIX + k for k in keys]
 
