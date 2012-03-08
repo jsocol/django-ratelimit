@@ -19,21 +19,27 @@ sensible defaults:
 
 :``ip``:
     Whether to rate-limit based on the IP.
+    
     *Default: True*
 :``block``:
     Whether to block the request instead of annotating. 
+    
     *Default: False*
 :``method``:
     Which HTTP method(s) to rate-limit. May be a string or a list.
+    
     *Default: all*
 :``field``:
     Which HTTP field(s) to use to rate-limit. May be a string or a list.
+    
     *Default: none*
 :``rate``:
     The number of requests per unit time allowed.
+    
     *Default: 5/m*
 :``skip_if``:
     If specified, pass this parameter a callable (e.g. lambda function) that takes the current request. If the callable returns a value that evaluates to True, the rate limiting is skipped for that particular view. This is useful to do things like selectively deactivating rate limiting based on a value in your settings file, or based on an attirbute in the current request object. (Also see the ``RATELIMIT_DISABLE_ALL`` settings option below.)
+    
     *Default: None*
 
 
@@ -41,6 +47,7 @@ In addition, you may choose to configure any of the following variables in your 
 
 :``RATELIMIT_DISABLE_ALL``:
     Set to True to disable rate-limiting across the board.
+    
     *Default: False*
 
 
