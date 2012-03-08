@@ -28,6 +28,8 @@ sensible defaults (in *italics*).
     Which HTTP field(s) to use to rate-limit. May be a string or a list. *none*
 ``rate``:
     The number of requests per unit time allowed. *5/m*
+:``skip_if``:
+    If specified, pass this parameter a callable (e.g. lambda function) that takes the current request. If the callable returns a value that evaluates to True, the rate limiting is skipped. This is useful to do things like selectively deactivating rate limiting based on a value in your settings file, or based on an attirbute in the current request object. *None*
 
 
 Examples
@@ -67,6 +69,16 @@ Examples
     @ratelimit(rate='4/h')
     def slow(request):
         # Allow 4 reqs/hour.
+        return HttpResponse()
+
+    @ratelimit(skip_if=lambda request: getattr(request, 'some_attribute', False))
+    def skipif1(request):
+        # Conditionally skip rate limiting (example 1)
+        return HttpResponse()
+
+    @ratelimit(skip_if=lambda request: settings.MYAPP_DEACTIVATE_RATE_LIMITING)
+    def skipif2(request):
+        # Conditionally skip rate limiting (example 2)
         return HttpResponse()
 
 
