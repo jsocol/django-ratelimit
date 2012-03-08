@@ -42,8 +42,7 @@ In addition, you may choose to configure any of the following variables in your
 Django settings file:
 
 ``RATELIMIT_DISABLE_ALL``:
-    Set to True to disable rate-limiting across the board.
-    *Default: False*
+    Set to True to disable rate-limiting across the board. *False*
 
 
 Examples
