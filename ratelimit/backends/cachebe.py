@@ -1,11 +1,11 @@
-import hashlib
-
 from django.core.cache import cache
+from django.core.cache.backends.base import BaseCache
 
 from ratelimit.backends import BaseBackend
 
 
 CACHE_PREFIX = 'rl:'
+CACHE_PARAMS = {'timeout': 30}
 
 
 class CacheBackend(BaseBackend):
@@ -18,11 +18,10 @@ class CacheBackend(BaseBackend):
                 field = [field]
             for f in field:
                 val = getattr(request, request.method).get(f)
-                # Convert value to hexdigest as cache backend doesn't allow
-                # certain characters.
-                val = hashlib.sha1(val).hexdigest()
                 keys.append(u'field:%s:%s' % (f, val))
-        return [CACHE_PREFIX + k for k in keys]
+        return [
+            BaseCache(CACHE_PARAMS).make_key(CACHE_PREFIX + k) for k in keys
+        ]
 
     def count(self, request, ip=True, field=None, period=60):
         counters = dict((key, 0) for key in self._keys(request, ip, field))
