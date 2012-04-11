@@ -7,7 +7,7 @@ from ratelimit.backends import BaseBackend
 
 
 CACHE_PREFIX = 'rl:'
-CACHE_PARAMS = {'timeout': 30}
+BASE_CACHE = BaseCache({})
 
 
 class CacheBackend(BaseBackend):
@@ -25,7 +25,7 @@ class CacheBackend(BaseBackend):
                 val = hashlib.sha1(val).hexdigest()
                 keys.append(u'field:%s:%s' % (f, val))
         return [
-            BaseCache(CACHE_PARAMS).make_key(CACHE_PREFIX + k) for k in keys
+            BASE_CACHE.make_key(CACHE_PREFIX + k) for k in keys
         ]
 
     def count(self, request, ip=True, field=None, period=60):
