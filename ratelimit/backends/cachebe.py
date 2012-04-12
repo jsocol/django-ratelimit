@@ -8,13 +8,22 @@ from ratelimit.backends import BaseBackend
 
 CACHE_PREFIX = 'rl:'
 BASE_CACHE = BaseCache({})
+IP_PREFIX = 'ip:'
 
 
 class CacheBackend(BaseBackend):
     def _keys(self, request, ip=True, field=None):
         keys = []
+        meta = request.META
         if ip:
-            keys.append('ip:' + request.META['REMOTE_ADDR'])
+            if 'HTTP_TRUE_CLIENT_IP' in meta:
+                keys.append(IP_PREFIX + meta['HTTP_TRUE_CLIENT_IP'])
+            elif 'HTTP_X_FORWARDED_FOR' in meta:
+                # The first element is the original IP.
+                keys.append(IP_PREFIX + meta['HTTP_X_FORWARDED_FOR'].split(',')[0])
+            else:
+                keys.append(IP_PREFIX + meta['REMOTE_ADDR'])
+
         if field is not None:
             if not isinstance(field, (list, tuple)):
                 field = [field]
