@@ -17,8 +17,10 @@ class CacheBackend(BaseBackend):
         meta = request.META
         if ip:
             if 'HTTP_TRUE_CLIENT_IP' in meta:
+                # If Akamai routes requests to you:
                 keys.append(IP_PREFIX + meta['HTTP_TRUE_CLIENT_IP'])
             elif 'HTTP_X_FORWARDED_FOR' in meta:
+                # For any other proxy or load balancer:
                 # The first element is the original IP.
                 keys.append(IP_PREFIX + meta['HTTP_X_FORWARDED_FOR'].split(',')[0])
             else:
