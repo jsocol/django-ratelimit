@@ -60,7 +60,6 @@ class CacheBackend(BaseBackend):
         counters.update(cache.get_many(counters.keys()))
         for key in counters:
             counters[key] += 1
-        print "COUNTERS: ", counters
         cache.set_many(counters, timeout=period)
 
     def limit(self, func_name, request,
