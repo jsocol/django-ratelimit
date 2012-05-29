@@ -38,13 +38,15 @@ _backend = CacheBackend()
 
 def ratelimit(ip=True, block=False, method=None, field=None, rate='5/m'):
     def decorator(fn):
+        func_name = fn.__name__
         count, period = _split_rate(rate)
 
         @wraps(fn)
         def _wrapped(request, *args, **kw):
             if _method_match(request, method):
-                _backend.count(request, ip, field, period)
-                if _backend.limit(request, ip, field, count, period):
+                _backend.count(func_name, request, ip, field, period)
+                if _backend.limit(
+                        func_name, request, ip, field, count, period):
                     if block:
                         return HttpResponseForbidden()
                     request.limited = True
