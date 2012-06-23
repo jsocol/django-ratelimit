@@ -14,28 +14,23 @@ PERIOD_PREFIX = 'period:'
 
 
 class CacheBackend(BaseBackend):
+
+    def get_ip(request):
+        """This gets the IP we wish to use for ratelimiting.
+
+        It defaults to 'REMOTE_ADDR'. It's recommended that you override
+        this function if you're using loadbalancers or any kind of upstream
+        proxy service to route requests to Django.
+        """
+        return request.META['REMOTE_ADDR']
+
     def _keys(self, func_name, request, ip=True, field=None, period=None):
         keys = []
-        meta = request.META
         if ip:
-            if 'HTTP_TRUE_CLIENT_IP' in meta:
-                # If Akamai routes requests to you:
-                keys.append(KEY_TEMPLATE % (
-                    func_name, PERIOD_PREFIX, period,
-                    IP_PREFIX, meta['HTTP_TRUE_CLIENT_IP']
-                ))
-            elif 'HTTP_X_FORWARDED_FOR' in meta:
-                # For any other proxy or load balancer:
-                # The first element is the original IP.
-                keys.append(KEY_TEMPLATE % (
-                    func_name, PERIOD_PREFIX, period,
-                    IP_PREFIX, meta['HTTP_X_FORWARDED_FOR'].split(',')[0]
-                ))
-            else:
-                keys.append(KEY_TEMPLATE % (
-                    func_name, PERIOD_PREFIX, period,
-                    IP_PREFIX, meta['REMOTE_ADDR']
-                ))
+            keys.append(KEY_TEMPLATE % (
+                func_name, PERIOD_PREFIX, period,
+                IP_PREFIX, self.get_ip(request)
+            ))
 
         if field is not None:
             if not isinstance(field, (list, tuple)):
