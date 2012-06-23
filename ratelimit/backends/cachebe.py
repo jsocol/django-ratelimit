@@ -15,7 +15,7 @@ PERIOD_PREFIX = 'period:'
 
 class CacheBackend(BaseBackend):
 
-    def get_ip(request):
+    def get_ip(self, request):
         """This gets the IP we wish to use for ratelimiting.
 
         It defaults to 'REMOTE_ADDR'. It's recommended that you override
