@@ -17,15 +17,16 @@ Using Django Ratelimit
 do. The ``@ratelimit`` decorator provides several optional arguments with
 sensible defaults (in *italics*).
 
-:``ip``:
+``ip``:
     Whether to rate-limit based on the IP. *True*
-:``block``:
+``block``:
     Whether to block the request instead of annotating. *False*
-:``method``:
-    Which HTTP method(s) to rate-limit. May be a string or a list. *all*
-:``field``:
+``method``:
+    Which HTTP method(s) to rate-limit. May be a string, a list/tuple, or
+    ``None`` for all methods. *None*
+``field``:
     Which HTTP field(s) to use to rate-limit. May be a string or a list. *none*
-:``rate``:
+``rate``:
     The number of requests per unit time allowed. *5/m*
 
 

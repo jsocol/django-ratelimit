@@ -8,10 +8,10 @@ from ratelimit.backends.cachebe import CacheBackend
 
 def _method_match(request, method=None):
     if method is None:
-        method = ['GET', 'POST', 'PUT', 'DELETE', 'HEAD']
-    if not isinstance(method, list):
+        return True
+    if not isinstance(method, (list, tuple)):
         method = [method]
-    return request.method in method
+    return request.method in [m.upper() for m in method]
 
 
 _PERIODS = {
@@ -36,7 +36,7 @@ def _split_rate(rate):
 _backend = CacheBackend()
 
 
-def ratelimit(ip=True, block=False, method=None, field=None, rate='5/m'):
+def ratelimit(ip=True, block=False, method=['POST'], field=None, rate='5/m'):
     def decorator(fn):
         count, period = _split_rate(rate)
 
