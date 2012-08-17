@@ -42,6 +42,7 @@ def ratelimit(ip=True, block=False, method=None, field=None, rate='5/m'):
 
         @wraps(fn)
         def _wrapped(request, *args, **kw):
+            request.limited = False
             if _method_match(request, method):
                 _backend.count(request, ip, field, period)
                 if _backend.limit(request, ip, field, count):
