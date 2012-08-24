@@ -17,7 +17,7 @@ class CacheBackend(BaseBackend):
             if not isinstance(field, (list, tuple)):
                 field = [field]
             for f in field:
-                val = getattr(request, request.method).get(f)
+                val = getattr(request, request.method).get(f, '')
                 # Convert value to hexdigest as cache backend doesn't allow
                 # certain characters.
                 val = hashlib.sha1(val).hexdigest()
