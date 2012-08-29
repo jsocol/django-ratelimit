@@ -2,6 +2,7 @@ import re
 from functools import wraps
 
 from django.http import HttpResponseForbidden
+from django.conf import settings
 
 from ratelimit.backends.cachebe import CacheBackend
 
@@ -43,7 +44,8 @@ def ratelimit(ip=True, block=False, method=['POST'], field=None, rate='5/m'):
         @wraps(fn)
         def _wrapped(request, *args, **kw):
             request.limited = False
-            if _method_match(request, method):
+            RATELIMIT_ENABLE = getattr(settings, 'RATELIMIT_ENABLE', True)
+            if RATELIMIT_ENABLE and _method_match(request, method):
                 _backend.count(request, ip, field, period)
                 if _backend.limit(request, ip, field, count):
                     if block:
