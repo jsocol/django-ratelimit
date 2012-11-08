@@ -1,9 +1,11 @@
 import re
 from functools import wraps
-
-from django.http import HttpResponseForbidden
-
+from django.http import HttpResponse
 from ratelimit.backends.cachebe import CacheBackend
+
+
+class HttpResponseThrottled(HttpResponse):
+    status_code = 429
 
 
 def _method_match(request, method=None):
@@ -47,7 +49,7 @@ def ratelimit(ip=True, block=False, method=['POST'], field=None, rate='5/m'):
                 _backend.count(request, ip, field, period)
                 if _backend.limit(request, ip, field, count):
                     if block:
-                        return HttpResponseForbidden()
+                        return HttpResponseThrottled()
                     request.limited = True
             return fn(request, *args, **kw)
         return _wrapped
