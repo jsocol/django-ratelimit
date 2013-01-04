@@ -135,6 +135,30 @@ def test_field():
 
 
 @with_setup(setup)
+def test_field_unicode():
+    post = RequestFactory().post('/', {'username': u'fran\xe7ois'})
+
+    @ratelimit(ip=False, field='username', rate='1/m')
+    def view(request):
+        return request.limited
+
+    assert not view(post)
+    assert view(post)
+
+
+@with_setup(setup)
+def test_field_empty():
+    post = RequestFactory().post('/', {})
+
+    @ratelimit(ip=False, field='username', rate='1/m')
+    def view(request):
+        return request.limited
+
+    assert not view(post)
+    assert view(post)
+
+
+@with_setup(setup)
 def test_rate():
     req = RequestFactory().post('/')
 
