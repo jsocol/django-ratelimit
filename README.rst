@@ -34,15 +34,14 @@ sensible defaults (in italics):
     to True, the rate limiting is skipped for that particular view. This is
     useful to do things like selectively deactivating rate limiting based on a
     value in your settings file, or based on an attirbute in the current
-    request object. (Also see the ``RATELIMIT_DISABLE_ALL`` settings option
-    below.) *None*
+    request object. (Also see the ``RATELIMIT_ENABLE`` setting below.) *None*
 
 
 In addition, you may choose to configure any of the following variables in your
 Django settings file:
 
-``RATELIMIT_DISABLE_ALL``:
-    Set to True to disable rate-limiting across the board. *False*
+``RATELIMIT_ENABLE``:
+    Set to ``False`` to disable rate-limiting across the board. *True*
 
 
 Examples
