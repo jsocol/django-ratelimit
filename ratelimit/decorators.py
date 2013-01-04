@@ -5,6 +5,7 @@ from django.conf import settings
 from django.http import HttpResponseForbidden
 
 from ratelimit.backends.cachebe import CacheBackend
+from ratelimit.exceptions import Ratelimited
 
 RATELIMIT_ENABLE = getattr(settings, 'RATELIMIT_ENABLE', True)
 
@@ -51,9 +52,9 @@ def ratelimit(ip=True, block=False, method=['POST'], field=None, rate='5/m',
                 _backend.count(request, ip, field, period)
                 if _backend.limit(request, ip, field, count):
                     if skip_if is None or not skip_if(request):
-                        if block:
-                            return HttpResponseForbidden()
                         request.limited = True
+                        if block:
+                            raise Ratelimited()
             return fn(request, *args, **kw)
         return _wrapped
     return decorator

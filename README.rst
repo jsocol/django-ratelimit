@@ -37,15 +37,39 @@ sensible defaults (in italics):
     request object. (Also see the ``RATELIMIT_ENABLE`` setting below.) *None*
 
 
-In addition, you may choose to configure any of the following variables in your
-Django settings file:
+Exceptions
+==========
+
+If a request is ratelimited and ``block`` is set to ``True``, Ratelimit will
+raise ``ratelimit.exceptions.Ratelimited``. This is a subclass of Django's
+``PermissionDenied`` exception, so if you don't need any special handling
+beyond the built-in 403 processing, you don't have to do anything.
+
+
+Middleware
+==========
+
+There is optional middleware to use a custom view to handle ``Ratelimited``
+exceptions. To use it, add ``ratelimit.middleware.RatelimitMiddleware`` to your
+``MIDDLEWARE_CLASSES`` (toward the bottom of the list) and set
+``RATELIMIT_VIEW`` to the full path of a view you want to use.
+
+The view specified in ``RATELIMIT_VIEW`` will get two arguments, the
+``request`` object (after ratelimit processing) and the exception.
+
+
+Settings
+========
 
 ``RATELIMIT_ENABLE``:
     Set to ``False`` to disable rate-limiting across the board. *True*
+``RATELIMIT_VIEW``:
+    A view to use when a request is ratelimited, in conjunction with
+    ``RatelimitMiddleware``. (E.g.: ``'myapp.views.ratelimited'``.) *None*
 
 
 Examples
---------
+========
 
 ::
 
@@ -57,7 +81,7 @@ Examples
 
     @ratelimit(block=True)
     def myview(request):
-        # If the same IP makes >5 reqs/min, will return HttpResponseForbidden
+        # If the same IP makes >5 reqs/min, will raise Ratelimited
         return HttpResponse()
 
     @ratelimit(field='username')
