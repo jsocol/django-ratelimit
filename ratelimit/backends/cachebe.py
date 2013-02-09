@@ -1,6 +1,6 @@
 import hashlib
 
-from django.core.cache import cache
+from django.core.cache import get_cache
 
 from ratelimit.backends import BaseBackend
 
@@ -24,13 +24,14 @@ class CacheBackend(BaseBackend):
                 keys.append(u'field:%s:%s' % (f, val))
         return [CACHE_PREFIX + k for k in keys]
 
-    def count(self, request, ip=True, field=None, period=60):
+    def count(self, request, ip=True, field=None, period=60, use='default'):
         counters = dict((key, 0) for key in self._keys(request, ip, field))
-        counters.update(cache.get_many(counters.keys()))
+        mycache = get_cache(use)
+        counters.update(mycache.get_many(counters.keys()))
         for key in counters:
             counters[key] += 1
-        cache.set_many(counters, timeout=period)
+        mycache.set_many(counters, timeout=period)
 
-    def limit(self, request, ip=True, field=None, count=5):
-        counters = cache.get_many(self._keys(request, ip, field))
+    def limit(self, request, ip=True, field=None, count=5, use='default'):
+        counters = get_cache(use).get_many(self._keys(request, ip, field))
         return any((v > count) for v in counters.values())

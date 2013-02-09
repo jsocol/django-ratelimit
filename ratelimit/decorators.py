@@ -41,7 +41,7 @@ _backend = CacheBackend()
 
 
 def ratelimit(ip=True, block=False, method=['POST'], field=None, rate='5/m',
-              skip_if=None):
+              skip_if=None, use='default'):
     def decorator(fn):
         count, period = _split_rate(rate)
 
@@ -49,8 +49,8 @@ def ratelimit(ip=True, block=False, method=['POST'], field=None, rate='5/m',
         def _wrapped(request, *args, **kw):
             request.limited = False
             if RATELIMIT_ENABLE and _method_match(request, method):
-                _backend.count(request, ip, field, period)
-                if _backend.limit(request, ip, field, count):
+                _backend.count(request, ip, field, period, use)
+                if _backend.limit(request, ip, field, count, use):
                     if skip_if is None or not skip_if(request):
                         request.limited = True
                         if block:
