@@ -50,7 +50,7 @@ def ratelimit(ip=True, block=False, method=['POST'], field=None, rate='5/m',
             request.limited = False
             if RATELIMIT_ENABLE and _method_match(request, method):
                 _backend.count(request, ip, field, period, use)
-                if _backend.limit(request, ip, field, count, use):
+                if _backend.limit(request, ip, field, count, period, use):
                     if skip_if is None or not skip_if(request):
                         request.limited = True
                         if block:
