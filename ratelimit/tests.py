@@ -1,3 +1,4 @@
+import time
 from django.core.cache import cache
 from django.test import RequestFactory
 
@@ -71,6 +72,18 @@ def setup():
 @with_setup(setup)
 def test_limit_ip():
     @ratelimit(ip=True, method=None, rate='1/m', block=True)
+    def view(request):
+        return True
+
+    req = RequestFactory().get('/')
+    with assert_raises(Ratelimited):
+        assert view(req)
+        view(req)
+
+
+@with_setup(setup)
+def test_limit_ip_use():
+    @ratelimit(ip=True, method=None, rate='1/m', block=True, use='ratelimit')
     def view(request):
         return True
 
@@ -183,3 +196,21 @@ def test_skip_if():
     assert view(req)
     req.skip = True
     assert not view(req)
+
+
+@with_setup(setup)
+def test_limit_ip_minute_later():
+    @ratelimit(ip=True, method=None, rate='1/m', block=True)
+    def view(request):
+        return True
+
+    req = RequestFactory().get('/')
+    with assert_raises(Ratelimited):
+        assert view(req)
+        view(req)
+
+    #time.sleep(60)
+    with assert_raises(Ratelimited):
+        assert view(req)
+        view(req)
+    

@@ -97,3 +97,8 @@ Examples
     def skipif2(request):
         # Conditionally skip rate limiting (example 2)
         return HttpResponse()
+
+    @ratelimit(use='redis')
+    def other_cache(request):
+        # use the redis CACHES entry.
+        return HttpResponse()
