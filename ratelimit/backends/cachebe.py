@@ -33,7 +33,6 @@ class CacheBackend(BaseBackend):
 
     def count(self, request, ip=True, field=None, period=60, use='default'):
         counters = dict((key, 0) for key in self._keys(request, ip, field, period))
-        print 'counters: {0}'.format(counters)
         mycache = get_cache(use)
         counters.update(mycache.get_many(counters.keys()))
         for key in counters:
