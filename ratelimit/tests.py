@@ -5,6 +5,7 @@ from nose.tools import with_setup
 
 from ratelimit.decorators import ratelimit
 from ratelimit.exceptions import Ratelimited
+from ratelimit.keys import ip_only, user_or_ip, field
 
 
 class assert_raises(object):
@@ -70,7 +71,7 @@ def setup():
 
 @with_setup(setup)
 def test_limit_ip():
-    @ratelimit(ip=True, method=None, rate='1/m', block=True)
+    @ratelimit(keys=ip_only, method=None, rate='1/m', block=True)
     def view(request):
         return True
 
@@ -82,11 +83,11 @@ def test_limit_ip():
 
 @with_setup(setup)
 def test_block():
-    @ratelimit(ip=True, method=None, rate='1/m', block=True)
+    @ratelimit(keys=ip_only, method=None, rate='1/m', block=True)
     def blocked(request):
         return True
 
-    @ratelimit(ip=True, method=None, rate='1/m', block=False)
+    @ratelimit(keys=ip_only, method=None, rate='1/m', block=False)
     def unblocked(request):
         return request.limited
 
@@ -105,11 +106,11 @@ def test_method():
     post = rf.post('/')
     get = rf.get('/')
 
-    @ratelimit(ip=True, method=['POST'], rate='1/m')
+    @ratelimit(keys=ip_only, method=['POST'], rate='1/m')
     def limit_post(request):
         return request.limited
 
-    @ratelimit(ip=True, method=['POST', 'GET'], rate='1/m')
+    @ratelimit(keys=ip_only, method=['POST', 'GET'], rate='1/m')
     def limit_get(request):
         return request.limited
 
@@ -125,7 +126,7 @@ def test_field():
     james = RequestFactory().post('/', {'username': 'james'})
     john = RequestFactory().post('/', {'username': 'john'})
 
-    @ratelimit(ip=False, field='username', rate='1/m')
+    @ratelimit(keys=field('username'), method=['POST', 'GET'], rate='1/m')
     def username(request):
         return request.limited
 
@@ -138,7 +139,7 @@ def test_field():
 def test_field_unicode():
     post = RequestFactory().post('/', {'username': u'fran\xe7ois'})
 
-    @ratelimit(ip=False, field='username', rate='1/m')
+    @ratelimit(keys=field('username'), rate='1/m')
     def view(request):
         return request.limited
 
@@ -150,7 +151,7 @@ def test_field_unicode():
 def test_field_empty():
     post = RequestFactory().post('/', {})
 
-    @ratelimit(ip=False, field='username', rate='1/m')
+    @ratelimit(keys=field('username'), rate='1/m')
     def view(request):
         return request.limited
 
@@ -162,7 +163,7 @@ def test_field_empty():
 def test_rate():
     req = RequestFactory().post('/')
 
-    @ratelimit(ip=True, rate='2/m')
+    @ratelimit(keys=ip_only, rate='2/m')
     def twice(request):
         return request.limited
 
@@ -175,7 +176,8 @@ def test_rate():
 def test_skip_if():
     req = RequestFactory().post('/')
 
-    @ratelimit(rate='1/m', skip_if=lambda r: getattr(r, 'skip', False))
+    @ratelimit(keys=ip_only, rate='1/m',
+               skip_if=lambda r: getattr(r, 'skip', False))
     def view(request):
         return request.limited
 
@@ -183,3 +185,36 @@ def test_skip_if():
     assert view(req)
     req.skip = True
     assert not view(req)
+
+
+class FakeUser(object):
+
+    def __init__(self, anonymous=False):
+        self.anonymous = True
+        self.username = u'fran\xe7ois'
+
+    def is_authenticated(self):
+        return not self.anonymous
+
+
+@with_setup(setup)
+def test_user_or_ip():
+    req = RequestFactory().post('/')
+    req.user = FakeUser(anonymous=True)
+
+    @ratelimit(keys=user_or_ip, rate='1/m')
+    def view(request):
+        return request.limited
+
+    # Anonymous
+    assert not view(req)
+    assert view(req)
+
+    # Now 'log in'
+    req.user.anonymous = False
+    assert not view(req)
+    assert view(req)
+
+    # 'Log out'
+    req.user.anonymous = True
+    assert view(req)
