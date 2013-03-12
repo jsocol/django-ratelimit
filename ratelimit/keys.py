@@ -17,7 +17,7 @@ def field(field):
     variables (POST or GET).
 
     Use this like
- 
+
         @ratelimit(keys=field('MOBILE'), ...)
         def foo(request):
             pass
@@ -31,8 +31,7 @@ def field(field):
         for f in field:
             val = getattr(request, request.method).get(f, '')
             # Convert the string to only ascii.
-            val = val.encode('utf-8')
-            keys.append('field:%s:%s' % (f, val))
+            keys.append(u'field:%s:%s' % (f, val))
         return keys
 
     return getter

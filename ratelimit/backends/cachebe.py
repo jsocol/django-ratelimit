@@ -14,12 +14,14 @@ class CacheBackend(BaseBackend):
         keys = super(CacheBackend, self).key_transform(request, key_funcs)
 
         def trans(key):
-            """Convert value to hexdigest as cache backend doesn't allow
-            certain characters."""
-            return CACHE_PREFIX + hashlib.sha1(key).hexdigest().encode('utf-8')
+            # Memcached can't handle some kinds of characters, like Non-
+            # ASCII characters or control characters. Since this key is
+            # probably going to memcached, conform to it. SHA1 hashes
+            # encoded as hexadecimal matches all of Memcached's
+            # requirements. Hashlib only works on encoded byte strings.
+            return CACHE_PREFIX + hashlib.sha1(key.encode('utf-8')).hexdigest()
 
-        keys = [trans(k) for k in keys]
-        return keys
+        return [trans(k) for k in keys]
 
     def count(self, request, keys, period):
         counters = dict((key, 0) for key in self.key_transform(request, keys))
