@@ -8,9 +8,9 @@ Contributing
 Set Up
 ======
 
-Create a virtualenv_ and install the requirements with pip_::
+Create a virtualenv_ and install Django with pip_::
 
-    pip install -r requirements.txt
+    pip install Django
 
 
 Running the Tests
