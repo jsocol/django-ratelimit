@@ -16,9 +16,9 @@ Create a virtualenv_ and install the requirements with pip_::
 Running the Tests
 =================
 
-The tests use Fabric_, just run::
+Running the tests is as easy as::
 
-    fab test
+    $ ./run.sh test
 
 
 Code Standards
@@ -30,5 +30,4 @@ need to pass.
 
 .. _virtualenv: http://www.virtualenv.org/en/latest/
 .. _pip: http://www.pip-installer.org/en/latest/
-.. _Fabric: http://www.fabfile.org/
 .. _PEP8: http://www.python.org/dev/peps/pep-0008/

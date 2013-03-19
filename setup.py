@@ -11,7 +11,7 @@ setup(
     author_email='james@mozilla.com',
     url='http://github.com/jsocol/django-ratelimit',
     license='BSD',
-    packages=find_packages(),
+    packages=find_packages(exclude=['test_settings']),
     include_package_data=True,
     package_data = {'': ['README.rst']},
     classifiers=[

@@ -1,202 +1,135 @@
 from django.core.cache import cache, InvalidCacheBackendError
-from django.test import RequestFactory
+from django.test import RequestFactory, TestCase
 from django.test.utils import override_settings
-
-from nose.tools import with_setup
 
 from ratelimit.decorators import ratelimit
 from ratelimit.exceptions import Ratelimited
 
 
-class assert_raises(object):
-    """A context manager that asserts a given exception was raised.
-
-    >>> with assert_raises(TypeError):
-    ...     raise TypeError
-
-    >>> with assert_raises(TypeError):
-    ...     raise ValueError
-    AssertionError: 'ValueError' not in ['TypeError']
-
-    >>> with assert_raises(TypeError):
-    ...     pass
-    AssertionError: No exception raised.
-
-    Or you can specify any of a number of exceptions:
-
-    >>> with assert_raises(TypeError, ValueError):
-    ...     raise ValueError
-
-    >>> with assert_raises(TypeError, ValueError):
-    ...     raise KeyError
-    AssertionError: 'KeyError' not in ['TypeError', 'ValueError']
-
-    You can also get the exception back later:
-
-    >>> with assert_raises(TypeError) as cm:
-    ...     raise TypeError('bad type!')
-    >>> cm.exception
-    TypeError('bad type!')
-    >>> cm.exc_type
-    TypeError
-    >>> cm.traceback
-    <traceback @ 0x3323ef0>
-
-    Lowercase name because that it's a class is an implementation detail.
-
-    """
-
-    def __init__(self, *exc_cls):
-        self._exc_cls = exc_cls
-
-    def __enter__(self):
-        # For access to the exception later.
-        return self
-
-    def __exit__(self, typ, value, tb):
-        assert typ, 'No exception raised.'
-        assert typ in self._exc_cls, "'%s' not in %s" % (
-            typ.__name__, [e.__name__ for e in self._exc_cls])
-        self.exc_type = typ
-        self.exception = value
-        self.traceback = tb
-
-        # Swallow expected exceptions.
-        return True
+class RatelimitTests(TestCase):
+    def setUp(self):
+        cache.clear()
 
 
-def setup():
-    cache.clear()
+    def test_limit_ip(self):
+        @ratelimit(ip=True, method=None, rate='1/m', block=True)
+        def view(request):
+            return True
+
+        req = RequestFactory().get('/')
+        assert view(req), 'First request works.'
+        with self.assertRaises(Ratelimited):
+            view(req)
 
 
-@with_setup(setup)
-def test_limit_ip():
-    @ratelimit(ip=True, method=None, rate='1/m', block=True)
-    def view(request):
-        return True
+    def test_block(self):
+        @ratelimit(ip=True, method=None, rate='1/m', block=True)
+        def blocked(request):
+            return True
 
-    req = RequestFactory().get('/')
-    with assert_raises(Ratelimited):
-        assert view(req)
-        view(req)
+        @ratelimit(ip=True, method=None, rate='1/m', block=False)
+        def unblocked(request):
+            return request.limited
 
+        req = RequestFactory().get('/')
 
-@with_setup(setup)
-def test_block():
-    @ratelimit(ip=True, method=None, rate='1/m', block=True)
-    def blocked(request):
-        return True
+        assert blocked(req), 'First request works.'
+        with self.assertRaises(Ratelimited):
+            blocked(req)
 
-    @ratelimit(ip=True, method=None, rate='1/m', block=False)
-    def unblocked(request):
-        return request.limited
-
-    req = RequestFactory().get('/')
-
-    with assert_raises(Ratelimited):
-        assert blocked(req)
-        blocked(req)
-
-    assert unblocked(req)
+        assert unblocked(req), 'Request is limited but not blocked.'
 
 
-@with_setup(setup)
-def test_method():
-    rf = RequestFactory()
-    post = rf.post('/')
-    get = rf.get('/')
+    def test_method(self):
+        rf = RequestFactory()
+        post = rf.post('/')
+        get = rf.get('/')
 
-    @ratelimit(ip=True, method=['POST'], rate='1/m')
-    def limit_post(request):
-        return request.limited
+        @ratelimit(ip=True, method=['POST'], rate='1/m')
+        def limit_post(request):
+            return request.limited
 
-    @ratelimit(ip=True, method=['POST', 'GET'], rate='1/m')
-    def limit_get(request):
-        return request.limited
+        @ratelimit(ip=True, method=['POST', 'GET'], rate='1/m')
+        def limit_get(request):
+            return request.limited
 
-    assert not limit_post(post)
-    assert limit_post(post)
-    assert not limit_post(get)
-    assert limit_get(post)
-    assert limit_get(get)
+        assert not limit_post(post), 'Do not limit first POST.'
+        assert limit_post(post), 'Limit second POST.'
+        assert not limit_post(get), 'Do not limit GET.'
 
-
-@with_setup(setup)
-def test_field():
-    james = RequestFactory().post('/', {'username': 'james'})
-    john = RequestFactory().post('/', {'username': 'john'})
-
-    @ratelimit(ip=False, field='username', rate='1/m')
-    def username(request):
-        return request.limited
-
-    assert not username(james)
-    assert username(james)
-    assert not username(john)
+        assert limit_get(post), 'Limit first POST.'
+        assert limit_get(get), 'Limit first GET.'
 
 
-@with_setup(setup)
-def test_field_unicode():
-    post = RequestFactory().post('/', {'username': u'fran\xe7ois'})
+    def test_field(self):
+        james = RequestFactory().post('/', {'username': 'james'})
+        john = RequestFactory().post('/', {'username': 'john'})
 
-    @ratelimit(ip=False, field='username', rate='1/m')
-    def view(request):
-        return request.limited
+        @ratelimit(ip=False, field='username', rate='1/m')
+        def username(request):
+            return request.limited
 
-    assert not view(post)
-    assert view(post)
-
-
-@with_setup(setup)
-def test_field_empty():
-    post = RequestFactory().post('/', {})
-
-    @ratelimit(ip=False, field='username', rate='1/m')
-    def view(request):
-        return request.limited
-
-    assert not view(post)
-    assert view(post)
+        assert not username(james), "james' first request is fine."
+        assert username(james), "james' second request is limited."
+        assert not username(john), "john's first request is fine."
 
 
-@with_setup(setup)
-def test_rate():
-    req = RequestFactory().post('/')
+    def test_field_unicode(self):
+        post = RequestFactory().post('/', {'username': u'fran\xe7ois'})
 
-    @ratelimit(ip=True, rate='2/m')
-    def twice(request):
-        return request.limited
+        @ratelimit(ip=False, field='username', rate='1/m')
+        def view(request):
+            return request.limited
 
-    assert not twice(req)
-    assert not twice(req)
-    assert twice(req)
+        assert not view(post), 'First request is not limited.'
+        assert view(post), 'Second request is limited.'
 
 
-@with_setup(setup)
-def test_skip_if():
-    req = RequestFactory().post('/')
+    def test_field_empty(self):
+        post = RequestFactory().post('/', {})
 
-    @ratelimit(rate='1/m', skip_if=lambda r: getattr(r, 'skip', False))
-    def view(request):
-        return request.limited
+        @ratelimit(ip=False, field='username', rate='1/m')
+        def view(request):
+            return request.limited
 
-    assert not view(req)
-    assert view(req)
-    req.skip = True
-    assert not view(req)
+        assert not view(post), 'First request is not limited.'
+        assert view(post), 'Second request is limited.'
 
 
-@with_setup(setup)
-@override_settings(RATELIMIT_USE_CACHE='fake-cache')
-def test_bad_cache():
-    """Tests that the RATELIMIT_USE_CACHE setting works--if the cache
-    exists."""
+    def test_rate(self):
+        req = RequestFactory().post('/')
 
-    @ratelimit()
-    def view(request):
-        return request
+        @ratelimit(ip=True, rate='2/m')
+        def twice(request):
+            return request.limited
 
-    req = RequestFactory().post('/')
+        assert not twice(req), 'First request is not limited.'
+        assert not twice(req), 'Second request is not limited.'
+        assert twice(req), 'Third request is limited.'
 
-    with assert_raises(InvalidCacheBackendError):
-        view(req)
+
+    def test_skip_if(self):
+        req = RequestFactory().post('/')
+
+        @ratelimit(rate='1/m', skip_if=lambda r: getattr(r, 'skip', False))
+        def view(request):
+            return request.limited
+
+        assert not view(req), 'First request is not limited.'
+        assert view(req), 'Second request is limited.'
+        req.skip = True
+        assert not view(req), 'Skipped request is not limited.'
+
+
+    @override_settings(RATELIMIT_USE_CACHE='fake-cache')
+    def test_bad_cache(self):
+        """The RATELIMIT_USE_CACHE setting works if the cache exists."""
+
+        @ratelimit()
+        def view(request):
+            return request
+
+        req = RequestFactory().post('/')
+
+        with self.assertRaises(InvalidCacheBackendError):
+            view(req)

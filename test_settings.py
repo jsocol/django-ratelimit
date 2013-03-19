@@ -1,7 +1,6 @@
 SECRET_KEY = 'ratelimit'
 
 INSTALLED_APPS = (
-    'django_nose',
     'ratelimit',
 )
 
@@ -20,5 +19,3 @@ DATABASES = {
         'NAME': 'test.db',
     },
 }
-
-TEST_RUNNER = 'django_nose.runner.NoseTestSuiteRunner'
