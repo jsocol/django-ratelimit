@@ -10,7 +10,6 @@ class RatelimitTests(TestCase):
     def setUp(self):
         cache.clear()
 
-
     def test_limit_ip(self):
         @ratelimit(ip=True, method=None, rate='1/m', block=True)
         def view(request):
@@ -20,7 +19,6 @@ class RatelimitTests(TestCase):
         assert view(req), 'First request works.'
         with self.assertRaises(Ratelimited):
             view(req)
-
 
     def test_block(self):
         @ratelimit(ip=True, method=None, rate='1/m', block=True)
@@ -38,7 +36,6 @@ class RatelimitTests(TestCase):
             blocked(req)
 
         assert unblocked(req), 'Request is limited but not blocked.'
-
 
     def test_method(self):
         rf = RequestFactory()
@@ -60,7 +57,6 @@ class RatelimitTests(TestCase):
         assert limit_get(post), 'Limit first POST.'
         assert limit_get(get), 'Limit first GET.'
 
-
     def test_field(self):
         james = RequestFactory().post('/', {'username': 'james'})
         john = RequestFactory().post('/', {'username': 'john'})
@@ -73,7 +69,6 @@ class RatelimitTests(TestCase):
         assert username(james), "james' second request is limited."
         assert not username(john), "john's first request is fine."
 
-
     def test_field_unicode(self):
         post = RequestFactory().post('/', {'username': u'fran\xe7ois'})
 
@@ -84,7 +79,6 @@ class RatelimitTests(TestCase):
         assert not view(post), 'First request is not limited.'
         assert view(post), 'Second request is limited.'
 
-
     def test_field_empty(self):
         post = RequestFactory().post('/', {})
 
@@ -94,7 +88,6 @@ class RatelimitTests(TestCase):
 
         assert not view(post), 'First request is not limited.'
         assert view(post), 'Second request is limited.'
-
 
     def test_rate(self):
         req = RequestFactory().post('/')
@@ -107,7 +100,6 @@ class RatelimitTests(TestCase):
         assert not twice(req), 'Second request is not limited.'
         assert twice(req), 'Third request is limited.'
 
-
     def test_skip_if(self):
         req = RequestFactory().post('/')
 
@@ -119,7 +111,6 @@ class RatelimitTests(TestCase):
         assert view(req), 'Second request is limited.'
         req.skip = True
         assert not view(req), 'Skipped request is not limited.'
-
 
     @override_settings(RATELIMIT_USE_CACHE='fake-cache')
     def test_bad_cache(self):

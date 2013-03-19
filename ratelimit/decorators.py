@@ -2,7 +2,6 @@ import re
 from functools import wraps
 
 from django.conf import settings
-from django.http import HttpResponseForbidden
 
 from ratelimit.backends.cachebe import CacheBackend
 from ratelimit.exceptions import Ratelimited
@@ -35,7 +34,6 @@ def _split_rate(rate):
     if multi:
         time = time * int(multi)
     return count, time
-
 
 
 def ratelimit(ip=True, block=False, method=['POST'], field=None, rate='5/m',
