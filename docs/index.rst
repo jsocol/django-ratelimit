@@ -6,6 +6,16 @@
 Welcome to Django Ratelimit's documentation!
 ============================================
 
+**Django Ratelimit** is a ratelimiting decorator for Django views.
+
+.. image:: https://travis-ci.org/jsocol/django-ratelimit.png?branch=master
+   :target: https://travis-ci.org/jsocol/django-ratelimit
+
+:Code:          https://github.com/jsocol/django-ratelimit
+:License:       Apache Software License
+:Issues:        https://github.com/jsocol/django-ratelimit/issues
+:Documentation: http://django-ratelimit.readthedocs.org/
+
 Contents:
 
 .. toctree::

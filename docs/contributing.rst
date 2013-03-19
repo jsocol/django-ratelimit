@@ -24,10 +24,12 @@ Running the tests is as easy as::
 Code Standards
 ==============
 
-Please follow PEP8_. New functionality should be tested, and the tests
-need to pass.
+I ask two things for pull requests.
+
+* The flake8_ tool must not report any violations.
+* All tests, including new tests where appropriate, must pass.
 
 
 .. _virtualenv: http://www.virtualenv.org/en/latest/
 .. _pip: http://www.pip-installer.org/en/latest/
-.. _PEP8: http://www.python.org/dev/peps/pep-0008/
+.. _flake8: https://pypi.python.org/pypi/flake8
