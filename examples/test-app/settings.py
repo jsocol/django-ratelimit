@@ -5,6 +5,8 @@ INSTALLED_APPS = (
     'ratelimit',
 )
 
+RATELIMIT_USE_CACHE = 'default'
+
 CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',

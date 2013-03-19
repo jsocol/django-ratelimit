@@ -1,6 +1,7 @@
 import hashlib
 
-from django.core.cache import cache
+from django.conf import settings
+from django.core.cache import get_cache
 
 from ratelimit.backends import BaseBackend
 
@@ -9,6 +10,12 @@ CACHE_PREFIX = 'rl:'
 
 
 class CacheBackend(BaseBackend):
+    """A BaseBackend that uses the Django cache infrastructure."""
+
+    def __init__(self):
+        cache = getattr(settings, 'RATELIMIT_USE_CACHE', 'default')
+        self.cache = get_cache(cache)
+
     def _keys(self, request, ip=True, field=None):
         keys = []
         if ip:
@@ -26,11 +33,11 @@ class CacheBackend(BaseBackend):
 
     def count(self, request, ip=True, field=None, period=60):
         counters = dict((key, 0) for key in self._keys(request, ip, field))
-        counters.update(cache.get_many(counters.keys()))
+        counters.update(self.cache.get_many(counters.keys()))
         for key in counters:
             counters[key] += 1
-        cache.set_many(counters, timeout=period)
+        self.cache.set_many(counters, timeout=period)
 
     def limit(self, request, ip=True, field=None, count=5):
-        counters = cache.get_many(self._keys(request, ip, field))
+        counters = self.cache.get_many(self._keys(request, ip, field))
         return any((v > count) for v in counters.values())

@@ -1,5 +1,6 @@
-from django.core.cache import cache
+from django.core.cache import cache, InvalidCacheBackendError
 from django.test import RequestFactory
+from django.test.utils import override_settings
 
 from nose.tools import with_setup
 
@@ -183,3 +184,19 @@ def test_skip_if():
     assert view(req)
     req.skip = True
     assert not view(req)
+
+
+@with_setup(setup)
+@override_settings(RATELIMIT_USE_CACHE='fake-cache')
+def test_bad_cache():
+    """Tests that the RATELIMIT_USE_CACHE setting works--if the cache
+    exists."""
+
+    @ratelimit()
+    def view(request):
+        return request
+
+    req = RequestFactory().post('/')
+
+    with assert_raises(InvalidCacheBackendError):
+        view(req)

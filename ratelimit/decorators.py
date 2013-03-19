@@ -37,8 +37,6 @@ def _split_rate(rate):
     return count, time
 
 
-_backend = CacheBackend()
-
 
 def ratelimit(ip=True, block=False, method=['POST'], field=None, rate='5/m',
               skip_if=None):
@@ -47,10 +45,11 @@ def ratelimit(ip=True, block=False, method=['POST'], field=None, rate='5/m',
 
         @wraps(fn)
         def _wrapped(request, *args, **kw):
+            backend = CacheBackend()
             request.limited = False
             if RATELIMIT_ENABLE and _method_match(request, method):
-                _backend.count(request, ip, field, period)
-                if _backend.limit(request, ip, field, count):
+                backend.count(request, ip, field, period)
+                if backend.limit(request, ip, field, count):
                     if skip_if is None or not skip_if(request):
                         request.limited = True
                         if block:
