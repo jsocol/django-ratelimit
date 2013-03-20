@@ -124,3 +124,33 @@ class RatelimitTests(TestCase):
 
         with self.assertRaises(InvalidCacheBackendError):
             view(req)
+
+    def test_keys(self):
+        """Allow custom functions to set cache keys."""
+        class User(object):
+            def __init__(self, authenticated=False):
+                self.pk = 1
+                self.authenticated = authenticated
+
+            def is_authenticated(self):
+                return self.authenticated
+
+        def user_or_ip(req):
+            if req.user.is_authenticated():
+                return 'uip:%d' % req.user.pk
+            return 'uip:%s' % req.META['REMOTE_ADDR']
+
+        @ratelimit(ip=False, rate='1/m', block=False, keys=user_or_ip)
+        def view(request):
+            return request.limited
+
+        req = RequestFactory().post('/')
+        req.user = User(authenticated=False)
+
+        assert not view(req), 'First unauthenticated request is allowed.'
+        assert view(req), 'Second unauthenticated request is limited.'
+
+        req.user = User(authenticated=True)
+
+        assert not view(req), 'First authenticated request is allowed.'
+        assert view(req), 'Second authenticated is limited.'

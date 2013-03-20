@@ -26,6 +26,10 @@ sensible defaults (in italics):
     useful to do things like selectively deactivating rate limiting based on a
     value in your settings file, or based on an attirbute in the current
     request object. (Also see the ``RATELIMIT_ENABLE`` setting below.) *None*
+``keys``:
+    Specify a function or list of functions that take the request object and
+    return string keys. This allows you to define custom logic (for example,
+    use an authenticated user ID or unauthenticated IP address). *None*
 
 
 Exceptions

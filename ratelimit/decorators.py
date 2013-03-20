@@ -40,7 +40,7 @@ def _split_rate(rate):
     return count, time
 
 
-def _get_keys(request, ip=True, field=None):
+def _get_keys(request, ip=True, field=None, keyfuncs=None):
     keys = []
     if ip:
         keys.append('ip:' + request.META['REMOTE_ADDR'])
@@ -51,6 +51,11 @@ def _get_keys(request, ip=True, field=None):
             val = getattr(request, request.method).get(f, '').encode('utf-8')
             val = hashlib.sha1(val).hexdigest()
             keys.append(u'field:%s:%s' % (f, val))
+    if keyfuncs:
+        if not isinstance(keyfuncs, (list, tuple)):
+            keyfuncs = [keyfuncs]
+        for k in keyfuncs:
+            keys.append(k(request))
     return [CACHE_PREFIX + k for k in keys]
 
 
@@ -68,7 +73,7 @@ def _incr(cache, keys, timeout=60):
 
 
 def ratelimit(ip=True, block=False, method=['POST'], field=None, rate='5/m',
-              skip_if=None):
+              skip_if=None, keys=None):
     def decorator(fn):
         count, period = _split_rate(rate)
 
@@ -80,7 +85,8 @@ def ratelimit(ip=True, block=False, method=['POST'], field=None, rate='5/m',
             request.limited = False
             if (RATELIMIT_ENABLE and _method_match(request, method) and
                     (skip_if is None or not skip_if(request))):
-                counts = _incr(cache, _get_keys(request, ip, field), period)
+                _keys = _get_keys(request, ip, field, keys)
+                counts = _incr(cache, _keys, period)
                 if any([c > count for c in counts.values()]):
                     request.limited = True
                     if block:
