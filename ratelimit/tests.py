@@ -23,7 +23,7 @@ class RatelimitTests(TestCase):
     def test_block(self):
         @ratelimit(ip=True, method=None, rate='1/m', block=True)
         def blocked(request):
-            return True
+            return request.limited
 
         @ratelimit(ip=True, method=None, rate='1/m', block=False)
         def unblocked(request):
@@ -31,7 +31,7 @@ class RatelimitTests(TestCase):
 
         req = RequestFactory().get('/')
 
-        assert blocked(req), 'First request works.'
+        assert not blocked(req), 'First request works.'
         with self.assertRaises(Ratelimited):
             blocked(req)
 
