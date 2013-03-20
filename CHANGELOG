@@ -1,0 +1,29 @@
+==========
+Change Log
+==========
+
+v0.3
+====
+
+- Drop the 'Backend' concept.
+- Add settings: RATELIMIT_USE_CACHE and RATELIMIT_CACHE_PREFIX.
+- Allow custom key functions.
+- Tests with Django 1.4.x and 1.5.x.
+- Refactor to simplify tests and development requirements.
+
+v0.2
+====
+
+- Added real docs.
+- Fix unicode field values.
+- Add real tests.
+- Use the Ratelimited exception, RatelimitMiddleware, and
+  RATELIMIT_VIEW setting.
+- Add RATELIMIT_ENABLE setting.
+- Add the skip_if argument.
+- Always add request.limited.
+
+v0.1
+====
+
+- Initial release.
