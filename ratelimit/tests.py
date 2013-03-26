@@ -1,7 +1,11 @@
 import django
 from django.core.cache import cache, InvalidCacheBackendError
 from django.test import RequestFactory, TestCase
-from django.test.utils import override_settings
+try:
+    from django.test.utils import override_settings
+except ImportError:
+    # for Django 1.3 backwards compatibility, uses django-override-settings
+    from override_settings import override_settings
 from django.views.generic import View
 
 from ratelimit.decorators import ratelimit
@@ -116,7 +120,7 @@ class RatelimitTests(TestCase):
         req.skip = True
         assert not view(req), 'Skipped request is not limited.'
 
-    @override_settings(RATELIMIT_USE_CACHE='fake-cache')
+    @override_settings(RATELIMIT_USE_CACHE='fake.cache')
     def test_bad_cache(self):
         """The RATELIMIT_USE_CACHE setting works if the cache exists."""
 
