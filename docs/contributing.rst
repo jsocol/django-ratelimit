@@ -20,6 +20,10 @@ Running the tests is as easy as::
 
     $ ./run.sh test
 
+You may also run the test on multiple versions of Django::
+
+    $ tox
+
 
 Code Standards
 ==============
