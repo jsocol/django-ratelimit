@@ -82,8 +82,9 @@ def ratelimit(ip=True, block=False, method=['POST'], field=None, rate='5/m',
             cache = getattr(settings, 'RATELIMIT_USE_CACHE', 'default')
             cache = get_cache(cache)
 
-            request.limited = False
-            if (RATELIMIT_ENABLE and _method_match(request, method) and
+            request.limited = getattr(request, 'limited', False)
+            if (not request.limited and RATELIMIT_ENABLE and
+                    _method_match(request, method) and
                     (skip_if is None or not skip_if(request))):
                 _keys = _get_keys(request, ip, field, keys)
                 counts = _incr(cache, _keys, period)

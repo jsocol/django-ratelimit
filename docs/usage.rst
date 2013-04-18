@@ -101,3 +101,12 @@ Examples
     def skipif2(request):
         # Conditionally skip rate limiting (example 2)
         return HttpResponse()
+
+    @ratelimit(keys=lambda x: 'min', rate='1/m')
+    @ratelimit(keys=lambda x: 'hour', rate='10/h')
+    @ratelimit(keys=lambda x: 'day', rate='50/d')
+    def post(request):
+        # Stack them.
+        # Note: once a decorator limits the request, the ones after
+        # won't count the request for limiting.
+        return HttpResponse()
