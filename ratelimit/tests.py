@@ -109,6 +109,7 @@ class RatelimitTests(TestCase):
 
         assert not view(req), 'First request is not limited.'
         assert view(req), 'Second request is limited.'
+        del req.limited
         req.skip = True
         assert not view(req), 'Skipped request is not limited.'
 
@@ -150,7 +151,21 @@ class RatelimitTests(TestCase):
         assert not view(req), 'First unauthenticated request is allowed.'
         assert view(req), 'Second unauthenticated request is limited.'
 
+        del req.limited
         req.user = User(authenticated=True)
 
         assert not view(req), 'First authenticated request is allowed.'
         assert view(req), 'Second authenticated is limited.'
+
+    def test_stacked_decorator(self):
+        """Allow @ratelimit to be stacked."""
+        # Put the shorter one first and make sure the second one doesn't
+        # reset request.limited back to False.
+        @ratelimit(ip=False, rate='1/m', block=False, keys=lambda x: 'min')
+        @ratelimit(ip=False, rate='10/d', block=False, keys=lambda x: 'day')
+        def view(request):
+            return request.limited
+
+        req = RequestFactory().post('/')
+        assert not view(req), 'First unauthenticated request is allowed.'
+        assert view(req), 'Second unauthenticated request is limited.'
