@@ -30,7 +30,8 @@ sensible defaults (in italics):
     Specify a function or list of functions that take the request object and
     return string keys. This allows you to define custom logic (for example,
     use an authenticated user ID or unauthenticated IP address). *None*
-
+``backend``:
+	The RateLimitBackend class to use. (Possible values are cache or redis) *cache*
 
 Exceptions
 ==========
