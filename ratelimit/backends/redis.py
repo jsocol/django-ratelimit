@@ -1,10 +1,9 @@
 from __future__ import absolute_import
-from ratelimit.backends import RateLimitBackend
 from django.conf import settings
 import redis as r
-from ratelimit.exceptions import InvalidConfig
-
 import time
+from ratelimit.exceptions import InvalidConfig
+from ratelimit.backends import RateLimitBackend
 
 
 class RedisRateLimitBackend(RateLimitBackend):

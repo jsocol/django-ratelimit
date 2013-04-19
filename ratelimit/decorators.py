@@ -32,10 +32,10 @@ def _method_match(request, method=None):
 def _split_rate(rate):
     count, multi, period = rate_re.match(rate).groups()
     count = int(count)
-    t = _PERIODS[period.lower()]
+    time = _PERIODS[period.lower()]
     if multi:
-        t = t * int(multi)
-    return count, t
+        time = time * int(multi)
+    return count, time
 
 
 def ratelimit(ip=True, block=False, method=['POST'], field=None, rate='5/m',
