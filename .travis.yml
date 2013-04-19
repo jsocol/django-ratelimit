@@ -5,5 +5,7 @@ env:
 python:
  - "2.6"
  - "2.7"
-install: pip install -q --use-mirrors Django==$DJANGO_VERSION
+install: 
+ - pip install -q --use-mirrors Django==$DJANGO_VERSION
+ - pip install redis
 script: ./run.sh test
