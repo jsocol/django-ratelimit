@@ -3,9 +3,6 @@ from functools import wraps
 
 from django.conf import settings
 
-import logging
-logger = logging.getLogger(__name__)
-
 from django.utils.importlib import import_module
 from ratelimit.exceptions import Ratelimited
 
@@ -55,14 +52,6 @@ def ratelimit(ip=True, block=False, method=['POST'], field=None, rate='5/m',
                     (skip_if is None or not skip_if(request))):
                 _keys = b._get_keys(request, ip, field, keys)
                 counts = b._incr(_keys, period)
-                logger.debug(counts)
-                # additional info added to the request
-                # usefull go get a warning when an ip is almost throttled
-                if ip and warning is not None:
-                    ip_key = CACHE_PREFIX + "ip:" + request.META['REMOTE_ADDR']
-                    if ip_key in counts:
-                        request.throttled_count_ip = (counts[ip_key], count, warning)
-
                 if any([c > count for c in counts.values()]):
                     request.limited = True
                     if block:
@@ -78,7 +67,6 @@ def _get_backend(backend):
     parts = module.split('.')
     modname = '.'.join(parts[:-1])
     clsname = parts[-1]
-    logger.debug(modname)
     mod = import_module(modname)
     cls = getattr(mod, clsname)
     return cls()
