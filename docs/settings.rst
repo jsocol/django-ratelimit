@@ -4,6 +4,9 @@
 Settings
 ========
 
+``RATELIMIT_BACKEND``:
+    The backend which holds the current access rates (defaults to
+    ``ratelimit.backends.cache.CacheBackend``)
 ``RATELIMIT_CACHE_PREFIX``:
     An optional cache prefix for ratelimit keys (in addition to the
     ``PREFIX`` value). *rl:*
