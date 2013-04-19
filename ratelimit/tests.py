@@ -126,8 +126,6 @@ class CacheRatelimitTests(TestCase):
         with self.assertRaises(InvalidConfig):
             view(req)
 
-        del settings.REDIS_SERVERS['default']
-
     def test_keys(self):
         """Allow custom functions to set cache keys."""
         class User(object):
