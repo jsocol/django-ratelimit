@@ -1,6 +1,9 @@
 import hashlib
+from django.conf import settings
 
 __all__ = ['RateLimitBackend']
+
+CACHE_PREFIX = getattr(settings, 'RATELIMIT_CACHE_PREFIX', 'rl:')
 
 
 class RateLimitBackend(object):
@@ -22,7 +25,7 @@ class RateLimitBackend(object):
                 keyfuncs = [keyfuncs]
             for k in keyfuncs:
                 keys.append(k(request))
-        return keys
+        return [CACHE_PREFIX + k for k in keys]
 
     def hit(self, request, ip, field, keys, period):
         """ Records a hit and returns the current coutns """
