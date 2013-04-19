@@ -12,7 +12,7 @@ usage() {
 
 case "$1" in
     "test" )
-        django-admin.py test ratelimit ;;
+        django-admin.py test ratelimit.CacheRatelimitTests ;;
     "shell" )
         django-admin.py shell ;;
     * )

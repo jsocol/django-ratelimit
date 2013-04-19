@@ -5,7 +5,6 @@ from django.conf import settings
 from ratelimit.decorators import ratelimit
 from ratelimit.exceptions import Ratelimited, InvalidConfig
 import redis
-import unittest
 
 
 class CacheRatelimitTests(TestCase):
@@ -159,9 +158,6 @@ class CacheRatelimitTests(TestCase):
 
 
 class RedisRatelimitTests(TestCase):
-    skip_redis_tests = True
-
-    @unittest.skipIf(skip_redis_tests, "skip_redis_tests is True")
     def setUp(self):
         settings.REDIS_SERVERS = {
             'default': {
@@ -173,7 +169,6 @@ class RedisRatelimitTests(TestCase):
         r = redis.client.StrictRedis(host="localhost", port=6379, socket_timeout=10)
         r.flushdb()
 
-    @unittest.skipIf(skip_redis_tests, "skip_redis_tests is True")
     def test_limit_ip(self):
         @ratelimit(ip=True, method=None, rate='1/m', block=True, backend='redis')
         def view(request):
@@ -184,7 +179,6 @@ class RedisRatelimitTests(TestCase):
         with self.assertRaises(Ratelimited):
             view(req)
 
-    @unittest.skipIf(skip_redis_tests, "skip_redis_tests is True")
     def test_block(self):
         @ratelimit(ip=True, method=None, rate='1/m', block=True, backend='redis')
         def blocked(request):
@@ -202,7 +196,6 @@ class RedisRatelimitTests(TestCase):
 
         assert unblocked(req), 'Request is limited but not blocked.'
 
-    @unittest.skipIf(skip_redis_tests, "skip_redis_tests is True")
     def test_method(self):
         rf = RequestFactory()
         post = rf.post('/')
@@ -223,7 +216,6 @@ class RedisRatelimitTests(TestCase):
         assert limit_get(post), 'Limit first POST.'
         assert limit_get(get), 'Limit first GET.'
 
-    @unittest.skipIf(skip_redis_tests, "skip_redis_tests is True")
     def test_field(self):
         james = RequestFactory().post('/', {'username': 'james'})
         john = RequestFactory().post('/', {'username': 'john'})
@@ -236,7 +228,6 @@ class RedisRatelimitTests(TestCase):
         assert username(james), "james' second request is limited."
         assert not username(john), "john's first request is fine."
 
-    @unittest.skipIf(skip_redis_tests, "skip_redis_tests is True")
     def test_field_unicode(self):
         post = RequestFactory().post('/', {'username': u'fran\xe7ois'})
 
@@ -247,7 +238,6 @@ class RedisRatelimitTests(TestCase):
         assert not view(post), 'First request is not limited.'
         assert view(post), 'Second request is limited.'
 
-    @unittest.skipIf(skip_redis_tests, "skip_redis_tests is True")
     def test_field_empty(self):
         post = RequestFactory().post('/', {})
 
@@ -258,7 +248,6 @@ class RedisRatelimitTests(TestCase):
         assert not view(post), 'First request is not limited.'
         assert view(post), 'Second request is limited.'
 
-    @unittest.skipIf(skip_redis_tests, "skip_redis_tests is True")
     def test_rate(self):
         req = RequestFactory().post('/')
 
@@ -270,7 +259,6 @@ class RedisRatelimitTests(TestCase):
         assert not twice(req), 'Second request is not limited.'
         assert twice(req), 'Third request is limited.'
 
-    @unittest.skipIf(skip_redis_tests, "skip_redis_tests is True")
     def test_skip_if(self):
         req = RequestFactory().post('/')
 
@@ -283,7 +271,6 @@ class RedisRatelimitTests(TestCase):
         req.skip = True
         assert not view(req), 'Skipped request is not limited.'
 
-    @unittest.skipIf(skip_redis_tests, "skip_redis_tests is True")
     @override_settings(RATELIMIT_USE_CACHE='fake-cache', backend='redis')
     def test_bad_config(self):
         """The RATELIMIT_USE_CACHE setting works if the cache exists."""
@@ -299,7 +286,6 @@ class RedisRatelimitTests(TestCase):
 
         del settings.REDIS_SERVERS['default']
 
-    @unittest.skipIf(skip_redis_tests, "skip_redis_tests is True")
     def test_keys(self):
         """Allow custom functions to set cache keys."""
         class User(object):
