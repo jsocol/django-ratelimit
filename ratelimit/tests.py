@@ -9,14 +9,6 @@ import redis
 
 class CacheRatelimitTests(TestCase):
     def setUp(self):
-        # settings.CACHES = {
-        #     'default': {
-        #         'BACKEND': 'caching.backends.memcached.CacheClass',
-        #         'LOCATION': 'localhost:11211',
-        #         'PREFIX': 'CacheMachine:'
-        #     },
-        # }
-
         cache.clear()
 
     def test_limit_ip(self):
