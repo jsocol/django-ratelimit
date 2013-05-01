@@ -6,7 +6,7 @@ Using Django Ratelimit
 
 
 Decorator
----------
+=========
 
 ``from ratelimit.decorators import ratelimit`` is the simplest thing to do. The
 ``@ratelimit`` decorator provides several optional arguments with sensible
@@ -37,7 +37,7 @@ defaults (in italics):
 
 
 Helper Function
----------------
+===============
 
 In some cases the decorator is not flexible enough. If this is an issue you can
 do ``from ratelimit.helpers import is_ratelimited``. The ``is_ratelimited``
