@@ -45,9 +45,9 @@ helper function is similar to the decorator, providing the following arguments
 (defaults in italics):
 
 ``request`` (Required)
-  The request object.
+    The request object.
 ``increment``
-  Whether to increment the count. *False*
+    Whether to increment the count. *False*
 ``ip``:
     Whether to rate-limit based on the IP. *True*
 ``method``:
