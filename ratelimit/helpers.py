@@ -15,7 +15,7 @@ _PERIODS = {
     'm': 60,
     'h': 60 * 60,
     'd': 24 * 60 * 60,
-    }
+}
 
 rate_re = re.compile('([\d]+)/([\d]*)([smhd])')
 
@@ -67,6 +67,7 @@ def _incr(cache, keys, timeout=60):
             counts[key] = 1
     cache.set_many(counts, timeout=timeout)
     return counts
+
 
 def is_ratelimited(request, increment=False, ip=True, method=['POST'],
                    field=None, rate='5/m', keys=None):
