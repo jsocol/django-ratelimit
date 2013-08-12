@@ -33,11 +33,11 @@ class RateLimitMixin(object):
     ratelimit_keys = None
 
     def get_ratelimit_config(self):
-        return {
-            k[len("ratelimit_"):]: v
+        return dict(
+            (k[len("ratelimit_"):], v)
             for k, v in vars(self.__class__).items()
             if k.startswith("ratelimit")
-        }
+        )
 
     def dispatch(self, *args, **kwargs):
         return ratelimit(
