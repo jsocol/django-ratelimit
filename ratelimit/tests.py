@@ -1,5 +1,3 @@
-import unittest
-
 import django
 from django.core.cache import cache, InvalidCacheBackendError
 from django.test import RequestFactory, TestCase
@@ -176,239 +174,231 @@ class RatelimitTests(TestCase):
         assert view(req), 'Second unauthenticated request is limited.'
 
 
-class RateLimitCBVTests(TestCase):
+#do it here, since python < 2.7 does not have unittest.skipIf
+if django.VERSION >= (1, 4):
+    class RateLimitCBVTests(TestCase):
 
-    SKIP_REASON = u"Class Based View supported by Django >=1.4"
+        SKIP_REASON = u"Class Based View supported by Django >=1.4"
 
-    def setUp(self):
-        cache.clear()
+        def setUp(self):
+            cache.clear()
 
-    @unittest.skipIf(django.VERSION < (1, 4), SKIP_REASON)
-    def test_limit_ip(self):
+        def test_limit_ip(self):
 
-        class RLView(RateLimitMixin, View):
-            ratelimit_ip = True
-            ratelimit_method = None
-            ratelimit_rate = '1/m'
-            ratelimit_block = True
+            class RLView(RateLimitMixin, View):
+                ratelimit_ip = True
+                ratelimit_method = None
+                ratelimit_rate = '1/m'
+                ratelimit_block = True
 
-        rlview = RLView.as_view()
+            rlview = RLView.as_view()
 
-        req = RequestFactory().get('/')
-        assert rlview(req), 'First request works.'
-        with self.assertRaises(Ratelimited):
-            rlview(req)
+            req = RequestFactory().get('/')
+            assert rlview(req), 'First request works.'
+            with self.assertRaises(Ratelimited):
+                rlview(req)
 
-    @unittest.skipIf(django.VERSION < (1, 4), SKIP_REASON)
-    def test_block(self):
+        def test_block(self):
 
-        class BlockedView(RateLimitMixin, View):
-            ratelimit_ip = True
-            ratelimit_method = None
-            ratelimit_rate = '1/m'
-            ratelimit_block = True
+            class BlockedView(RateLimitMixin, View):
+                ratelimit_ip = True
+                ratelimit_method = None
+                ratelimit_rate = '1/m'
+                ratelimit_block = True
 
-            def get(self, request, *args, **kwargs):
-                return request.limited
+                def get(self, request, *args, **kwargs):
+                    return request.limited
 
-        class UnBlockedView(RateLimitMixin, View):
-            ratelimit_ip = True
-            ratelimit_method = None
-            ratelimit_rate = '1/m'
-            ratelimit_block = False
+            class UnBlockedView(RateLimitMixin, View):
+                ratelimit_ip = True
+                ratelimit_method = None
+                ratelimit_rate = '1/m'
+                ratelimit_block = False
 
-            def get(self, request, *args, **kwargs):
-                return request.limited
+                def get(self, request, *args, **kwargs):
+                    return request.limited
 
-        blocked = BlockedView.as_view()
-        unblocked = UnBlockedView.as_view()
+            blocked = BlockedView.as_view()
+            unblocked = UnBlockedView.as_view()
 
-        req = RequestFactory().get('/')
+            req = RequestFactory().get('/')
 
-        assert not blocked(req), 'First request works.'
-        with self.assertRaises(Ratelimited):
-            blocked(req)
+            assert not blocked(req), 'First request works.'
+            with self.assertRaises(Ratelimited):
+                blocked(req)
 
-        assert unblocked(req), 'Request is limited but not blocked.'
+            assert unblocked(req), 'Request is limited but not blocked.'
 
-    @unittest.skipIf(django.VERSION < (1, 4), SKIP_REASON)
-    def test_method(self):
-        rf = RequestFactory()
-        post = rf.post('/')
-        get = rf.get('/')
+        def test_method(self):
+            rf = RequestFactory()
+            post = rf.post('/')
+            get = rf.get('/')
 
-        class LimitPostView(RateLimitMixin, View):
-            ratelimit_ip = True
-            ratelimit_method = ['POST']
-            ratelimit_rate = '1/m'
+            class LimitPostView(RateLimitMixin, View):
+                ratelimit_ip = True
+                ratelimit_method = ['POST']
+                ratelimit_rate = '1/m'
 
-            def post(self, request, *args, **kwargs):
-                return request.limited
-            get = post
+                def post(self, request, *args, **kwargs):
+                    return request.limited
+                get = post
 
-        class LimitGetView(RateLimitMixin, View):
-            ratelimit_ip = True
-            ratelimit_method = ['POST', 'GET']
-            ratelimit_rate = '1/m'
+            class LimitGetView(RateLimitMixin, View):
+                ratelimit_ip = True
+                ratelimit_method = ['POST', 'GET']
+                ratelimit_rate = '1/m'
 
-            def post(self, request, *args, **kwargs):
-                return request.limited
-            get = post
+                def post(self, request, *args, **kwargs):
+                    return request.limited
+                get = post
 
-        limit_post = LimitPostView.as_view()
-        limit_get = LimitGetView.as_view()
+            limit_post = LimitPostView.as_view()
+            limit_get = LimitGetView.as_view()
 
-        assert not limit_post(post), 'Do not limit first POST.'
-        assert limit_post(post), 'Limit second POST.'
-        assert not limit_post(get), 'Do not limit GET.'
+            assert not limit_post(post), 'Do not limit first POST.'
+            assert limit_post(post), 'Limit second POST.'
+            assert not limit_post(get), 'Do not limit GET.'
 
-        assert limit_get(post), 'Limit first POST.'
-        assert limit_get(get), 'Limit first GET.'
+            assert limit_get(post), 'Limit first POST.'
+            assert limit_get(get), 'Limit first GET.'
 
-    @unittest.skipIf(django.VERSION < (1, 4), SKIP_REASON)
-    def test_field(self):
-        james = RequestFactory().post('/', {'username': 'james'})
-        john = RequestFactory().post('/', {'username': 'john'})
+        def test_field(self):
+            james = RequestFactory().post('/', {'username': 'james'})
+            john = RequestFactory().post('/', {'username': 'john'})
 
-        class UsernameView(RateLimitMixin, View):
-            ratelimit_ip = False
-            ratelimit_field = 'username'
-            ratelimit_rate = '1/m'
+            class UsernameView(RateLimitMixin, View):
+                ratelimit_ip = False
+                ratelimit_field = 'username'
+                ratelimit_rate = '1/m'
 
-            def post(self, request, *args, **kwargs):
-                return request.limited
-            get = post
+                def post(self, request, *args, **kwargs):
+                    return request.limited
+                get = post
 
-        username = UsernameView.as_view()
-        assert not username(james), "james' first request is fine."
-        assert username(james), "james' second request is limited."
-        assert not username(john), "john's first request is fine."
+            username = UsernameView.as_view()
+            assert not username(james), "james' first request is fine."
+            assert username(james), "james' second request is limited."
+            assert not username(john), "john's first request is fine."
 
-    @unittest.skipIf(django.VERSION < (1, 4), SKIP_REASON)
-    def test_field_unicode(self):
-        post = RequestFactory().post('/', {'username': u'fran\xe7ois'})
+        def test_field_unicode(self):
+            post = RequestFactory().post('/', {'username': u'fran\xe7ois'})
 
-        class UsernameView(RateLimitMixin, View):
-            ratelimit_ip = False
-            ratelimit_field = 'username'
-            ratelimit_rate = '1/m'
+            class UsernameView(RateLimitMixin, View):
+                ratelimit_ip = False
+                ratelimit_field = 'username'
+                ratelimit_rate = '1/m'
 
-            def post(self, request, *args, **kwargs):
-                return request.limited
-            get = post
+                def post(self, request, *args, **kwargs):
+                    return request.limited
+                get = post
 
-        view = UsernameView.as_view()
+            view = UsernameView.as_view()
 
-        assert not view(post), 'First request is not limited.'
-        assert view(post), 'Second request is limited.'
+            assert not view(post), 'First request is not limited.'
+            assert view(post), 'Second request is limited.'
 
-    @unittest.skipIf(django.VERSION < (1, 4), SKIP_REASON)
-    def test_field_empty(self):
-        post = RequestFactory().post('/', {})
+        def test_field_empty(self):
+            post = RequestFactory().post('/', {})
 
-        class EmptyFieldView(RateLimitMixin, View):
-            ratelimit_ip = False
-            ratelimit_field = 'username'
-            ratelimit_rate = '1/m'
+            class EmptyFieldView(RateLimitMixin, View):
+                ratelimit_ip = False
+                ratelimit_field = 'username'
+                ratelimit_rate = '1/m'
 
-            def post(self, request, *args, **kwargs):
-                return request.limited
-            get = post
+                def post(self, request, *args, **kwargs):
+                    return request.limited
+                get = post
 
-        view = EmptyFieldView.as_view()
+            view = EmptyFieldView.as_view()
 
-        assert not view(post), 'First request is not limited.'
-        assert view(post), 'Second request is limited.'
+            assert not view(post), 'First request is not limited.'
+            assert view(post), 'Second request is limited.'
 
-    @unittest.skipIf(django.VERSION < (1, 4), SKIP_REASON)
-    def test_rate(self):
-        req = RequestFactory().post('/')
+        def test_rate(self):
+            req = RequestFactory().post('/')
 
-        class TwiceView(RateLimitMixin, View):
-            ratelimit_ip = True
-            ratelimit_rate = '2/m'
+            class TwiceView(RateLimitMixin, View):
+                ratelimit_ip = True
+                ratelimit_rate = '2/m'
 
-            def post(self, request, *args, **kwargs):
-                return request.limited
-            get = post
+                def post(self, request, *args, **kwargs):
+                    return request.limited
+                get = post
 
-        twice = TwiceView.as_view()
+            twice = TwiceView.as_view()
 
-        assert not twice(req), 'First request is not limited.'
-        assert not twice(req), 'Second request is not limited.'
-        assert twice(req), 'Third request is limited.'
+            assert not twice(req), 'First request is not limited.'
+            assert not twice(req), 'Second request is not limited.'
+            assert twice(req), 'Third request is limited.'
 
-    @unittest.skipIf(django.VERSION < (1, 4), SKIP_REASON)
-    def test_skip_if(self):
-        req = RequestFactory().post('/')
+        def test_skip_if(self):
+            req = RequestFactory().post('/')
 
-        class SkipIfView(RateLimitMixin, View):
-            ratelimit_rate = '1/m'
-            ratelimit_skip_if = lambda r: getattr(r, 'skip', False)
+            class SkipIfView(RateLimitMixin, View):
+                ratelimit_rate = '1/m'
+                ratelimit_skip_if = lambda r: getattr(r, 'skip', False)
 
-            def post(self, request, *args, **kwargs):
-                return request.limited
-            get = post
-        view = SkipIfView.as_view()
+                def post(self, request, *args, **kwargs):
+                    return request.limited
+                get = post
+            view = SkipIfView.as_view()
 
-        assert not view(req), 'First request is not limited.'
-        assert view(req), 'Second request is limited.'
-        del req.limited
-        req.skip = True
-        assert not view(req), 'Skipped request is not limited.'
+            assert not view(req), 'First request is not limited.'
+            assert view(req), 'Second request is limited.'
+            del req.limited
+            req.skip = True
+            assert not view(req), 'Skipped request is not limited.'
 
-    @override_settings(RATELIMIT_USE_CACHE='fake-cache')
-    @unittest.skipIf(django.VERSION < (1, 4), SKIP_REASON)
-    def test_bad_cache(self):
-        """The RATELIMIT_USE_CACHE setting works if the cache exists."""
+        @override_settings(RATELIMIT_USE_CACHE='fake-cache')
+        def test_bad_cache(self):
+            """The RATELIMIT_USE_CACHE setting works if the cache exists."""
 
-        class BadCacheView(RateLimitMixin, View):
+            class BadCacheView(RateLimitMixin, View):
 
-            def post(self, request, *args, **kwargs):
-                return request
-            get = post
-        view = BadCacheView.as_view()
+                def post(self, request, *args, **kwargs):
+                    return request
+                get = post
+            view = BadCacheView.as_view()
 
-        req = RequestFactory().post('/')
+            req = RequestFactory().post('/')
 
-        with self.assertRaises(InvalidCacheBackendError):
-            view(req)
+            with self.assertRaises(InvalidCacheBackendError):
+                view(req)
 
-    @unittest.skipIf(django.VERSION < (1, 4), SKIP_REASON)
-    def test_keys(self):
-        """Allow custom functions to set cache keys."""
-        class User(object):
-            def __init__(self, authenticated=False):
-                self.pk = 1
-                self.authenticated = authenticated
+        def test_keys(self):
+            """Allow custom functions to set cache keys."""
+            class User(object):
+                def __init__(self, authenticated=False):
+                    self.pk = 1
+                    self.authenticated = authenticated
 
-            def is_authenticated(self):
-                return self.authenticated
+                def is_authenticated(self):
+                    return self.authenticated
 
-        def user_or_ip(req):
-            if req.user.is_authenticated():
-                return 'uip:%d' % req.user.pk
-            return 'uip:%s' % req.META['REMOTE_ADDR']
+            def user_or_ip(req):
+                if req.user.is_authenticated():
+                    return 'uip:%d' % req.user.pk
+                return 'uip:%s' % req.META['REMOTE_ADDR']
 
-        class KeysView(RateLimitMixin, View):
-            ratelimit_ip = False
-            ratelimit_block = False
-            ratelimit_rate = '1/m'
-            ratelimit_keys = user_or_ip
+            class KeysView(RateLimitMixin, View):
+                ratelimit_ip = False
+                ratelimit_block = False
+                ratelimit_rate = '1/m'
+                ratelimit_keys = user_or_ip
 
-            def post(self, request, *args, **kwargs):
-                return request.limited
-            get = post
-        view = KeysView.as_view()
+                def post(self, request, *args, **kwargs):
+                    return request.limited
+                get = post
+            view = KeysView.as_view()
 
-        req = RequestFactory().post('/')
-        req.user = User(authenticated=False)
+            req = RequestFactory().post('/')
+            req.user = User(authenticated=False)
 
-        assert not view(req), 'First unauthenticated request is allowed.'
-        assert view(req), 'Second unauthenticated request is limited.'
+            assert not view(req), 'First unauthenticated request is allowed.'
+            assert view(req), 'Second unauthenticated request is limited.'
 
-        del req.limited
-        req.user = User(authenticated=True)
+            del req.limited
+            req.user = User(authenticated=True)
 
-        assert not view(req), 'First authenticated request is allowed.'
-        assert view(req), 'Second authenticated is limited.'
+            assert not view(req), 'First authenticated request is allowed.'
+            assert view(req), 'Second authenticated is limited.'
