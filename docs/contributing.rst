@@ -10,7 +10,7 @@ Set Up
 
 Create a virtualenv_ and install Django with pip_::
 
-    pip install Django
+    $ pip install Django
 
 
 Running the Tests
@@ -20,7 +20,13 @@ Running the tests is as easy as::
 
     $ ./run.sh test
 
-You may also run the test on multiple versions of Django::
+You may also run the test on multiple versions of Django using tox.
+
+- First install tox::
+
+    $ pip install tox
+
+- Then run the tests with tox::
 
     $ tox
 
