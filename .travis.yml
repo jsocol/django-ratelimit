@@ -7,5 +7,5 @@ python:
  - "2.6"
  - "2.7"
 install:
- - pip install -q --use-mirrors Django==$DJANGO_VERSION django-override-settings
+ - pip install -q --use-mirrors "Django>=$DJANGO_VERSION,<$DJANGO_VERSION.99" django-override-settings
 script: ./run.sh test
