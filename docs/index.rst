@@ -1,10 +1,9 @@
-.. Django Ratelimit documentation master file, created by
-   sphinx-quickstart on Fri Jan  4 15:55:31 2013.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+================
+Django Ratelimit
+================
 
-Welcome to Django Ratelimit's documentation!
-============================================
+Project
+=======
 
 **Django Ratelimit** is a ratelimiting decorator for Django views.
 
@@ -16,16 +15,40 @@ Welcome to Django Ratelimit's documentation!
 :Issues:        https://github.com/jsocol/django-ratelimit/issues
 :Documentation: http://django-ratelimit.readthedocs.org/
 
-Contents:
+
+Quickstart
+==========
+
+Install::
+
+   pip install django-ratelimit
+
+
+Use as a decorator in ``views.py``::
+
+    from ratelimit.decorators import ratelimit
+
+    @ratelimit()
+    def myview(request):
+        # ...
+
+    @ratelimit(rate='100/h')
+    def secondview(request):
+        # ...
+
+
+.. _PyPI: http://pypi.python.org/pypi/django-ratelimit
+
+
+Contents
+========
 
 .. toctree::
    :maxdepth: 2
 
-   install
    settings
    usage
    contributing
-
 
 
 Indices and tables
