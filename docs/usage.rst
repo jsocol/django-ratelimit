@@ -16,10 +16,15 @@ Import::
     from ratelimit.decorators import ratelimit
 
 
-.. py:decorator:: ratelimit(ip=True, block=False, method=None field=None, rate='5/m', skip_if=None, keys=None)
+.. py:decorator:: ratelimit(ip=True, block=False, method=None, field=None, rate='5/m', skip_if=None, keys=None)
 
    :arg ip:
-       *True* Whether to rate-limit based on the IP.
+       *True* Whether to rate-limit based on the IP from ``REMOTE_ADDR``.
+
+       .. Note::
+
+          If you're using a reverse proxy, set this to False and use
+          the ``keys`` argument.
 
    :arg block:
        *False* Whether to block the request instead of annotating.
@@ -29,11 +34,16 @@ Import::
         list/tuple, or ``None`` for all methods.
 
    :arg field:
-       *None* Which HTTP field(s) to use to rate-limit. May be a
-       string or a list.
+        *None* Which HTTP GET/POST argument field(s) to use to
+        rate-limit. May be a string or a list of strings.
 
    :arg rate:
-        *'5/m'* The number of requests per unit time allowed.
+        *'5/m'* The number of requests per unit time allowed. Valid units are:
+
+        * ``s`` - seconds
+        * ``m`` - minutes
+        * ``h`` - hours
+        * ``d`` - days
 
    :arg skip_if:
         *None* If specified, pass this parameter a callable
@@ -50,6 +60,12 @@ Import::
         request object and return string keys. This allows you to
         define custom logic (for example, use an authenticated user ID
         or unauthenticated IP address).
+
+        .. Note::
+
+           If you're using a reverse proxy, pass in a function that
+           pulls the appropriate field from ``request.META`` for the
+           actual ip address of the client.
 
 
 Examples::
@@ -105,6 +121,19 @@ Examples::
         # Stack them.
         # Note: once a decorator limits the request, the ones after
         # won't count the request for limiting.
+        return HttpResponse()
+
+    @ratelimit(ip=False,
+               keys=lambda req: req.META.get('HTTP_X_CLUSTER_CLIENT_IP',
+                                             req.META['REMOTE_ADDR']))
+    def post(request):
+        # This will use the HTTP_X_CLUSTER_CLIENT_IP and default to
+        # REMOTE_ADDR if that's not set. This is how you'd set up your
+        # rate limiting if you're behind a reverse proxy.
+        #
+        # It's important to set ip to False here. Otherwise it'll use
+        # limit on EITHER HTTP_X_CLUSTER_CLIENT_IP or REMOTE_ADDR and
+        # the end result is that everything will be throttled.
         return HttpResponse()
 
 
