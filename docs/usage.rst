@@ -5,89 +5,70 @@ Using Django Ratelimit
 ======================
 
 
-Decorator
-=========
+Use as a decorator
+==================
 
-``from ratelimit.decorators import ratelimit`` is the simplest thing to do. The
-``@ratelimit`` decorator provides several optional arguments with sensible
-defaults (in italics):
+The ``@ratelimit`` view decorator provides several optional arguments
+with sensible defaults (in italics).
 
-``ip``:
-    Whether to rate-limit based on the IP. *True*
-``block``:
-    Whether to block the request instead of annotating. *False*
-``method``:
-    Which HTTP method(s) to rate-limit. May be a string, a list/tuple, or
-    ``None`` for all methods. *None*
-``field``:
-    Which HTTP field(s) to use to rate-limit. May be a string or a list. *None*
-``rate``:
-    The number of requests per unit time allowed. *5/m*
-``skip_if``:
-    If specified, pass this parameter a callable (e.g. lambda function) that
-    takes the current request. If the callable returns a value that evaluates
-    to True, the rate limiting is skipped for that particular view. This is
-    useful to do things like selectively deactivating rate limiting based on a
-    value in your settings file, or based on an attirbute in the current
-    request object. (Also see the ``RATELIMIT_ENABLE`` setting below.) *None*
-``keys``:
-    Specify a function or list of functions that take the request object and
-    return string keys. This allows you to define custom logic (for example,
-    use an authenticated user ID or unauthenticated IP address). *None*
+Import::
+
+    from ratelimit.decorators import ratelimit
 
 
-Helper Function
-===============
+.. py:decorator:: ratelimit(ip=True, block=False, method=None, field=None, rate='5/m', skip_if=None, keys=None)
 
-In some cases the decorator is not flexible enough. If this is an issue you can
-do ``from ratelimit.helpers import is_ratelimited``. The ``is_ratelimited``
-helper function is similar to the decorator, providing the following arguments
-(defaults in italics):
+   :arg ip:
+       *True* Whether to rate-limit based on the IP from ``REMOTE_ADDR``.
 
-``request`` (Required)
-    The request object.
-``increment``
-    Whether to increment the count. *False*
-``ip``:
-    Whether to rate-limit based on the IP. *True*
-``method``:
-    Which HTTP method(s) to rate-limit. May be a string, a list/tuple, or
-    ``None`` for all methods. *None*
-``field``:
-    Which HTTP field(s) to use to rate-limit. May be a string or a list. *None*
-``rate``:
-    The number of requests per unit time allowed. *5/m*
-``keys``:
-    Specify a function or list of functions that take the request object and
-    return string keys. This allows you to define custom logic (for example,
-    use an authenticated user ID or unauthenticated IP address). *None*
+       .. Note::
+
+          If you're using a reverse proxy, set this to False and use
+          the ``keys`` argument.
+
+   :arg block:
+       *False* Whether to block the request instead of annotating.
+
+   :arg method:
+        *None* Which HTTP method(s) to rate-limit. May be a string, a
+        list/tuple, or ``None`` for all methods.
+
+   :arg field:
+        *None* Which HTTP GET/POST argument field(s) to use to
+        rate-limit. May be a string or a list of strings.
+
+   :arg rate:
+        *'5/m'* The number of requests per unit time allowed. Valid units are:
+
+        * ``s`` - seconds
+        * ``m`` - minutes
+        * ``h`` - hours
+        * ``d`` - days
+
+   :arg skip_if:
+        *None* If specified, pass this parameter a callable
+        (e.g. lambda function) that takes the current request. If the
+        callable returns a value that evaluates to True, the rate
+        limiting is skipped for that particular view. This is useful
+        to do things like selectively deactivating rate limiting based
+        on a value in your settings file, or based on an attirbute in
+        the current request object. (Also see the ``RATELIMIT_ENABLE``
+        setting below.)
+
+   :arg keys:
+        *None* Specify a function or list of functions that take the
+        request object and return string keys. This allows you to
+        define custom logic (for example, use an authenticated user ID
+        or unauthenticated IP address).
+
+        .. Note::
+
+           If you're using a reverse proxy, pass in a function that
+           pulls the appropriate field from ``request.META`` for the
+           actual ip address of the client.
 
 
-Exceptions
-==========
-
-If a request is ratelimited and ``block`` is set to ``True``, Ratelimit will
-raise ``ratelimit.exceptions.Ratelimited``. This is a subclass of Django's
-``PermissionDenied`` exception, so if you don't need any special handling
-beyond the built-in 403 processing, you don't have to do anything.
-
-
-Middleware
-==========
-
-There is optional middleware to use a custom view to handle ``Ratelimited``
-exceptions. To use it, add ``ratelimit.middleware.RatelimitMiddleware`` to your
-``MIDDLEWARE_CLASSES`` (toward the bottom of the list) and set
-``RATELIMIT_VIEW`` to the full path of a view you want to use.
-
-The view specified in ``RATELIMIT_VIEW`` will get two arguments, the
-``request`` object (after ratelimit processing) and the exception.
-
-
-Examples
-========
-
-::
+Examples::
 
     @ratelimit()
     def myview(request):
@@ -141,3 +122,84 @@ Examples
         # Note: once a decorator limits the request, the ones after
         # won't count the request for limiting.
         return HttpResponse()
+
+    @ratelimit(ip=False,
+               keys=lambda req: req.META.get('HTTP_X_CLUSTER_CLIENT_IP',
+                                             req.META['REMOTE_ADDR']))
+    def post(request):
+        # This will use the HTTP_X_CLUSTER_CLIENT_IP and default to
+        # REMOTE_ADDR if that's not set. This is how you'd set up your
+        # rate limiting if you're behind a reverse proxy.
+        #
+        # It's important to set ip to False here. Otherwise it'll use
+        # limit on EITHER HTTP_X_CLUSTER_CLIENT_IP or REMOTE_ADDR and
+        # the end result is that everything will be throttled.
+        return HttpResponse()
+
+
+Helper Function
+===============
+
+In some cases the decorator is not flexible enough. If this is an
+issue you use the ``is_ratelimited`` helper function. It's similar to
+the decorator.
+
+Import::
+
+    from ratelimit.helpers import is_ratelimited
+
+
+.. py:function:: is_ratelimited(request, increment=False, ip=True, method=None, field=None, rate='5/m', keys=None)
+
+   :arg request:
+       (Required) The request object.
+
+   :arg increment:
+       *False* Whether to increment the count.
+
+   :arg ip:
+       *True* Whether to rate-limit based on the IP.
+
+   :arg method:
+       *None* Which HTTP method(s) to rate-limit. May be a string, a
+       list/tuple, or ``None`` for all methods.
+
+   :arg field:
+       *None* Which HTTP field(s) to use to rate-limit. May be a
+       string or a list.
+
+   :arg rate:
+       *'5/m'* The number of requests per unit time allowed.
+
+   :arg keys:
+       *None* Specify a function or list of functions that take the
+       request object and return string keys. This allows you to
+       define custom logic (for example, use an authenticated user ID
+       or unauthenticated IP address).
+
+
+Exceptions
+==========
+
+.. py:class:: ratelimit.exceptions.Ratelimited
+
+   If a request is ratelimited and ``block`` is set to ``True``,
+   Ratelimit will raise ``ratelimit.exceptions.Ratelimited``.
+
+   This is a subclass of Django's ``PermissionDenied`` exception, so
+   if you don't need any special handling beyond the built-in 403
+   processing, you don't have to do anything.
+
+
+Middleware
+==========
+
+There is optional middleware to use a custom view to handle ``Ratelimited``
+exceptions.
+
+To use it, add ``ratelimit.middleware.RatelimitMiddleware`` to your
+``MIDDLEWARE_CLASSES`` (toward the bottom of the list) and set
+``RATELIMIT_VIEW`` to the full path of a view you want to use.
+
+The view specified in ``RATELIMIT_VIEW`` will get two arguments, the
+``request`` object (after ratelimit processing) and the exception.

@@ -117,7 +117,7 @@ class RatelimitTests(TestCase):
         req.skip = True
         assert not view(req), 'Skipped request is not limited.'
 
-    @override_settings(RATELIMIT_USE_CACHE='fake-cache')
+    @override_settings(RATELIMIT_USE_CACHE='fake.cache')
     def test_bad_cache(self):
         """The RATELIMIT_USE_CACHE setting works if the cache exists."""
 
