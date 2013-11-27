@@ -7,6 +7,7 @@ from django.views.generic import View
 from ratelimit.decorators import ratelimit
 from ratelimit.exceptions import Ratelimited
 from ratelimit.mixins import RateLimitMixin
+from ratelimit.helpers import is_ratelimited
 
 
 class RatelimitTests(TestCase):
@@ -172,6 +173,19 @@ class RatelimitTests(TestCase):
         req = RequestFactory().post('/')
         assert not view(req), 'First unauthenticated request is allowed.'
         assert view(req), 'Second unauthenticated request is limited.'
+
+    def test_is_ratelimited(self):
+        def get_keys(request):
+            return "test_is_ratelimited_key"
+        def not_increment(request):
+            return is_ratelimited(request, increment=False, ip=False, method=None, keys=[get_keys], rate='1/m')
+        def do_increment(request):
+            return is_ratelimited(request, increment=True, ip=False, method=None, keys=[get_keys], rate='1/m')
+
+        req = RequestFactory().get('/')
+        self.assertEqual(not_increment(req), False, "Request should not be rate limited.") # Does not increment. Count still 0. Does not rate limit because 0 < 1.
+        self.assertEqual(do_increment(req), False, "Request should not be rate limited.") # Increments. Does not rate limit because 0 < 1. Count now 1. 
+        self.assertEqual(not_increment(req), True, "Request should be rate limited.") # Does not increment. Count still 1. Rate limits because 1 < 1 is false.
 
 
 #do it here, since python < 2.7 does not have unittest.skipIf

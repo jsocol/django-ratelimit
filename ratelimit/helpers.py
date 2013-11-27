@@ -68,6 +68,15 @@ def _incr(cache, keys, timeout=60):
     cache.set_many(counts, timeout=timeout)
     return counts
 
+def _get(cache, keys):
+    counts = cache.get_many(keys)
+    for key in keys:
+        if key in counts:
+            counts[key] += 1
+        else:
+            counts[key] = 1
+    return counts
+
 
 def is_ratelimited(request, increment=False, ip=True, method=['POST'],
                    field=None, rate='5/m', keys=None):
@@ -76,10 +85,13 @@ def is_ratelimited(request, increment=False, ip=True, method=['POST'],
     cache = get_cache(cache)
 
     request.limited = getattr(request, 'limited', False)
-    if (not request.limited and increment and RATELIMIT_ENABLE and
+    if (not request.limited and RATELIMIT_ENABLE and
             _method_match(request, method)):
         _keys = _get_keys(request, ip, field, keys)
-        counts = _incr(cache, _keys, period)
+        if increment:
+            counts = _incr(cache, _keys, period)
+        else:
+            counts = _get(cache, _keys)
         if any([c > count for c in counts.values()]):
             request.limited = True
 
