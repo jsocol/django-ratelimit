@@ -68,6 +68,7 @@ def _incr(cache, keys, timeout=60):
     cache.set_many(counts, timeout=timeout)
     return counts
 
+
 def _get(cache, keys):
     counts = cache.get_many(keys)
     for key in keys:

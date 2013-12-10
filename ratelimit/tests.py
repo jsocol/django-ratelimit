@@ -176,23 +176,34 @@ class RatelimitTests(TestCase):
 
     def test_is_ratelimited(self):
         def get_keys(request):
-            return "test_is_ratelimited_key"
+            return 'test_is_ratelimited_key'
+
         def not_increment(request):
-            return is_ratelimited(request, increment=False, ip=False, method=None, keys=[get_keys], rate='1/m')
+            return is_ratelimited(request, increment=False, ip=False,
+                                  method=None, keys=[get_keys], rate='1/m')
+
         def do_increment(request):
-            return is_ratelimited(request, increment=True, ip=False, method=None, keys=[get_keys], rate='1/m')
+            return is_ratelimited(request, increment=True, ip=False,
+                                  method=None, keys=[get_keys], rate='1/m')
 
         req = RequestFactory().get('/')
-        self.assertEqual(not_increment(req), False, "Request should not be rate limited.") # Does not increment. Count still 0. Does not rate limit because 0 < 1.
-        self.assertEqual(do_increment(req), False, "Request should not be rate limited.") # Increments. Does not rate limit because 0 < 1. Count now 1. 
-        self.assertEqual(not_increment(req), True, "Request should be rate limited.") # Does not increment. Count still 1. Rate limits because 1 < 1 is false.
+        # Does not increment. Count still 0. Does not rate limit
+        # because 0 < 1.
+        assert not not_increment(req), 'Request should not be rate limited.'
+
+        # Increments. Does not rate limit because 0 < 1. Count now 1.
+        assert not do_increment(req), 'Request should not be rate limited.'
+
+        # Does not increment. Count still 1. Rate limits because 1 < 1
+        # is false.
+        assert not_increment(req), 'Request should be rate limited.'
 
 
 #do it here, since python < 2.7 does not have unittest.skipIf
 if django.VERSION >= (1, 4):
     class RateLimitCBVTests(TestCase):
 
-        SKIP_REASON = u"Class Based View supported by Django >=1.4"
+        SKIP_REASON = u'Class Based View supported by Django >=1.4'
 
         def setUp(self):
             cache.clear()
