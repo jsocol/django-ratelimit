@@ -16,7 +16,7 @@ Import::
     from ratelimit.decorators import ratelimit
 
 
-.. py:decorator:: ratelimit(ip=True, block=False, method=None, field=None, rate='5/m', skip_if=None, keys=None)
+.. py:decorator:: ratelimit(ip=True, block=False, method=['POST'], field=None, rate='5/m', skip_if=None, keys=None)
 
    :arg ip:
        *True* Whether to rate-limit based on the IP from ``REMOTE_ADDR``.
@@ -30,7 +30,7 @@ Import::
        *False* Whether to block the request instead of annotating.
 
    :arg method:
-        *None* Which HTTP method(s) to rate-limit. May be a string, a
+        *['POST']* Which HTTP method(s) to rate-limit. May be a string, a
         list/tuple, or ``None`` for all methods.
 
    :arg field:
@@ -81,7 +81,7 @@ Examples::
         # If the same IP makes >5 reqs/min, will raise Ratelimited
         return HttpResponse()
 
-    @ratelimit(field='username')
+    @ratelimit(field='username', method=['GET', 'POST'])
     def login(request):
         # If the same username OR IP is used >5 times/min, this will be True.
         # The `username` value will come from GET or POST, determined by the
@@ -149,7 +149,7 @@ Import::
     from ratelimit.helpers import is_ratelimited
 
 
-.. py:function:: is_ratelimited(request, increment=False, ip=True, method=None, field=None, rate='5/m', keys=None)
+.. py:function:: is_ratelimited(request, increment=False, ip=True, method=['POST'], field=None, rate='5/m', keys=None)
 
    :arg request:
        (Required) The request object.
@@ -161,7 +161,7 @@ Import::
        *True* Whether to rate-limit based on the IP.
 
    :arg method:
-       *None* Which HTTP method(s) to rate-limit. May be a string, a
+       *['POST']* Which HTTP method(s) to rate-limit. May be a string, a
        list/tuple, or ``None`` for all methods.
 
    :arg field:
