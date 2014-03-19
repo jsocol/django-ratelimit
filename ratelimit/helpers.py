@@ -7,9 +7,6 @@ from django.core.cache import get_cache
 
 __all__ = ['is_ratelimited']
 
-RATELIMIT_ENABLE = getattr(settings, 'RATELIMIT_ENABLE', True)
-CACHE_PREFIX = getattr(settings, 'RATELIMIT_CACHE_PREFIX', 'rl:')
-
 _PERIODS = {
     's': 1,
     'm': 60,
@@ -53,7 +50,8 @@ def _get_keys(request, ip=True, field=None, keyfuncs=None):
             keyfuncs = [keyfuncs]
         for k in keyfuncs:
             keys.append(k(request))
-    return [CACHE_PREFIX + k for k in keys]
+    prefix = getattr(settings, 'CACHE_PREFIX', 'rl:')
+    return [prefix + k for k in keys]
 
 
 def _incr(cache, keys, timeout=60):
@@ -86,8 +84,9 @@ def is_ratelimited(request, increment=False, ip=True, method=['POST'],
     cache = get_cache(cache)
 
     request.limited = getattr(request, 'limited', False)
-    if (not request.limited and RATELIMIT_ENABLE and
-            _method_match(request, method)):
+    if (not request.limited
+            and getattr(settings, 'RATELIMIT_ENABLE', True)
+            and _method_match(request, method)):
         _keys = _get_keys(request, ip, field, keys)
         if increment:
             counts = _incr(cache, _keys, period)
