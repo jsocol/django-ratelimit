@@ -33,11 +33,16 @@ def _split_rate(rate):
         time = time * int(multi)
     return count, time
 
+def _get_client_address(environ):
+    try:
+        return environ['HTTP_X_FORWARDED_FOR'].split(',')[-1].strip()
+    except KeyError:
+        return environ['REMOTE_ADDR']
 
 def _get_keys(request, ip=True, field=None, keyfuncs=None):
     keys = []
     if ip:
-        keys.append('ip:' + request.META['REMOTE_ADDR'])
+        keys.append('ip:' + _get_client_address(request.META))
     if field is not None:
         if not isinstance(field, (list, tuple)):
             field = [field]
