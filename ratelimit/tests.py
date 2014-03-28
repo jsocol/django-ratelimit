@@ -356,6 +356,33 @@ if django.VERSION >= (1, 4):
             assert not twice(req), 'Second request is not limited.'
             assert twice(req), 'Third request is limited.'
 
+        def test_rate_x_forwarded_for(self):
+            req1 = RequestFactory().get(
+                '/',
+                HTTP_X_FORWARDED_FOR='111.111.111.111'
+            )
+            req2 = RequestFactory().get(
+                '/',
+                HTTP_X_FORWARDED_FOR='222.222.222.222'
+            )
+
+            class TwiceView(RateLimitMixin, View):
+                ratelimit_ip = True
+                ratelimit_rate = '2/m'
+                ratelimit_method = ['GET']
+
+                def get(self, request, *args, **kwargs):
+                    return request.limited
+
+            twice = TwiceView.as_view()
+
+            assert not twice(req1), 'First request is not limited.'
+            assert not twice(req2), 'First request is not limited.'
+            assert not twice(req1), 'Second request is not limited.'
+            assert not twice(req2), 'Second request is not limited.'
+            assert twice(req1), 'Third request is limited.'
+            assert twice(req2), 'Third request is limited.'
+
         def test_skip_if(self):
             req = RequestFactory().post('/')
 
