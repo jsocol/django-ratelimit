@@ -116,7 +116,7 @@ the decorator.
 
 Import::
 
-    from ratelimit.helpers import is_ratelimited
+    from ratelimit.utils import is_ratelimited
 
 
 .. py:function:: is_ratelimited(request, group=None, key=None, rate=None, method=['POST'])

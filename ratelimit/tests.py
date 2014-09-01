@@ -7,7 +7,7 @@ from django.views.generic import View
 from ratelimit.decorators import ratelimit
 from ratelimit.exceptions import Ratelimited
 from ratelimit.mixins import RateLimitMixin
-from ratelimit.helpers import is_ratelimited
+from ratelimit.utils import is_ratelimited
 
 
 class RatelimitTests(TestCase):
