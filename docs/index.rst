@@ -48,6 +48,8 @@ Contents
 
    settings
    usage
+   keys
+   rates
    contributing
 
 
