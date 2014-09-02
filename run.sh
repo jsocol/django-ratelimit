@@ -12,7 +12,8 @@ usage() {
 
 case "$1" in
     "test" )
-        django-admin.py test ratelimit ;;
+        shift;
+        django-admin.py test ratelimit $@;;
     "shell" )
         django-admin.py shell ;;
     * )

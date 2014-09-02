@@ -5,7 +5,7 @@ import zlib
 
 from django.conf import settings
 from django.core.cache import get_cache
-from django.core.excpetions import ImproperlyConfigured
+from django.core.exceptions import ImproperlyConfigured
 
 
 __all__ = ['is_ratelimited']
@@ -37,13 +37,11 @@ def get_header(request, header):
 
 
 _ACCESSOR_KEYS = {
-    'get': lambda r, k: r.GET[k],
-    'post': lambda r, k: r.POST[k],
-    'field': lambda r, k: r.POST[k] if request.method == 'POST' else r.GET[k],
+    'get': lambda r, k: r.GET.get(k, ''),
+    'post': lambda r, k: r.POST.get(k, ''),
+    'field': lambda r, k: (r.POST if r.method == 'POST' else r.GET).get(k, ''),
     'header': get_header,
 }
-
-rate_re = re.compile('([\d]+)/([\d]*)([smhd])')
 
 
 def _method_match(request, method=None):
@@ -54,11 +52,16 @@ def _method_match(request, method=None):
     return request.method in [m.upper() for m in method]
 
 
+rate_re = re.compile('([\d]+)/([\d]*)([smhd])?')
+
+
 def _split_rate(rate):
     if isinstance(rate, tuple):
         return rate
     count, multi, period = rate_re.match(rate).groups()
     count = int(count)
+    if not period:
+        period = 's'
     time = _PERIODS[period.lower()]
     if multi:
         time = time * int(multi)
@@ -69,24 +72,37 @@ def _get_window(value, period):
     ts = int(time.time())
     if period == 1:
         return ts
+    if isinstance(value, unicode):
+        value = value.encode('utf-8')
     w = ts - (ts % period) + (zlib.crc32(value) % period)
     if w < ts:
         return w + period
     return w
 
 
-def _make_cache_key(group, rate, value):
+def _make_cache_key(group, rate, value, methods):
     count, period = _split_rate(rate)
     window = _get_window(value, period)
     safe_rate = '%d/%ds' % (count, period)
-    m = md5(group + safe_rate, value, str(window))
-    return settings.RATELIMIT_CACHE_PREFIX + m.hexdigest()
+    parts = [group + safe_rate, value, str(window)]
+    if methods is not None:
+        if isinstance(methods, (list, tuple)):
+            methods = ''.join(sorted([m.upper() for m in methods]))
+        parts.append(methods)
+    prefix = getattr(settings, 'RATELIMIT_CACHE_PREFIX', 'rl:')
+    return prefix + hashlib.md5(u''.join(parts).encode('utf-8')).hexdigest()
 
 
-def is_ratelimited(request, group=None, key=None, rate=None, method='POST',
-                   increment=False):
-    if not settings.RATELIMIT_ENABLE_CACHE:
+def is_ratelimited(request, group=None, fn=None, key=None, rate=None,
+                   method='POST', increment=False):
+    if group is None:
+        group = '.'.join((fn.__module__, fn.__name__))
+
+    if not getattr(settings, 'RATELIMIT_ENABLE', True):
         request.limited = False
+        return False
+
+    if not _method_match(request, method):
         return False
 
     old_limited = getattr(request, 'limited', False)
@@ -115,8 +131,10 @@ def is_ratelimited(request, group=None, key=None, rate=None, method='POST',
         value = _ACCESSOR_KEYS[accessor](request, k)
     else:
         # TODO: import path
+        pass
 
-    cache_key = _make_cache_key(group, rate, value)
+    cache_key = _make_cache_key(group, rate, value, method)
+    added = cache.add(cache_key, 0)
     if increment:
         count = cache.incr(cache_key)
     else:

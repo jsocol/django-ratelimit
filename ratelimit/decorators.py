@@ -11,11 +11,10 @@ def ratelimit(group=None, key=None, rate=None, method='POST', block=False):
     def decorator(fn):
         @wraps(fn)
         def _wrapped(request, *args, **kw):
-            if group is None:
-                group = '.'.join((fn.__module__, fn.__name))
             request.limited = getattr(request, 'limited', False)
-            ratelimited = is_ratelimited(request=request, group=group, key=key,
-                                         rate=rate, method=method)
+            ratelimited = is_ratelimited(request=request, group=group, fn=fn,
+                                         key=key, rate=rate, method=method,
+                                         increment=True)
             if ratelimited and block:
                 raise Ratelimited()
             return fn(request, *args, **kw)
