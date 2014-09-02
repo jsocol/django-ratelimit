@@ -5,6 +5,8 @@ Rates
 =====
 
 
+.. _rates-simple:
+
 Simple rates
 ============
 
@@ -27,6 +29,8 @@ five minutes":
 * ``100/300s``
 * ``100/300``
 
+
+.. _rates-callable:
 
 Callables
 =========

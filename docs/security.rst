@@ -5,6 +5,8 @@ Security considerations
 =======================
 
 
+.. _security-client-ip:
+
 Client IP address
 =================
 
