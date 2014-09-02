@@ -50,6 +50,7 @@ Contents
    usage
    keys
    rates
+   security
    contributing
 
 

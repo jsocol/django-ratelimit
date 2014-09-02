@@ -21,7 +21,8 @@ used ratelimit keys:
   
     .. note::
        If you are using a reverse proxy, make sure this value is correct
-       or use an appropriate ``header:`` value.
+       or use an appropriate ``header:`` value. See the :ref:`security
+       <security-chapter>` notes.
 * ``get:X`` - Use the value of ``request.GET['X']``.
 * ``post:X`` - Use the value of ``request.POST['X']``.
 * ``field:X`` - Use ``request.POST['X']`` if the request method is
