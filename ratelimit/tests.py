@@ -10,6 +10,15 @@ from ratelimit.mixins import RateLimitMixin
 from ratelimit.utils import is_ratelimited, _split_rate
 
 
+class MockUser(object):
+    def __init__(self, authenticated=False):
+        self.pk = 1
+        self.authenticated = authenticated
+
+    def is_authenticated(self):
+        return self.authenticated
+
+
 class RateParsingTests(TestCase):
     def test_simple(self):
         tests = (
@@ -26,11 +35,15 @@ class RateParsingTests(TestCase):
             assert o == _split_rate(i)
 
 
+def mykey(group, request):
+    return request.META['REMOTE_ADDR'][::-1]
+
+
 class RatelimitTests(TestCase):
     def setUp(self):
         cache.clear()
 
-    def test_limit_ip(self):
+    def test_ip(self):
         @ratelimit(key='ip', method=None, rate='1/m', block=True)
         def view(request):
             return True
@@ -77,11 +90,11 @@ class RatelimitTests(TestCase):
         assert limit_get(post), 'Limit first POST.'
         assert limit_get(get), 'Limit first GET.'
 
-    def test_get(self):
+    def test_key_get(self):
         req_a = RequestFactory().get('/', {'foo': 'a'})
-        req_a = RequestFactory().get('/', {'foo': 'b'})
+        req_b = RequestFactory().get('/', {'foo': 'b'})
 
-        @ratelimit(key='get:foo', rate='1/m')
+        @ratelimit(key='get:foo', rate='1/m', method='GET')
         def view(request):
             return request.limited
 
@@ -90,7 +103,31 @@ class RatelimitTests(TestCase):
         assert not view(req_b)
         assert view(req_b)
 
-    def test_field(self):
+    def test_key_post(self):
+        req_a = RequestFactory().post('/', {'foo': 'a'})
+        req_b = RequestFactory().post('/', {'foo': 'b'})
+
+        @ratelimit(key='post:foo', rate='1/m')
+        def view(request):
+            return request.limited
+
+        assert not view(req_a)
+        assert view(req_a)
+        assert not view(req_b)
+        assert view(req_b)
+
+    def test_key_header(self):
+        req = RequestFactory().post('/')
+        req.META['HTTP_X_REAL_IP'] = '1.2.3.4'
+
+        @ratelimit(key='header:x-real-ip', rate='1/m')
+        def view(request):
+            return request.limited
+
+        assert not view(req)
+        assert view(req)
+
+    def test_key_field(self):
         james = RequestFactory().post('/', {'username': 'james'})
         john = RequestFactory().post('/', {'username': 'john'})
 
@@ -133,6 +170,27 @@ class RatelimitTests(TestCase):
         assert not twice(req), 'Second request is not limited.'
         assert twice(req), 'Third request is limited.'
 
+    def test_callable_rate(self):
+        auth = RequestFactory().post('/')
+        unauth = RequestFactory().post('/')
+        auth.user = MockUser(authenticated=True)
+        unauth.user = MockUser(authenticated=False)
+
+        def get_rate(group, request):
+            if request.user.is_authenticated():
+                return (2, 60)
+            return (1, 60)
+
+        @ratelimit(key='user_or_ip', rate=get_rate)
+        def view(request):
+            return request.limited
+
+        assert not view(unauth)
+        assert view(unauth)
+        assert not view(auth)
+        assert not view(auth)
+        assert view(auth)
+
     @override_settings(RATELIMIT_USE_CACHE='fake-cache')
     def test_bad_cache(self):
         """The RATELIMIT_USE_CACHE setting works if the cache exists."""
@@ -148,29 +206,31 @@ class RatelimitTests(TestCase):
 
     def test_user_or_ip(self):
         """Allow custom functions to set cache keys."""
-        class User(object):
-            def __init__(self, authenticated=False):
-                self.pk = 1
-                self.authenticated = authenticated
-
-            def is_authenticated(self):
-                return self.authenticated
 
         @ratelimit(key='user_or_ip', rate='1/m', block=False)
         def view(request):
             return request.limited
 
         unauth = RequestFactory().post('/')
-        unauth.user = User(authenticated=False)
+        unauth.user = MockUser(authenticated=False)
 
         assert not view(unauth), 'First unauthenticated request is allowed.'
         assert view(unauth), 'Second unauthenticated request is limited.'
 
         auth = RequestFactory().post('/')
-        auth.user = User(authenticated=True)
+        auth.user = MockUser(authenticated=True)
 
         assert not view(auth), 'First authenticated request is allowed.'
         assert view(auth), 'Second authenticated is limited.'
+
+    def test_key_path(self):
+        @ratelimit(key='ratelimit.tests.mykey', rate='1/m')
+        def view(request):
+            return request.limited
+
+        req = RequestFactory().post('/')
+        assert not view(req)
+        assert view(req)
 
     def test_stacked_decorator(self):
         """Allow @ratelimit to be stacked."""
@@ -415,13 +475,6 @@ class RateLimitCBVTests(TestCase):
 
     def test_keys(self):
         """Allow custom functions to set cache keys."""
-        class User(object):
-            def __init__(self, authenticated=False):
-                self.pk = 1
-                self.authenticated = authenticated
-
-            def is_authenticated(self):
-                return self.authenticated
 
         def user_or_ip(req):
             if req.user.is_authenticated():
@@ -440,13 +493,13 @@ class RateLimitCBVTests(TestCase):
         view = KeysView.as_view()
 
         req = RequestFactory().post('/')
-        req.user = User(authenticated=False)
+        req.user = MockUser(authenticated=False)
 
         assert not view(req), 'First unauthenticated request is allowed.'
         assert view(req), 'Second unauthenticated request is limited.'
 
         del req.limited
-        req.user = User(authenticated=True)
+        req.user = MockUser(authenticated=True)
 
         assert not view(req), 'First authenticated request is allowed.'
         assert view(req), 'Second authenticated is limited.'

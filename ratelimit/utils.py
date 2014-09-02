@@ -6,6 +6,7 @@ import zlib
 from django.conf import settings
 from django.core.cache import get_cache
 from django.core.exceptions import ImproperlyConfigured
+from django.utils.importlib import import_module
 
 
 __all__ = ['is_ratelimited']
@@ -82,8 +83,8 @@ def _get_window(value, period):
 
 def _make_cache_key(group, rate, value, methods):
     count, period = _split_rate(rate)
-    window = _get_window(value, period)
     safe_rate = '%d/%ds' % (count, period)
+    window = _get_window(value, period)
     parts = [group + safe_rate, value, str(window)]
     if methods is not None:
         if isinstance(methods, (list, tuple)):
@@ -129,9 +130,13 @@ def is_ratelimited(request, group=None, fn=None, key=None, rate=None,
         if accessor not in _ACCESSOR_KEYS:
             raise ImproperlyConfigured('Unknown ratelimit key: %s' % key)
         value = _ACCESSOR_KEYS[accessor](request, k)
+    elif '.' in key:
+        mod, attr = key.rsplit('.', 1)
+        keyfn = getattr(import_module(mod), attr)
+        value = keyfn(group, request)
     else:
-        # TODO: import path
-        pass
+        raise ImproperlyConfigured(
+            'Could not understand ratelimit key: %s' % key)
 
     cache_key = _make_cache_key(group, rate, value, method)
     added = cache.add(cache_key, 0)
