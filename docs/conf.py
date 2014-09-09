@@ -82,6 +82,7 @@ exclude_patterns = ['_build']
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = 'sphinx'
+highlight_language = 'python'
 
 # A list of ignored prefixes for module index sorting.
 #modindex_common_prefix = []

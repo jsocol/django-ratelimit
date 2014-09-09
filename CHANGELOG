@@ -5,11 +5,15 @@ Change Log
 v0.5
 ====
 
+- Rates are now counted in fixed—instead of sliding—windows, except for
+  per-second limits. See the Upgrade Notes.
 - Mixin renamed to `RatelimitMixin` (lowercase `l`) for consistency.
 - Dramatic rewrite.
   - `ip`, `field`, and `keys` arguments replaced with `key`.
   - well-known "key" values support.
 - Custom callable rate functions.
+  - Support for "not limited" rate.
+  - Replaces ``skip_if`` argument.
 
 v0.4
 ====

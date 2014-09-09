@@ -18,7 +18,7 @@ used ratelimit keys:
 
 * ``'ip'`` - Use the request IP address (i.e.
   ``request.META['REMOTE_ADDR']``)
-  
+
     .. note::
        If you are using a reverse proxy, make sure this value is correct
        or use an appropriate ``header:`` value. See the :ref:`security
@@ -28,7 +28,7 @@ used ratelimit keys:
 * ``'field:X'`` - Use ``request.POST['X']`` if the request method is
   ``POST``, otherwise use ``request.GET['X']``.
 * ``'header:x-x'`` - Use the value of ``request.META['HTTP_X_X']``.
-  
+
     .. note::
        The value right of the colon will be translated to all-caps and
        any dashes will be replaced with underscores, e.g.: x-client-ip

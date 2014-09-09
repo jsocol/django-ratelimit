@@ -87,3 +87,12 @@ a ``header:`` key::
 
 .. _too much variation: http://www.wikiwand.com/en/Talk:X-Forwarded-For#Variations
 .. _Django dropped: https://docs.djangoproject.com/en/1.3/releases/1.1/#removed-setremoteaddrfromforwardedfor-middleware
+
+
+.. security-brute-force::
+
+Brute force attacks
+===================
+
+One of the key uses of ratelimiting is preventing brute force or
+dictionary attacks against login forms.
