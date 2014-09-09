@@ -5,6 +5,8 @@ Using Django Ratelimit
 ======================
 
 
+.. _usage-decorator:
+
 Use as a decorator
 ==================
 
@@ -103,9 +105,57 @@ Examples::
     @ratelimit(key=lambda r: r.META.get('HTTP_X_CLUSTER_CLIENT_IP',
                                         r.META['REMOTE_ADDR'])
     def myview(request):
-        # Use `X-Cluster-Client-IP but fall back to REMOTE_ADDR.
+        # Use `X-Cluster-Client-IP` but fall back to REMOTE_ADDR.
         return HttpResponse()
 
+
+Class-Based Views
+-----------------
+
+.. versionadded:: 0.5
+
+The ``@ratelimit`` decorator also works on class-based view methods,
+though *make sure the ``method`` argument matches the decorator*::
+
+    class MyView(View):
+        @ratelimit(key='ip', method='POST')
+        def post(self, request, *args):
+            # Something expensive...
+
+.. note::
+   Unless given an explicit ``group`` argument, different methods of a
+   class-based view will be limited separate.
+
+
+.. _usage-mixin:
+
+Class-Based View Mixin
+======================
+
+.. py:class:: ratelimit.mixins.RatelimitMixin
+
+.. versionadded:: 0.4
+
+Ratelimits can also be applied to class-based views with the
+``ratelimit.mixins.RatelimitMixin`` mixin. They are configured via class
+attributes that are the same as the :ref:`decorator <usage-decorator>`,
+prefixed with ``ratelimit_``, e.g.::
+
+    class MyView(RatelimitMixin, View):
+        ratelimit_key = 'ip'
+        ratelimit_rate = '10/m'
+        ratelimit_block = False
+        ratelimit_method = 'GET'
+
+        def get(self, request, *args, **kwargs):
+            # Calculate expensive report...
+
+.. versionchanged:: 0.5
+   The name of the mixin changed from ``RateLimitMixin`` to
+   ``RatelimitMixin`` for consistency.
+
+
+.. _usage-helper:
 
 Helper Function
 ===============
@@ -150,6 +200,8 @@ Import::
        *True* Whether to increment the count or just check.
 
 
+.. _usage-exception:
+
 Exceptions
 ==========
 
@@ -162,6 +214,8 @@ Exceptions
    if you don't need any special handling beyond the built-in 403
    processing, you don't have to do anything.
 
+
+.. _usage-middleware:
 
 Middleware
 ==========

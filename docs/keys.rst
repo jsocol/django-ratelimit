@@ -56,6 +56,10 @@ more on callables.
 Callable values
 ===============
 
+.. versionadded:: 0.3
+.. versionchanged:: 0.5
+   Added support for python path to callables.
+
 If the value of ``key=`` is a callable, or the path to a callable, that
 callable will be called with two arguments, the :ref:`group
 <usage-chapter>` and the ``request`` object. It should return a
