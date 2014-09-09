@@ -73,7 +73,7 @@ def _get_window(value, period):
     ts = int(time.time())
     if period == 1:
         return ts
-    if isinstance(value, unicode):
+    if not isinstance(value, bytes):
         value = value.encode('utf-8')
     w = ts - (ts % period) + (zlib.crc32(value) % period)
     if w < ts:
