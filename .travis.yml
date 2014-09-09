@@ -10,8 +10,10 @@ python:
  - "3.4"
  - "pypy"
 install:
- - pip install -q "Django>=${DJANGO_VERSION},<${DJANGO_VERSION}.99"
-script: ./run.sh test
+ - pip install -q "Django>=${DJANGO_VERSION},<${DJANGO_VERSION}.99" flake8
+script:
+ - ./run.sh test
+ - ./run.sh flake8
 matrix:
   exclude:
     - python: "2.6"
