@@ -6,7 +6,7 @@ from django.views.generic import View
 
 from ratelimit.decorators import ratelimit
 from ratelimit.exceptions import Ratelimited
-from ratelimit.mixins import RateLimitMixin
+from ratelimit.mixins import RatelimitMixin
 from ratelimit.utils import is_ratelimited, _split_rate
 
 
@@ -303,16 +303,15 @@ class RatelimitTests(TestCase):
         assert not_increment(req), 'Request should be rate limited.'
 
 
-class RateLimitCBVTests(TestCase):
+class RatelimitCBVTests(TestCase):
 
     def setUp(self):
-        self.skipTest('no cbv yet')
         cache.clear()
 
     def test_limit_ip(self):
 
-        class RLView(RateLimitMixin, View):
-            ratelimit_ip = True
+        class RLView(RatelimitMixin, View):
+            ratelimit_key = 'ip'
             ratelimit_method = None
             ratelimit_rate = '1/m'
             ratelimit_block = True
@@ -326,8 +325,9 @@ class RateLimitCBVTests(TestCase):
 
     def test_block(self):
 
-        class BlockedView(RateLimitMixin, View):
-            ratelimit_ip = True
+        class BlockedView(RatelimitMixin, View):
+            ratelimit_group = 'cbv:block'
+            ratelimit_key = 'ip'
             ratelimit_method = None
             ratelimit_rate = '1/m'
             ratelimit_block = True
@@ -335,8 +335,9 @@ class RateLimitCBVTests(TestCase):
             def get(self, request, *args, **kwargs):
                 return request.limited
 
-        class UnBlockedView(RateLimitMixin, View):
-            ratelimit_ip = True
+        class UnBlockedView(RatelimitMixin, View):
+            ratelimit_group = 'cbv:block'
+            ratelimit_key = 'ip'
             ratelimit_method = None
             ratelimit_rate = '1/m'
             ratelimit_block = False
@@ -360,8 +361,9 @@ class RateLimitCBVTests(TestCase):
         post = rf.post('/')
         get = rf.get('/')
 
-        class LimitPostView(RateLimitMixin, View):
-            ratelimit_ip = True
+        class LimitPostView(RatelimitMixin, View):
+            ratelimit_group = 'cbv:method'
+            ratelimit_key = 'ip'
             ratelimit_method = ['POST']
             ratelimit_rate = '1/m'
 
@@ -369,8 +371,9 @@ class RateLimitCBVTests(TestCase):
                 return request.limited
             get = post
 
-        class LimitGetView(RateLimitMixin, View):
-            ratelimit_ip = True
+        class LimitGetView(RatelimitMixin, View):
+            ratelimit_group = 'cbv:method'
+            ratelimit_key = 'ip'
             ratelimit_method = ['POST', 'GET']
             ratelimit_rate = '1/m'
 
@@ -392,9 +395,8 @@ class RateLimitCBVTests(TestCase):
         james = RequestFactory().post('/', {'username': 'james'})
         john = RequestFactory().post('/', {'username': 'john'})
 
-        class UsernameView(RateLimitMixin, View):
-            ratelimit_ip = False
-            ratelimit_field = 'username'
+        class UsernameView(RatelimitMixin, View):
+            ratelimit_key = 'field:username'
             ratelimit_rate = '1/m'
 
             def post(self, request, *args, **kwargs):
@@ -409,9 +411,8 @@ class RateLimitCBVTests(TestCase):
     def test_field_unicode(self):
         post = RequestFactory().post('/', {'username': u'fran\xe7ois'})
 
-        class UsernameView(RateLimitMixin, View):
-            ratelimit_ip = False
-            ratelimit_field = 'username'
+        class UsernameView(RatelimitMixin, View):
+            ratelimit_key = 'field:username'
             ratelimit_rate = '1/m'
 
             def post(self, request, *args, **kwargs):
@@ -426,9 +427,8 @@ class RateLimitCBVTests(TestCase):
     def test_field_empty(self):
         post = RequestFactory().post('/', {})
 
-        class EmptyFieldView(RateLimitMixin, View):
-            ratelimit_ip = False
-            ratelimit_field = 'username'
+        class EmptyFieldView(RatelimitMixin, View):
+            ratelimit_key = 'field:username'
             ratelimit_rate = '1/m'
 
             def post(self, request, *args, **kwargs):
@@ -443,8 +443,8 @@ class RateLimitCBVTests(TestCase):
     def test_rate(self):
         req = RequestFactory().post('/')
 
-        class TwiceView(RateLimitMixin, View):
-            ratelimit_ip = True
+        class TwiceView(RatelimitMixin, View):
+            ratelimit_key = 'ip'
             ratelimit_rate = '2/m'
 
             def post(self, request, *args, **kwargs):
@@ -461,7 +461,8 @@ class RateLimitCBVTests(TestCase):
     def test_bad_cache(self):
         """The RATELIMIT_USE_CACHE setting works if the cache exists."""
 
-        class BadCacheView(RateLimitMixin, View):
+        class BadCacheView(RatelimitMixin, View):
+            ratelimit_key = 'ip'
 
             def post(self, request, *args, **kwargs):
                 return request
@@ -481,11 +482,10 @@ class RateLimitCBVTests(TestCase):
                 return 'uip:%d' % req.user.pk
             return 'uip:%s' % req.META['REMOTE_ADDR']
 
-        class KeysView(RateLimitMixin, View):
-            ratelimit_ip = False
+        class KeysView(RatelimitMixin, View):
+            ratelimit_key = user_or_ip
             ratelimit_block = False
             ratelimit_rate = '1/m'
-            ratelimit_keys = user_or_ip
 
             def post(self, request, *args, **kwargs):
                 return request.limited
@@ -503,3 +503,16 @@ class RateLimitCBVTests(TestCase):
 
         assert not view(req), 'First authenticated request is allowed.'
         assert view(req), 'Second authenticated is limited.'
+
+    def test_method_decorator(self):
+        class TestView(View):
+            @ratelimit(key='ip', rate='1/m', block=False)
+            def post(self, request):
+                return request.limited
+
+        view = TestView.as_view()
+
+        req = RequestFactory().post('/')
+
+        assert not view(req)
+        assert view(req)

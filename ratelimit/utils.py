@@ -97,7 +97,11 @@ def _make_cache_key(group, rate, value, methods):
 def is_ratelimited(request, group=None, fn=None, key=None, rate=None,
                    method='POST', increment=False):
     if group is None:
-        group = '.'.join((fn.__module__, fn.__name__))
+        if hasattr(fn, '__self__'):
+            parts = fn.__module__, fn.__self__.__class__.__name__, fn.__name__
+        else:
+            parts = (fn.__module__, fn.__name__)
+        group = '.'.join(parts)
 
     if not getattr(settings, 'RATELIMIT_ENABLE', True):
         request.limited = False
