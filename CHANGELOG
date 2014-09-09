@@ -2,6 +2,23 @@
 Change Log
 ==========
 
+v0.5
+====
+
+- Mixin renamed to `RatelimitMixin` (lowercase `l`) for consistency.
+- Dramatic rewrite.
+  - `ip`, `field`, and `keys` arguments replaced with `key`.
+  - well-known "key" values support.
+- Custom callable rate functions.
+
+v0.4
+====
+
+- (Sort of) make @ratelimit decorators stack.
+- Add RateLimitMixin for CBVs.
+- Fixes for Python <2.7.
+- Clean up Travis and tox tests.
+
 v0.3
 ====
 
