@@ -198,4 +198,4 @@ As documented above, however, this allows powerful new uses, like burst
 limits and distinct GET/POST limits.
 
 
-.. _least-surprising: http://www.wikiwand.com/en/Principle_of_least_astonishment
+.. _least-surprising: http://en.wikipedia.org/wiki/Principle_of_least_astonishment

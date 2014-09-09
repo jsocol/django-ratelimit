@@ -85,7 +85,7 @@ a ``header:`` key::
 
     @ratelimit(key='header:x-real-ip', rate='10/s')
 
-.. _too much variation: http://www.wikiwand.com/en/Talk:X-Forwarded-For#Variations
+.. _too much variation: http://en.wikipedia.org/wiki/Talk:X-Forwarded-For#Variations
 .. _Django dropped: https://docs.djangoproject.com/en/1.3/releases/1.1/#removed-setremoteaddrfromforwardedfor-middleware
 
 
@@ -95,4 +95,55 @@ Brute force attacks
 ===================
 
 One of the key uses of ratelimiting is preventing brute force or
-dictionary attacks against login forms.
+dictionary attacks against login forms. These attacks generally take one
+of a few forms:
+
+- One IP address trying one username with many passwords.
+- Many IP addresses trying one username with many passwords.
+- One IP address trying many usernames with a few common passwords.
+- Many IP addresses trying many usernames with one or a few common
+  passwords.
+
+.. note::
+   Unfortunately, the fourth case of many IPs trying many usernames can
+   be difficult to distinguish from regular user behavior and requires
+   additional signals, such as a consistent user agent or a common
+   network prefix.
+
+Protecting against the single IP address cases is easy::
+
+    @ratelimit(key='ip')
+    def login_view(request):
+        pass
+
+Also limiting by username and password provides better protection::
+
+    @ratelimit(key='ip')
+    @ratelimit(key='post:username')
+    @ratelimit(key='post:password')
+    def login_view(request):
+        pass
+
+Key values are never stored in a raw form, even as cache keys.
+
+
+Denial of Service
+-----------------
+
+However, limiting based on field values may open a `denial of service`_
+vector against your users, preventing them from logging in.
+
+For pages like login forms, consider implenting a soft blocking
+mechanism, such as requiring a captcha, rather than a hard block with a
+``PermissionDenied`` error.
+
+
+Network Address Translation
+---------------------------
+
+Depending on your profile of your users, you may have many users behind
+NAT (e.g. users in schools or in corporate networks). It is reasonable
+to set a higher limit on a per-IP limit than on a username or password
+limit.
+
+.. _denial of service: http://en.wikipedia.org/wiki/Denial-of-service_attack?oldformat=true
