@@ -1,6 +1,6 @@
-# -*- coding: utf-8 -*-
+from __future__ import absolute_import
 
-from .decorators import ratelimit
+from ratelimit.decorators import ratelimit
 
 
 class RatelimitMixin(object):

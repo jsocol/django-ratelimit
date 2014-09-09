@@ -1,4 +1,3 @@
-import django
 from django.core.cache import cache, InvalidCacheBackendError
 from django.test import RequestFactory, TestCase
 from django.test.utils import override_settings

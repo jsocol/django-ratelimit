@@ -63,10 +63,10 @@ def _split_rate(rate):
     count = int(count)
     if not period:
         period = 's'
-    time = _PERIODS[period.lower()]
+    seconds = _PERIODS[period.lower()]
     if multi:
-        time = time * int(multi)
-    return count, time
+        seconds = seconds * int(multi)
+    return count, seconds
 
 
 def _get_window(value, period):
@@ -121,9 +121,9 @@ def is_ratelimited(request, group=None, fn=None, key=None, rate=None,
 
     limit, period = _split_rate(rate)
 
-    cache = getattr(settings, 'RATELIMIT_USE_CACHE', 'default')
+    cache_name = getattr(settings, 'RATELIMIT_USE_CACHE', 'default')
     # TODO: Django 1.7+
-    cache = get_cache(cache)
+    cache = get_cache(cache_name)
 
     if callable(key):
         value = key(request)
@@ -143,7 +143,7 @@ def is_ratelimited(request, group=None, fn=None, key=None, rate=None,
             'Could not understand ratelimit key: %s' % key)
 
     cache_key = _make_cache_key(group, rate, value, method)
-    added = cache.add(cache_key, 0)
+    cache.add(cache_key, 0)
     if increment:
         count = cache.incr(cache_key)
     else:
