@@ -207,6 +207,7 @@ class RatelimitTests(TestCase):
 
     def test_none_rate(self):
         req = rf.post('/')
+
         @ratelimit(key='ip', rate=None)
         def always(request):
             return request.limited
@@ -249,6 +250,7 @@ class RatelimitTests(TestCase):
         req.never_limit = False
 
         get_rate = lambda g, r: None if r.never_limit else '1/m'
+
         @ratelimit(key='ip', rate=get_rate)
         def view(request):
             return request.limited
