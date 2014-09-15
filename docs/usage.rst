@@ -15,14 +15,14 @@ Import::
     from ratelimit.decorators import ratelimit
 
 
-.. py:decorator:: ratelimit(group=None, key=None, rate=None, method=ALL, block=False)
+.. py:decorator:: ratelimit(group=None, key=, rate=None, method=ALL, block=False)
 
    :arg group:
        *None* A group of rate limits to count together. Defaults to the
        dotted name of the view.
 
    :arg key:
-       *None* What key to use, see :ref:`Keys <keys-chapter>`.
+       What key to use, see :ref:`Keys <keys-chapter>`.
 
    :arg rate:
         *'5/m'* The number of requests per unit time allowed. Valid
@@ -197,7 +197,7 @@ Import::
     from ratelimit.utils import is_ratelimited
 
 
-.. py:function:: is_ratelimited(request, group=None, key=None, rate=None, method=ALL)
+.. py:function:: is_ratelimited(request, group=None, key=, rate=None, method=ALL)
 
    :arg request:
        *None* The HTTPRequest object.
@@ -207,7 +207,7 @@ Import::
        dotted name of the view.
 
    :arg key:
-       *None* What key to use, see :ref:`Keys <keys-chapter>`.
+       What key to use, see :ref:`Keys <keys-chapter>`.
 
    :arg rate:
        *'5/m'* The number of requests per unit time allowed. Valid

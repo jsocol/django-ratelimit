@@ -1,4 +1,5 @@
 from django.core.cache import cache, InvalidCacheBackendError
+from django.core.exceptions import ImproperlyConfigured
 from django.test import RequestFactory, TestCase
 from django.test.utils import override_settings
 from django.views.generic import View
@@ -44,6 +45,15 @@ def mykey(group, request):
 class RatelimitTests(TestCase):
     def setUp(self):
         cache.clear()
+
+    def test_no_key(self):
+        @ratelimit()
+        def view(request):
+            return True
+
+        req = rf.get('/')
+        with self.assertRaises(ImproperlyConfigured):
+            view(req)
 
     def test_ip(self):
         @ratelimit(key='ip', rate='1/m', block=True)
