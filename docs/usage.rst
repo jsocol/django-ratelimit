@@ -85,7 +85,7 @@ Examples
         # If the same IP makes >5 reqs/min, will raise Ratelimited
         return HttpResponse()
 
-    @ratelimit(key='field:username', rate='5/m', method=['GET', 'POST'])
+    @ratelimit(key='post:username', rate='5/m', method=['GET', 'POST'])
     def login(request):
         # If the same username OR IP is used >5 times/min, this will be True.
         # The `username` value will come from GET or POST, determined by the

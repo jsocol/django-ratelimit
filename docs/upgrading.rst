@@ -21,16 +21,14 @@ Quickly:
 - Drop ``ip=False``.
 - A key must always be specified. If using without an explicit key, add
   ``key='ip'``.
-- Change ``fields='foo'`` to ``key='field:foo'`` (or ``post:foo`` or
-  ``get:foo`` to be more explicit.
+- Change ``fields='foo'`` to ``post:foo`` or ``get:foo``.
 - Change ``keys=callable`` to ``key=callable``.
 - Change ``skip_if`` to a callable ``rate=<callable>`` method (see
   :ref:`Rates <rates-chapter>`.
 - Change ``RateLimitMixin`` to ``RatelimitMixin`` (note the lowercase
   ``l``).
 - Change ``ratelimit_ip=True`` to ``ratelimit_key='ip'``.
-- Change ``ratelimit_fields='foo'`` to ``ratelimit_key='field:foo'`` (or
-  ``post:foo`` or ``get:foo``).
+- Change ``ratelimit_fields='foo'`` to ``post:foo`` or ``get:foo``.
 - Change ``ratelimit_keys=callable`` to ``ratelimit_key=callable``.
 
 
@@ -186,10 +184,11 @@ To simplify both the internals and the question of what limits apply,
 each decorator now tracks exactly one rate, but decorators can be more
 reliably stacked (c.f. some examples in the section above).
 
-The pre-0.5 example above would need to become three decorators::
+The pre-0.5 example above would need to become four decorators::
 
     @ratelimit(key='ip')
-    @ratelimit(key='field:username')
+    @ratelimit(key='post:username')
+    @ratelimit(key='get:username')
     @ratelimit(key=mykeysfunc)
     def someview(request):
         # ...

@@ -25,8 +25,6 @@ used ratelimit keys:
        <security-chapter>` notes.
 * ``'get:X'`` - Use the value of ``request.GET['X']``.
 * ``'post:X'`` - Use the value of ``request.POST['X']``.
-* ``'field:X'`` - Use ``request.POST['X']`` if the request method is
-  ``POST``, otherwise use ``request.GET['X']``.
 * ``'header:x-x'`` - Use the value of ``request.META['HTTP_X_X']``.
 
     .. note::

@@ -160,39 +160,6 @@ class RatelimitTests(TestCase):
         assert not view(req)
         assert view(req)
 
-    def test_key_field(self):
-        james = rf.post('/', {'username': 'james'})
-        john = rf.post('/', {'username': 'john'})
-
-        @ratelimit(key='field:username', rate='1/m')
-        def username(request):
-            return request.limited
-
-        assert not username(james), "james' first request is fine."
-        assert username(james), "james' second request is limited."
-        assert not username(john), "john's first request is fine."
-
-    def test_field_unicode(self):
-        post = rf.post('/', {'username': u'fran\xe7ois'})
-
-        @ratelimit(key='field:username', rate='1/m')
-        def view(request):
-            return request.limited
-
-        assert not view(post), 'First request is not limited.'
-        assert view(post), 'Second request is limited.'
-
-    def test_field_empty(self):
-        post = rf.post('/', {})
-
-        @ratelimit(key='field:username', rate='1/m')
-        def view(request):
-            return request.limited
-
-        assert not view(post), 'First request is not limited.'
-        del post.limited
-        assert view(post), 'Second request is limited.'
-
     def test_rate(self):
         req = rf.post('/')
 
@@ -496,55 +463,6 @@ class RatelimitCBVTests(TestCase):
 
         assert limit_get(post), 'Limit first POST.'
         assert limit_get(get), 'Limit first GET.'
-
-    def test_field(self):
-        james = rf.post('/', {'username': 'james'})
-        john = rf.post('/', {'username': 'john'})
-
-        class UsernameView(RatelimitMixin, View):
-            ratelimit_key = 'field:username'
-            ratelimit_rate = '1/m'
-
-            def post(self, request, *args, **kwargs):
-                return request.limited
-            get = post
-
-        username = UsernameView.as_view()
-        assert not username(james), "james' first request is fine."
-        assert username(james), "james' second request is limited."
-        assert not username(john), "john's first request is fine."
-
-    def test_field_unicode(self):
-        post = rf.post('/', {'username': u'fran\xe7ois'})
-
-        class UsernameView(RatelimitMixin, View):
-            ratelimit_key = 'field:username'
-            ratelimit_rate = '1/m'
-
-            def post(self, request, *args, **kwargs):
-                return request.limited
-            get = post
-
-        view = UsernameView.as_view()
-
-        assert not view(post), 'First request is not limited.'
-        assert view(post), 'Second request is limited.'
-
-    def test_field_empty(self):
-        post = rf.post('/', {})
-
-        class EmptyFieldView(RatelimitMixin, View):
-            ratelimit_key = 'field:username'
-            ratelimit_rate = '1/m'
-
-            def post(self, request, *args, **kwargs):
-                return request.limited
-            get = post
-
-        view = EmptyFieldView.as_view()
-
-        assert not view(post), 'First request is not limited.'
-        assert view(post), 'Second request is limited.'
 
     def test_rate(self):
         req = rf.post('/')
