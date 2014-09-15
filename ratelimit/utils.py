@@ -8,6 +8,8 @@ from django.core.cache import get_cache
 from django.core.exceptions import ImproperlyConfigured
 from django.utils.importlib import import_module
 
+from ratelimit import ALL, UNSAFE
+
 
 __all__ = ['is_ratelimited']
 
@@ -45,8 +47,8 @@ _ACCESSOR_KEYS = {
 }
 
 
-def _method_match(request, method=None):
-    if method is None:
+def _method_match(request, method=ALL):
+    if method == ALL:
         return True
     if not isinstance(method, (list, tuple)):
         method = [method]
@@ -87,7 +89,9 @@ def _make_cache_key(group, rate, value, methods):
     window = _get_window(value, period)
     parts = [group + safe_rate, value, str(window)]
     if methods is not None:
-        if isinstance(methods, (list, tuple)):
+        if methods == ALL:
+            methods = ''
+        elif isinstance(methods, (list, tuple)):
             methods = ''.join(sorted([m.upper() for m in methods]))
         parts.append(methods)
     prefix = getattr(settings, 'RATELIMIT_CACHE_PREFIX', 'rl:')
@@ -95,7 +99,7 @@ def _make_cache_key(group, rate, value, methods):
 
 
 def is_ratelimited(request, group=None, fn=None, key=None, rate=None,
-                   method='POST', increment=False):
+                   method=ALL, increment=False):
     if group is None:
         if hasattr(fn, '__self__'):
             parts = fn.__module__, fn.__self__.__class__.__name__, fn.__name__
@@ -152,3 +156,7 @@ def is_ratelimited(request, group=None, fn=None, key=None, rate=None,
     if increment:
         request.limited = old_limited or limited
     return limited
+
+
+is_ratelimited.ALL = ALL
+is_ratelimited.UNSAFE = UNSAFE

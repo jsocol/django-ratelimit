@@ -4,6 +4,7 @@ from functools import wraps
 
 from django.http import HttpRequest
 
+from ratelimit import ALL, UNSAFE
 from ratelimit.exceptions import Ratelimited
 from ratelimit.utils import is_ratelimited
 
@@ -11,7 +12,7 @@ from ratelimit.utils import is_ratelimited
 __all__ = ['ratelimit']
 
 
-def ratelimit(group=None, key=None, rate=None, method='POST', block=False):
+def ratelimit(group=None, key=None, rate=None, method=ALL, block=False):
     def decorator(fn):
         @wraps(fn)
         def _wrapped(*args, **kw):
@@ -29,3 +30,7 @@ def ratelimit(group=None, key=None, rate=None, method='POST', block=False):
             return fn(*args, **kw)
         return _wrapped
     return decorator
+
+
+ratelimit.ALL = ALL
+ratelimit.UNSAFE = UNSAFE

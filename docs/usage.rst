@@ -15,7 +15,7 @@ Import::
     from ratelimit.decorators import ratelimit
 
 
-.. py:decorator:: ratelimit(group=None, key=None, rate=None, method=['POST'], block=False)
+.. py:decorator:: ratelimit(group=None, key=None, rate=None, method=ALL, block=False)
 
    :arg group:
        *None* A group of rate limits to count together. Defaults to the
@@ -36,14 +36,42 @@ Import::
         Also accepts callables. See :ref:`Rates <rates-chapter>`.
 
    :arg method:
-        *['POST']* Which HTTP method(s) to rate-limit. May be a string, a
-        list/tuple, or ``None`` for all methods.
+        *ALL* Which HTTP method(s) to rate-limit. May be a string, a
+        list/tuple of strings, or the special values for ``ALL`` or
+        ``UNSAFE`` (which includes ``POST``, ``PUT``, ``DELETE`` and
+        ``PATCH``).
 
    :arg block:
        *False* Whether to block the request instead of annotating.
 
 
-Examples::
+HTTP Methods
+------------
+
+Each decorator can be limited to one or more HTTP methods. The
+``method=`` argument accepts a method name (e.g. ``'GET'``) or a list or
+tuple of strings (e.g. ``('GET', 'OPTIONS')``).
+
+There are two special shortcuts values, both accessible from the
+``ratelimit`` decorator, the ``RatelimitMixin`` class, or the
+``is_ratelimited`` helper, as well as on the root ``ratelimit`` module::
+
+    from ratelimit.decorators import ratelimit
+
+    @ratelimit(key='ip', method=ratelimit.ALL)
+    @ratelimit(key='ip', method=ratelimit.UNSAFE)
+    def myview(request):
+        pass
+
+``ratelimit.ALL`` applies to all HTTP methods. ``ratelimit.UNSAFE``
+is a shortcut for ``('POST', 'PUT', 'PATCH', 'DELETE')``.
+
+
+Examples
+--------
+
+
+::
 
     @ratelimit(key='ip', rate='5/m')
     def myview(request):
@@ -169,7 +197,7 @@ Import::
     from ratelimit.utils import is_ratelimited
 
 
-.. py:function:: is_ratelimited(request, group=None, key=None, rate=None, method=['POST'])
+.. py:function:: is_ratelimited(request, group=None, key=None, rate=None, method=ALL)
 
    :arg request:
        *None* The HTTPRequest object.
@@ -193,7 +221,7 @@ Import::
        Also accepts callables. See :ref:`Rates <rates-chapter>`.
 
    :arg method:
-       *['POST']* Which HTTP method(s) to rate-limit. May be a string, a
+       *ALL* Which HTTP method(s) to rate-limit. May be a string, a
        list/tuple, or ``None`` for all methods.
 
    :arg increment:

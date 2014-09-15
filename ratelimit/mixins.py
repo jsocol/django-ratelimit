@@ -1,6 +1,10 @@
 from __future__ import absolute_import
 
+from ratelimit import ALL, UNSAFE
 from ratelimit.decorators import ratelimit
+
+
+__all__ = ['RatelimitMixin']
 
 
 class RatelimitMixin(object):
@@ -30,7 +34,10 @@ class RatelimitMixin(object):
     ratelimit_key = None
     ratelimit_rate = '5/m'
     ratelimit_block = False
-    ratelimit_method = ['POST']
+    ratelimit_method = ALL
+
+    ALL = ALL
+    UNSAFE = UNSAFE
 
     def get_ratelimit_config(self):
         return dict(

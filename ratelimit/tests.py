@@ -46,7 +46,7 @@ class RatelimitTests(TestCase):
         cache.clear()
 
     def test_ip(self):
-        @ratelimit(key='ip', method=None, rate='1/m', block=True)
+        @ratelimit(key='ip', rate='1/m', block=True)
         def view(request):
             return True
 
@@ -56,11 +56,11 @@ class RatelimitTests(TestCase):
             view(req)
 
     def test_block(self):
-        @ratelimit(key='ip', method=None, rate='1/m', block=True)
+        @ratelimit(key='ip', rate='1/m', block=True)
         def blocked(request):
             return request.limited
 
-        @ratelimit(key='ip', method=None, rate='1/m', block=False)
+        @ratelimit(key='ip', rate='1/m', block=False)
         def unblocked(request):
             return request.limited
 
@@ -76,7 +76,7 @@ class RatelimitTests(TestCase):
         post = rf.post('/')
         get = rf.get('/')
 
-        @ratelimit(key='ip', rate='1/m', group='a')
+        @ratelimit(key='ip', method='POST', rate='1/m', group='a')
         def limit_post(request):
             return request.limited
 
@@ -90,6 +90,28 @@ class RatelimitTests(TestCase):
 
         assert limit_get(post), 'Limit first POST.'
         assert limit_get(get), 'Limit first GET.'
+
+    def test_unsafe_methods(self):
+        @ratelimit(key='ip', method=ratelimit.UNSAFE, rate='0/m')
+        def limit_unsafe(request):
+            return request.limited
+
+        get = rf.get('/')
+        head = rf.head('/')
+        options = rf.options('/')
+
+        delete = rf.delete('/')
+        patch = rf.patch('/')
+        post = rf.post('/')
+        put = rf.put('/')
+
+        assert not limit_unsafe(get)
+        assert not limit_unsafe(head)
+        assert not limit_unsafe(options)
+        assert limit_unsafe(delete)
+        assert limit_unsafe(patch)
+        assert limit_unsafe(post)
+        assert limit_unsafe(put)
 
     def test_key_get(self):
         req_a = rf.get('/', {'foo': 'a'})
@@ -350,12 +372,14 @@ class RatelimitTests(TestCase):
             return 'test_is_ratelimited_key'
 
         def not_increment(request):
-            return is_ratelimited(request, increment=False, method=None,
-                                  key=get_key, rate='1/m', group='a')
+            return is_ratelimited(request, increment=False,
+                                  method=is_ratelimited.ALL, key=get_key,
+                                  rate='1/m', group='a')
 
         def do_increment(request):
-            return is_ratelimited(request, increment=True, method=None,
-                                  key=get_key, rate='1/m', group='a')
+            return is_ratelimited(request, increment=True,
+                                  method=is_ratelimited.ALL, key=get_key,
+                                  rate='1/m', group='a')
 
         req = rf.get('/')
         # Does not increment. Count still 0. Does not rate limit
@@ -383,7 +407,7 @@ class RatelimitCBVTests(TestCase):
 
         class RLView(RatelimitMixin, View):
             ratelimit_key = 'ip'
-            ratelimit_method = None
+            ratelimit_method = ratelimit.ALL
             ratelimit_rate = '1/m'
             ratelimit_block = True
 
@@ -399,7 +423,7 @@ class RatelimitCBVTests(TestCase):
         class BlockedView(RatelimitMixin, View):
             ratelimit_group = 'cbv:block'
             ratelimit_key = 'ip'
-            ratelimit_method = None
+            ratelimit_method = ratelimit.ALL
             ratelimit_rate = '1/m'
             ratelimit_block = True
 
@@ -409,7 +433,7 @@ class RatelimitCBVTests(TestCase):
         class UnBlockedView(RatelimitMixin, View):
             ratelimit_group = 'cbv:block'
             ratelimit_key = 'ip'
-            ratelimit_method = None
+            ratelimit_method = ratelimit.ALL
             ratelimit_rate = '1/m'
             ratelimit_block = False
 
