@@ -111,7 +111,6 @@ class RatelimitTests(TestCase):
         options = rf.options('/')
 
         delete = rf.delete('/')
-        patch = rf.patch('/')
         post = rf.post('/')
         put = rf.put('/')
 
@@ -119,9 +118,13 @@ class RatelimitTests(TestCase):
         assert not limit_unsafe(head)
         assert not limit_unsafe(options)
         assert limit_unsafe(delete)
-        assert limit_unsafe(patch)
         assert limit_unsafe(post)
         assert limit_unsafe(put)
+
+        # TODO: When all supported versions have this, drop the `if`.
+        if hasattr(rf, 'patch'):
+            patch = rf.patch('/')
+            assert limit_unsafe(patch)
 
     def test_key_get(self):
         req_a = rf.get('/', {'foo': 'a'})
