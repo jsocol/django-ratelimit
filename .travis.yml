@@ -3,15 +3,21 @@ env:
  - DJANGO_VERSION=1.4
  - DJANGO_VERSION=1.5
  - DJANGO_VERSION=1.6
+ - DJANGO_VERSION=1.7
 python:
  - "2.6"
  - "2.7"
+ - "3.3"
+ - "3.4"
+ - "pypy"
 install:
  - pip install -q "Django>=${DJANGO_VERSION},<${DJANGO_VERSION}.99"
 script: ./run.sh test
 matrix:
-  include:
-    - python: 3.3
-      env: DJANGO_VERSION=1.5
-    - python: 3.3
-      env: DJANGO_VERSION=1.6
+  exclude:
+    - python: "2.6"
+      env: DJANGO_VERSION=1.7
+    - python: "3.3"
+      env: DJANGO_VERSION=1.4
+    - python: "3.4"
+      env: DJANGO_VERSION=1.4
