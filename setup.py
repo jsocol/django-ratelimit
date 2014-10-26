@@ -9,7 +9,7 @@ setup(
     description='Cache-based rate-limiting for Django.',
     long_description=open('README.rst').read(),
     author='James Socol',
-    author_email='james@mozilla.com',
+    author_email='me@jamessocol.com',
     url='https://github.com/jsocol/django-ratelimit',
     license='Apache Software License',
     packages=find_packages(exclude=['test_settings']),
@@ -18,7 +18,6 @@ setup(
     classifiers=[
         'Development Status :: 4 - Beta',
         'Environment :: Web Environment',
-        'Environment :: Web Environment :: Mozilla',
         'Framework :: Django',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: Apache Software License',
