@@ -5,83 +5,87 @@ Using Django Ratelimit
 ======================
 
 
+.. _usage-decorator:
+
 Use as a decorator
 ==================
-
-The ``@ratelimit`` view decorator provides several optional arguments
-with sensible defaults (in italics).
 
 Import::
 
     from ratelimit.decorators import ratelimit
 
 
-.. py:decorator:: ratelimit(ip=True, block=False, method=['POST'], field=None, rate='5/m', skip_if=None, keys=None)
+.. py:decorator:: ratelimit(group=None, key=, rate=None, method=ALL, block=False)
 
-   :arg ip:
-       *True* Whether to rate-limit based on the IP from ``REMOTE_ADDR``.
+   :arg group:
+       *None* A group of rate limits to count together. Defaults to the
+       dotted name of the view.
 
-       .. Note::
-
-          If you're using a reverse proxy, set this to False and use
-          the ``keys`` argument.
-
-   :arg block:
-       *False* Whether to block the request instead of annotating.
-
-   :arg method:
-        *['POST']* Which HTTP method(s) to rate-limit. May be a string, a
-        list/tuple, or ``None`` for all methods.
-
-   :arg field:
-        *None* Which HTTP GET/POST argument field(s) to use to
-        rate-limit. May be a string or a list of strings.
+   :arg key:
+       What key to use, see :ref:`Keys <keys-chapter>`.
 
    :arg rate:
-        *'5/m'* The number of requests per unit time allowed. Valid units are:
+        *'5/m'* The number of requests per unit time allowed. Valid
+        units are:
 
         * ``s`` - seconds
         * ``m`` - minutes
         * ``h`` - hours
         * ``d`` - days
 
-   :arg skip_if:
-        *None* If specified, pass this parameter a callable
-        (e.g. lambda function) that takes the current request. If the
-        callable returns a value that evaluates to True, the rate
-        limiting is skipped for that particular view. This is useful
-        to do things like selectively deactivating rate limiting based
-        on a value in your settings file, or based on an attirbute in
-        the current request object. (Also see the ``RATELIMIT_ENABLE``
-        setting below.)
+        Also accepts callables. See :ref:`Rates <rates-chapter>`.
 
-   :arg keys:
-        *None* Specify a function or list of functions that take the
-        request object and return string keys. This allows you to
-        define custom logic (for example, use an authenticated user ID
-        or unauthenticated IP address).
+   :arg method:
+        *ALL* Which HTTP method(s) to rate-limit. May be a string, a
+        list/tuple of strings, or the special values for ``ALL`` or
+        ``UNSAFE`` (which includes ``POST``, ``PUT``, ``DELETE`` and
+        ``PATCH``).
 
-        .. Note::
-
-           If you're using a reverse proxy, pass in a function that
-           pulls the appropriate field from ``request.META`` for the
-           actual ip address of the client.
+   :arg block:
+       *False* Whether to block the request instead of annotating.
 
 
-Examples::
+HTTP Methods
+------------
 
-    @ratelimit()
+Each decorator can be limited to one or more HTTP methods. The
+``method=`` argument accepts a method name (e.g. ``'GET'``) or a list or
+tuple of strings (e.g. ``('GET', 'OPTIONS')``).
+
+There are two special shortcuts values, both accessible from the
+``ratelimit`` decorator, the ``RatelimitMixin`` class, or the
+``is_ratelimited`` helper, as well as on the root ``ratelimit`` module::
+
+    from ratelimit.decorators import ratelimit
+
+    @ratelimit(key='ip', method=ratelimit.ALL)
+    @ratelimit(key='ip', method=ratelimit.UNSAFE)
     def myview(request):
-        # Will be true if the same IP makes more than 5 requests/minute.
+        pass
+
+``ratelimit.ALL`` applies to all HTTP methods. ``ratelimit.UNSAFE``
+is a shortcut for ``('POST', 'PUT', 'PATCH', 'DELETE')``.
+
+
+Examples
+--------
+
+
+::
+
+    @ratelimit(key='ip', rate='5/m')
+    def myview(request):
+        # Will be true if the same IP makes more than 5 POST
+        # requests/minute.
         was_limited = getattr(request, 'limited', False)
         return HttpResponse()
 
-    @ratelimit(block=True)
+    @ratelimit(key='ip', rate='5/m', block=True)
     def myview(request):
         # If the same IP makes >5 reqs/min, will raise Ratelimited
         return HttpResponse()
 
-    @ratelimit(field='username', method=['GET', 'POST'])
+    @ratelimit(key='post:username', rate='5/m', method=['GET', 'POST'])
     def login(request):
         # If the same username OR IP is used >5 times/min, this will be True.
         # The `username` value will come from GET or POST, determined by the
@@ -89,53 +93,97 @@ Examples::
         was_limited = getattr(request, 'limited', False)
         return HttpResponse()
 
-    @ratelimit(method='POST')
+    @ratelimit(key='post:username', rate='5/m')
+    @ratelimit(key='post:password', rate='5/m')
     def login(request):
-        # Only apply rate-limiting to POSTs.
-        return HttpResponseRedirect()
-
-    @ratelimit(field=['username', 'other_field'])
-    def login(request):
-        # Use multiple field values.
+        # Use multiple keys by stacking decorators.
         return HttpResponse()
 
-    @ratelimit(rate='4/h')
+    @ratelimit(key='ip', rate='4/h')
     def slow(request):
         # Allow 4 reqs/hour.
         return HttpResponse()
 
-    @ratelimit(skip_if=lambda request: getattr(request, 'some_attribute', False))
+    rate = lambda r: None if request.user.is_authenticated() else '100/h'
+    @ratelimit(key='ip', rate=rate)
     def skipif1(request):
-        # Conditionally skip rate limiting (example 1)
+        # Only rate limit anonymous requests
         return HttpResponse()
 
-    @ratelimit(skip_if=lambda request: settings.MYAPP_DEACTIVATE_RATE_LIMITING)
-    def skipif2(request):
-        # Conditionally skip rate limiting (example 2)
+    @ratelimit(key='user_or_ip', rate='10/s')
+    @ratelimit(key='user_or_ip', rate='100/m')
+    def burst_limit(request):
+        # Implement a separate burst limit.
         return HttpResponse()
 
-    @ratelimit(keys=lambda x: 'min', rate='1/m')
-    @ratelimit(keys=lambda x: 'hour', rate='10/h')
-    @ratelimit(keys=lambda x: 'day', rate='50/d')
+    @ratelimit(group='expensive', key='user_or_ip', rate='10/h')
+    def expensive_view_a(request):
+        return something_expensive()
+
+    @ratelimit(group='expensive', key='user_or_ip', rate='10/h')
+    def expensive_view_b(request):
+        # Shares a counter with expensive_view_a
+        return something_else_expensive()
+
+    @ratelimit(key='header:x-cluster-client-ip')
     def post(request):
-        # Stack them.
-        # Note: once a decorator limits the request, the ones after
-        # won't count the request for limiting.
+        # Uses the X-Cluster-Client-IP header value.
         return HttpResponse()
 
-    @ratelimit(ip=False,
-               keys=lambda req: req.META.get('HTTP_X_CLUSTER_CLIENT_IP',
-                                             req.META['REMOTE_ADDR']))
-    def post(request):
-        # This will use the HTTP_X_CLUSTER_CLIENT_IP and default to
-        # REMOTE_ADDR if that's not set. This is how you'd set up your
-        # rate limiting if you're behind a reverse proxy.
-        #
-        # It's important to set ip to False here. Otherwise it'll use
-        # limit on EITHER HTTP_X_CLUSTER_CLIENT_IP or REMOTE_ADDR and
-        # the end result is that everything will be throttled.
+    @ratelimit(key=lambda r: r.META.get('HTTP_X_CLUSTER_CLIENT_IP',
+                                        r.META['REMOTE_ADDR'])
+    def myview(request):
+        # Use `X-Cluster-Client-IP` but fall back to REMOTE_ADDR.
         return HttpResponse()
 
+
+Class-Based Views
+-----------------
+
+.. versionadded:: 0.5
+
+The ``@ratelimit`` decorator also works on class-based view methods,
+though *make sure the ``method`` argument matches the decorator*::
+
+    class MyView(View):
+        @ratelimit(key='ip', method='POST')
+        def post(self, request, *args):
+            # Something expensive...
+
+.. note::
+   Unless given an explicit ``group`` argument, different methods of a
+   class-based view will be limited separate.
+
+
+.. _usage-mixin:
+
+Class-Based View Mixin
+======================
+
+.. py:class:: ratelimit.mixins.RatelimitMixin
+
+.. versionadded:: 0.4
+
+Ratelimits can also be applied to class-based views with the
+``ratelimit.mixins.RatelimitMixin`` mixin. They are configured via class
+attributes that are the same as the :ref:`decorator <usage-decorator>`,
+prefixed with ``ratelimit_``, e.g.::
+
+    class MyView(RatelimitMixin, View):
+        ratelimit_key = 'ip'
+        ratelimit_rate = '10/m'
+        ratelimit_block = False
+        ratelimit_method = 'GET'
+
+        def get(self, request, *args, **kwargs):
+            # Calculate expensive report...
+
+.. versionchanged:: 0.5
+   The name of the mixin changed from ``RateLimitMixin`` to
+   ``RatelimitMixin`` for consistency.
+
+
+.. _usage-helper:
 
 Helper Function
 ===============
@@ -146,37 +194,41 @@ the decorator.
 
 Import::
 
-    from ratelimit.helpers import is_ratelimited
+    from ratelimit.utils import is_ratelimited
 
 
-.. py:function:: is_ratelimited(request, increment=False, ip=True, method=['POST'], field=None, rate='5/m', keys=None)
+.. py:function:: is_ratelimited(request, group=None, key=, rate=None, method=ALL)
 
    :arg request:
-       (Required) The request object.
+       *None* The HTTPRequest object.
 
-   :arg increment:
-       *False* Whether to increment the count.
+   :arg group:
+       *None* A group of rate limits to count together. Defaults to the
+       dotted name of the view.
 
-   :arg ip:
-       *True* Whether to rate-limit based on the IP.
-
-   :arg method:
-       *['POST']* Which HTTP method(s) to rate-limit. May be a string, a
-       list/tuple, or ``None`` for all methods.
-
-   :arg field:
-       *None* Which HTTP field(s) to use to rate-limit. May be a
-       string or a list.
+   :arg key:
+       What key to use, see :ref:`Keys <keys-chapter>`.
 
    :arg rate:
-       *'5/m'* The number of requests per unit time allowed.
+       *'5/m'* The number of requests per unit time allowed. Valid
+       units are:
 
-   :arg keys:
-       *None* Specify a function or list of functions that take the
-       request object and return string keys. This allows you to
-       define custom logic (for example, use an authenticated user ID
-       or unauthenticated IP address).
+       * ``s`` - seconds
+       * ``m`` - minutes
+       * ``h`` - hours
+       * ``d`` - days
 
+       Also accepts callables. See :ref:`Rates <rates-chapter>`.
+
+   :arg method:
+       *ALL* Which HTTP method(s) to rate-limit. May be a string, a
+       list/tuple, or ``None`` for all methods.
+
+   :arg increment:
+       *True* Whether to increment the count or just check.
+
+
+.. _usage-exception:
 
 Exceptions
 ==========
@@ -190,6 +242,8 @@ Exceptions
    if you don't need any special handling beyond the built-in 403
    processing, you don't have to do anything.
 
+
+.. _usage-middleware:
 
 Middleware
 ==========

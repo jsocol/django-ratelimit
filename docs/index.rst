@@ -28,11 +28,11 @@ Use as a decorator in ``views.py``::
 
     from ratelimit.decorators import ratelimit
 
-    @ratelimit()
+    @ratelimit(key='ip')
     def myview(request):
         # ...
 
-    @ratelimit(rate='100/h')
+    @ratelimit(key='ip', rate='100/h')
     def secondview(request):
         # ...
 
@@ -48,6 +48,10 @@ Contents
 
    settings
    usage
+   keys
+   rates
+   security
+   upgrading
    contributing
 
 
