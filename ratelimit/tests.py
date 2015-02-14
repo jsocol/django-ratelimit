@@ -544,3 +544,17 @@ class RatelimitCBVTests(TestCase):
 
         assert not view(req)
         assert view(req)
+
+    def test_config_inheritance(self):
+        class ParentView(RatelimitMixin, View):
+            ratelimit_key = 'ip'
+            ratelimit_rate = '1/m'
+
+        class ChildView(ParentView):
+            def get(self, request, *args, **kwargs):
+                return request.limited
+
+        child = ChildView.as_view()
+        req = rf.get('/')
+        assert not child(req), 'First request is not limited.'
+        assert child(req), 'Second request is limited.'
