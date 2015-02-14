@@ -19,3 +19,5 @@ DATABASES = {
         'NAME': 'test.db',
     },
 }
+
+MIDDLEWARE_CLASSES = []
