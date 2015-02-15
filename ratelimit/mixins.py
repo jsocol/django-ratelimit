@@ -41,9 +41,9 @@ class RatelimitMixin(object):
 
     def get_ratelimit_config(self):
         return dict(
-            (k[len("ratelimit_"):], v)
-            for k, v in vars(self.__class__).items()
-            if k.startswith("ratelimit")
+            (attr[len("ratelimit_"):], getattr(self.__class__, attr))
+            for attr in dir(self.__class__)
+            if attr.startswith("ratelimit")
         )
 
     def dispatch(self, *args, **kwargs):
