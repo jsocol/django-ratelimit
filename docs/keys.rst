@@ -57,6 +57,8 @@ Callable values
 .. versionadded:: 0.3
 .. versionchanged:: 0.5
    Added support for python path to callables.
+.. versionchanged:: 0.6
+   Callable was mistakenly only passed the ``request``, now also gets ``group`` as documented.
 
 If the value of ``key=`` is a callable, or the path to a callable, that
 callable will be called with two arguments, the :ref:`group
