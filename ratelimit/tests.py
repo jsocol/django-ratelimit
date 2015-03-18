@@ -307,12 +307,21 @@ class RatelimitTests(TestCase):
         assert not view(req)
         assert view(req)
 
+    def test_callable_key(self):
+        @ratelimit(key=mykey, rate='1/m')
+        def view(request):
+            return request.limited
+
+        req = rf.post('/')
+        assert not view(req)
+        assert view(req)
+
     def test_stacked_decorator(self):
         """Allow @ratelimit to be stacked."""
         # Put the shorter one first and make sure the second one doesn't
         # reset request.limited back to False.
-        @ratelimit(rate='1/m', block=False, key=lambda x: 'min')
-        @ratelimit(rate='10/d', block=False, key=lambda x: 'day')
+        @ratelimit(rate='1/m', block=False, key=lambda x, y: 'min')
+        @ratelimit(rate='10/d', block=False, key=lambda x, y: 'day')
         def view(request):
             return request.limited
 
@@ -350,7 +359,7 @@ class RatelimitTests(TestCase):
         assert post_get(req)
 
     def test_is_ratelimited(self):
-        def get_key(request):
+        def get_key(group, request):
             return 'test_is_ratelimited_key'
 
         def not_increment(request):
@@ -505,7 +514,7 @@ class RatelimitCBVTests(TestCase):
     def test_keys(self):
         """Allow custom functions to set cache keys."""
 
-        def user_or_ip(req):
+        def user_or_ip(group, req):
             if req.user.is_authenticated():
                 return 'uip:%d' % req.user.pk
             return 'uip:%s' % req.META['REMOTE_ADDR']
