@@ -4,9 +4,13 @@ import time
 import zlib
 
 from django.conf import settings
-from django.core.cache import get_cache
+try:
+    from django.core.cache import caches
+except:
+    from django.core.cache import get_cache as caches
 from django.core.exceptions import ImproperlyConfigured
-from django.utils.importlib import import_module
+
+from importlib import import_module
 
 from ratelimit import ALL, UNSAFE
 
@@ -127,11 +131,10 @@ def is_ratelimited(request, group=None, fn=None, key=None, rate=None,
     limit, period = _split_rate(rate)
 
     cache_name = getattr(settings, 'RATELIMIT_USE_CACHE', 'default')
-    # TODO: Django 1.7+
-    cache = get_cache(cache_name)
+    cache = hasattr(caches, '__call__') and caches(cache_name) or caches[cache_name]
 
     if callable(key):
-        value = key(group, request)
+        value = key(request)
     elif key in _SIMPLE_KEYS:
         value = _SIMPLE_KEYS[key](request)
     elif ':' in key:
