@@ -137,7 +137,7 @@ def is_ratelimited(request, group=None, fn=None, key=None, rate=None,
     cache = hasattr(caches, '__call__') and caches(cache_name) or caches[cache_name]
 
     if callable(key):
-        value = key(request)
+        value = key(group, request)
     elif key in _SIMPLE_KEYS:
         value = _SIMPLE_KEYS[key](request)
     elif ':' in key:
