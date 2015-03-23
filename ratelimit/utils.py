@@ -6,11 +6,14 @@ import zlib
 from django.conf import settings
 try:
     from django.core.cache import caches
-except:
+except ImportError:
     from django.core.cache import get_cache as caches
 from django.core.exceptions import ImproperlyConfigured
 
-from importlib import import_module
+try:
+    from importlib import import_module
+except ImportError:
+    from django.utils.importlib import import_module
 
 from ratelimit import ALL, UNSAFE
 
