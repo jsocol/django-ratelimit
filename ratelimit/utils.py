@@ -6,8 +6,10 @@ import zlib
 from django.conf import settings
 try:
     from django.core.cache import caches
+    def get_cache(name):
+        return caches[name]
 except ImportError:
-    from django.core.cache import get_cache as caches
+    from django.core.cache import get_cache
 from django.core.exceptions import ImproperlyConfigured
 
 try:
@@ -134,7 +136,7 @@ def is_ratelimited(request, group=None, fn=None, key=None, rate=None,
     limit, period = _split_rate(rate)
 
     cache_name = getattr(settings, 'RATELIMIT_USE_CACHE', 'default')
-    cache = hasattr(caches, '__call__') and caches(cache_name) or caches[cache_name]
+    cache = get_cache(cache_name)
 
     if callable(key):
         value = key(group, request)
