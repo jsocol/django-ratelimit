@@ -97,8 +97,21 @@ def _make_cache_key(group, rate, value, methods):
     return prefix + hashlib.md5(u''.join(parts).encode('utf-8')).hexdigest()
 
 
-def is_ratelimited(request, group=None, fn=None, key=None, rate=None,
-                   method=ALL, increment=False):
+def _prepare_rate(rate, group, request):
+    if callable(rate):
+        rate = rate(group, request)
+    return rate
+
+
+def get_ratelimit_cache():
+    cache_name = getattr(settings, 'RATELIMIT_USE_CACHE', 'default')
+    # TODO: Django 1.7+
+    cache = get_cache(cache_name)
+    return cache
+
+
+def get_cache_key_for_request(request, group=None, fn=None, key=None,
+                              rate=None, method=ALL):
     if not key:
         raise ImproperlyConfigured('Ratelimit key must be specified')
     if group is None:
@@ -108,27 +121,7 @@ def is_ratelimited(request, group=None, fn=None, key=None, rate=None,
             parts = (fn.__module__, fn.__name__)
         group = '.'.join(parts)
 
-    if not getattr(settings, 'RATELIMIT_ENABLE', True):
-        request.limited = False
-        return False
-
-    if not _method_match(request, method):
-        return False
-
-    old_limited = getattr(request, 'limited', False)
-
-    if callable(rate):
-        rate = rate(group, request)
-
-    if rate is None:
-        request.limited = old_limited
-        return False
-
-    limit, period = _split_rate(rate)
-
-    cache_name = getattr(settings, 'RATELIMIT_USE_CACHE', 'default')
-    # TODO: Django 1.7+
-    cache = get_cache(cache_name)
+    rate = _prepare_rate(rate, group, request)
 
     if callable(key):
         value = key(group, request)
@@ -147,10 +140,40 @@ def is_ratelimited(request, group=None, fn=None, key=None, rate=None,
         raise ImproperlyConfigured(
             'Could not understand ratelimit key: %s' % key)
 
-    cache_key = _make_cache_key(group, rate, value, method)
+    return _make_cache_key(group, rate, value, method)
+
+
+def is_ratelimited(request, group=None, fn=None, key=None, rate=None,
+                   method=ALL, increment=False):
+    if not key:
+        raise ImproperlyConfigured('Ratelimit key must be specified')
+    if not getattr(settings, 'RATELIMIT_ENABLE', True):
+        request.limited = False
+        return False
+
+    if not _method_match(request, method):
+        return False
+
+    old_limited = getattr(request, 'limited', False)
+
+    rate = _prepare_rate(rate, group, request)
+    if rate is None:
+        request.limited = old_limited
+        return False
+    limit, period = _split_rate(rate)
+
+    cache = get_ratelimit_cache()
+    cache_key = get_cache_key_for_request(
+        request, group, fn, key, rate, method,
+    )
+
     cache.add(cache_key, 0)
     if increment:
-        count = cache.incr(cache_key)
+        try:
+            count = cache.incr(cache_key)
+        except ValueError:
+            # key already expired or removed because we lack memory
+            count = 1
     else:
         count = cache.get(cache_key)
     limited = count > limit
