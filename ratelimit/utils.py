@@ -169,7 +169,11 @@ def is_ratelimited(request, group=None, fn=None, key=None, rate=None,
 
     cache.add(cache_key, 0)
     if increment:
-        count = cache.incr(cache_key)
+        try:
+            count = cache.incr(cache_key)
+        except ValueError:
+            # key already expired or removed because we lack memory
+            count = 1
     else:
         count = cache.get(cache_key)
     limited = count > limit
