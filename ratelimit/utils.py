@@ -148,11 +148,15 @@ def is_ratelimited(request, group=None, fn=None, key=None, rate=None,
             'Could not understand ratelimit key: %s' % key)
 
     cache_key = _make_cache_key(group, rate, value, method)
-    cache.add(cache_key, 0)
-    if increment:
-        count = cache.incr(cache_key)
+    initial_value = 1 if increment else 0
+    added = cache.add(cache_key, initial_value)
+    if added:
+        count = initial_value
     else:
-        count = cache.get(cache_key)
+        if increment:
+            count = cache.incr(cache_key)
+        else:
+            count = cache.get(cache_key)
     limited = count > limit
     if increment:
         request.limited = old_limited or limited
