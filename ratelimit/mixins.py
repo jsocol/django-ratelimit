@@ -40,7 +40,8 @@ class RatelimitMixin(object):
     UNSAFE = UNSAFE
 
     def get_ratelimit_config(self):
-        # Ensures that the ratelimit_key is called as a function instead of a method if it is a callable (ie self is not passed).
+        # Ensures that the ratelimit_key is called as a function instead of a
+        # method if it is a callable (ie self is not passed).
         if callable(self.ratelimit_key):
             self.ratelimit_key = self.ratelimit_key.__func__
         return dict(
