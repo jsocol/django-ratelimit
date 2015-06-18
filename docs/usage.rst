@@ -197,7 +197,7 @@ Import::
     from ratelimit.utils import is_ratelimited
 
 
-.. py:function:: is_ratelimited(request, group=None, key=, rate=None, method=ALL)
+.. py:function:: is_ratelimited(request, group=None, key=, rate=None, method=ALL, increment=False)
 
    :arg request:
        *None* The HTTPRequest object.
@@ -225,7 +225,7 @@ Import::
        list/tuple, or ``None`` for all methods.
 
    :arg increment:
-       *True* Whether to increment the count or just check.
+       *False* Whether to increment the count or just check.
 
 
 .. _usage-exception:
