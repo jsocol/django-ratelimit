@@ -1,12 +1,22 @@
 import hashlib
+try:
+    from importlib import import_module
+except ImportError:
+    from django.utils.importlib import import_module
 import re
 import time
 import zlib
 
 from django.conf import settings
-from django.core.cache import get_cache
+try:
+    from django.core.cache import caches
+
+    def get_cache(name):
+        return caches[name]
+except:
+    from django.core.cache import get_cache
+
 from django.core.exceptions import ImproperlyConfigured
-from django.utils.importlib import import_module
 
 from ratelimit import ALL, UNSAFE
 
@@ -127,7 +137,6 @@ def is_ratelimited(request, group=None, fn=None, key=None, rate=None,
     limit, period = _split_rate(rate)
 
     cache_name = getattr(settings, 'RATELIMIT_USE_CACHE', 'default')
-    # TODO: Django 1.7+
     cache = get_cache(cache_name)
 
     if callable(key):
