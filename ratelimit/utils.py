@@ -4,10 +4,9 @@ import time
 import zlib
 
 from django.conf import settings
-from django.core.cache import get_cache
 from django.core.exceptions import ImproperlyConfigured
-from django.utils.importlib import import_module
 
+from ratelimit.compat import import_module, get_cache
 from ratelimit import ALL, UNSAFE
 
 
