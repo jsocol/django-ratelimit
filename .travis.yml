@@ -1,4 +1,5 @@
 language: python
+sudo: false
 env:
  - DJANGO_VERSION=1.4
  - DJANGO_VERSION=1.6
