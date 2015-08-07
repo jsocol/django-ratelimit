@@ -2,6 +2,15 @@
 Change Log
 ==========
 
+v0.6
+====
+
+- Fix CBV inheritance.
+- Better Django 1.8 support, fixing deprecation warnings and testing.
+- Clean up some out-of-date docs.
+- Fix counting behavior around increment and new cache keys.
+- Correctly pass `group` to callable `key`s.
+
 v0.5
 ====
 
