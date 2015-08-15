@@ -10,6 +10,6 @@ variable.
    :target: https://travis-ci.org/jsocol/django-ratelimit
 
 :Code:          https://github.com/jsocol/django-ratelimit
-:License:       BSD; see LICENSE file
+:License:       Apache Software License 2.0; see LICENSE file
 :Issues:        https://github.com/jsocol/django-ratelimit/issues
 :Documentation: http://django-ratelimit.readthedocs.org/
