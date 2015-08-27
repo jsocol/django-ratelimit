@@ -6,12 +6,6 @@ from ratelimit import ALL, UNSAFE
 from ratelimit.exceptions import Ratelimited
 from ratelimit.utils import is_ratelimited
 
-try:
-    from rest_framework.exceptions import Throttled
-    Ratelimited = Throttled
-except ImportError:
-    pass
-
 __all__ = ['ratelimit']
 
 def _looks_like_HttpRequest(thing):
@@ -30,7 +24,7 @@ def ratelimit(group=None, key=None, rate=None, method=ALL, block=False):
     def decorator(fn):
         @wraps(fn)
         def _wrapped(*args, **kw):
-            # Work as a CBV method decorator.
+            # Work as a function-based view decorator or CBV method decorator.
             if _looks_like_HttpRequest(args[0]):
                 request = args[0]
             elif len(args) >= 2 and _looks_like_HttpRequest(args[1]):
