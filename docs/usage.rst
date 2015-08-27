@@ -99,6 +99,14 @@ Examples
         # Use multiple keys by stacking decorators.
         return HttpResponse()
 
+    @ratelimit(key='get:q', rate='5/m')
+    @ratelimit(key='post:q', rate='5/m')
+    def search(request):
+        # These two decorators combine to form one rate limit: the same search
+        # query can only be tried 5 times a minute, regardless of the request
+        # method (GET or POST)
+        return HttpResponse()
+
     @ratelimit(key='ip', rate='4/h')
     def slow(request):
         # Allow 4 reqs/hour.
