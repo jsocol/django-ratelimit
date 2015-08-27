@@ -153,9 +153,17 @@ def is_ratelimited(request, group=None, fn=None, key=None, rate=None,
         count = initial_value
     else:
         if increment:
-            count = cache.incr(cache_key)
+            try:
+                count = cache.incr(cache_key)
+            except ValueError: # add failed or value expired
+                cache.add(cache_key, initial_value)
+                count = initial_value
         else:
             count = cache.get(cache_key)
+            if count is None: # add failed or value expired
+                cache.add(cache_key, initial_value)
+                count = initial_value
+
     limited = count > limit
     if increment:
         request.limited = old_limited or limited
