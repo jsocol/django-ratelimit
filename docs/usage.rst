@@ -87,7 +87,7 @@ Examples
 
     @ratelimit(key='post:username', rate='5/m', method=['GET', 'POST'])
     def login(request):
-        # If the same username OR IP is used >5 times/min, this will be True.
+        # If the same username is used >5 times/min, this will be True.
         # The `username` value will come from GET or POST, determined by the
         # request method.
         was_limited = getattr(request, 'limited', False)
