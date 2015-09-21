@@ -3,6 +3,7 @@ from django.core.exceptions import ImproperlyConfigured
 from django.test import RequestFactory, TestCase
 from django.test.utils import override_settings
 from django.views.generic import View
+from django.core.cache.backends.locmem import LocMemCache
 
 from ratelimit.decorators import ratelimit
 from ratelimit.exceptions import Ratelimited
@@ -20,6 +21,18 @@ class MockUser(object):
 
     def is_authenticated(self):
         return self.authenticated
+
+
+class IncrGetFailCache(LocMemCache):
+    """
+    get() always returns None, and incr() always raises ValueError - simulates
+    key missing as per memcached backends
+    """
+    def get(self, key, default=None, version=None):
+        return None
+
+    def incr(self, key, delta=1, version=None):
+        raise ValueError("Key '%s' not found" % key)
 
 
 class RateParsingTests(TestCase):
@@ -387,6 +400,35 @@ class RatelimitTests(TestCase):
         # Count = 2, 2 > 1.
         assert do_increment(req), 'Request should be rate limited.'
         assert not_increment(req), 'Request should be rate limited.'
+
+    @override_settings(CACHES={'default': {
+        'BACKEND': 'ratelimit.tests.IncrGetFailCache'
+    }})
+    def test_key_evicted_from_cache(self):
+        """
+        Check that if we fail to add the key, but then it gets evicted before
+        we check the key again, then things still work
+        """
+        def get_key(group, request):
+            return 'test_key_evicted_from_cache'
+
+        def not_increment(request):
+            return is_ratelimited(request, increment=False,
+                                  method=is_ratelimited.ALL, key=get_key,
+                                  rate='1/m', group='a')
+
+        def do_increment(request):
+            return is_ratelimited(request, increment=True,
+                                  method=is_ratelimited.ALL,
+                                  key=get_key,
+                                  rate='1/m', group='a')
+        req = rf.get('/')
+
+        # ValueError dealt with
+        assert not do_increment(req)
+
+        # Failed get() dealt with
+        assert not not_increment(req)
 
 
 class RatelimitCBVTests(TestCase):
