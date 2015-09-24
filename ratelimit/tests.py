@@ -157,6 +157,7 @@ class RatelimitTests(TestCase):
         req.META['HTTP_X_REAL_IP'] = '1.2.3.4'
 
         @ratelimit(key='header:x-real-ip', rate='1/m')
+        @ratelimit(key='header:x-missing-header', rate='1/m')
         def view(request):
             return request.limited
 
