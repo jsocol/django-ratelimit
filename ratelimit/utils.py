@@ -35,7 +35,7 @@ _SIMPLE_KEYS = {
 
 def get_header(request, header):
     key = 'HTTP_' + header.replace('-', '_').upper()
-    return request.META[key]
+    return request.META.get(key, '')
 
 
 _ACCESSOR_KEYS = {
