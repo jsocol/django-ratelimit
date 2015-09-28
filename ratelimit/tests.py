@@ -1,3 +1,5 @@
+import time
+
 from django.core.cache import cache, InvalidCacheBackendError
 from django.core.exceptions import ImproperlyConfigured
 from django.test import RequestFactory, TestCase
@@ -388,6 +390,20 @@ class RatelimitTests(TestCase):
         # Count = 2, 2 > 1.
         assert do_increment(req), 'Request should be rate limited.'
         assert not_increment(req), 'Request should be rate limited.'
+
+    def test_longer_window_than_deault_timeout(self):
+        @ratelimit(key='ip', rate='1/m', block=True)
+        def view(request):
+            return True
+
+        req = rf.get('/')
+
+        assert view(req), 'First request works.'
+
+        time.sleep(3)
+
+        with self.assertRaises(Ratelimited):
+            view(req)
 
 
 class RatelimitCBVTests(TestCase):
