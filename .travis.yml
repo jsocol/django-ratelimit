@@ -12,6 +12,9 @@ python:
  - "3.4"
  - "pypy"
 install:
+ - if [[ $TRAVIS_PYTHON_VERSION == 2* ]]; then pip install -q python-memcached>=1.57; fi
+ - if [[ $TRAVIS_PYTHON_VERSION == 3* ]]; then pip install -q python3-memcached>=1.51; fi
+ - if [[ $TRAVIS_PYTHON_VERSION == pypy ]]; then pip install -q python-memcached>=1.57; fi
  - pip install -q "Django>=${DJANGO_VERSION},<${DJANGO_VERSION}.99" flake8
 script:
  - ./run.sh test

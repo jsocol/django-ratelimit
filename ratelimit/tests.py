@@ -280,6 +280,16 @@ class RatelimitTests(TestCase):
         with self.assertRaises(InvalidCacheBackendError):
             view(req)
 
+    @override_settings(RATELIMIT_USE_CACHE='connection-errors')
+    def test_cache_connection_error(self):
+
+        @ratelimit(key='ip', rate='1/m')
+        def view(request):
+            return request
+
+        req = rf.post('/')
+        assert view(req)
+
     def test_user_or_ip(self):
         """Allow custom functions to set cache keys."""
 
@@ -388,6 +398,33 @@ class RatelimitTests(TestCase):
         # Count = 2, 2 > 1.
         assert do_increment(req), 'Request should be rate limited.'
         assert not_increment(req), 'Request should be rate limited.'
+
+    @override_settings(RATELIMIT_USE_CACHE='connection-errors')
+    def test_is_ratelimited_cache_connection_error_without_increment(self):
+        def get_key(group, request):
+            return 'test_is_ratelimited_key'
+
+        def not_increment(request):
+            return is_ratelimited(request, increment=False,
+                                  method=is_ratelimited.ALL, key=get_key,
+                                  rate='1/m', group='a')
+
+        req = rf.get('/')
+        assert not not_increment(req)
+
+    @override_settings(RATELIMIT_USE_CACHE='connection-errors')
+    def test_is_ratelimited_cache_connection_error_with_increment(self):
+        def get_key(group, request):
+            return 'test_is_ratelimited_key'
+
+        def do_increment(request):
+            return is_ratelimited(request, increment=True,
+                                  method=is_ratelimited.ALL, key=get_key,
+                                  rate='1/m', group='a')
+
+        req = rf.get('/')
+        assert not do_increment(req)
+        assert req.limited is False
 
 
 class RatelimitCBVTests(TestCase):

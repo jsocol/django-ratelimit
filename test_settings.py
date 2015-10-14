@@ -11,6 +11,10 @@ CACHES = {
         'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
         'LOCATION': 'ratelimit-tests',
     },
+    'connection-errors': {
+        'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
+        'LOCATION': 'test-connection-errors',
+    },
 }
 
 DATABASES = {
