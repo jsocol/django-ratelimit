@@ -89,7 +89,7 @@ a ``header:`` key::
 .. _Django dropped: https://docs.djangoproject.com/en/1.3/releases/1.1/#removed-setremoteaddrfromforwardedfor-middleware
 
 
-.. security-brute-force::
+.. _security-brute-force:
 
 Brute force attacks
 ===================
@@ -124,7 +124,8 @@ Also limiting by username and password provides better protection::
     def login_view(request):
         pass
 
-Key values are never stored in a raw form, even as cache keys.
+Key values are never stored in a raw form, even as cache keys, but
+they are constructed with a fast hash function.
 
 
 Denial of Service
@@ -147,3 +148,23 @@ to set a higher limit on a per-IP limit than on a username or password
 limit.
 
 .. _denial of service: http://en.wikipedia.org/wiki/Denial-of-service_attack?oldformat=true
+
+
+.. _security-user-supplied:
+
+User-supplied Data
+==================
+
+Using data from GET (``key='get:X'``) POST (``key='post:X'``) or headers
+(``key='header:x-x'``) that are provided directly by the browser or
+other client presents a risk. Unless there is some requirement of the
+attack that requires the client *not* change the value (for example,
+attempting to brute force a password requires that the username be
+consistent) clients can trivially change these values on every request.
+
+Headers that are provided by web servers or reverse proxies should be
+independently audited to ensure they cannot be affected by clients.
+
+The ``User-Agent`` header is especially dangerous, since bad actors can
+change it on every request, and many good actors may share the same
+value.
