@@ -12,7 +12,8 @@ from ratelimit.utils import is_ratelimited
 __all__ = ['ratelimit']
 
 
-def ratelimit(group=None, key=None, rate=None, method=ALL, block=False, reset=None):
+def ratelimit(group=None, key=None, rate=None, method=ALL, block=False,
+              reset=None):
     def decorator(fn):
         @wraps(fn)
         def _wrapped(*args, **kw):
