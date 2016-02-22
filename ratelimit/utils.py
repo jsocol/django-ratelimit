@@ -98,8 +98,6 @@ def _make_cache_key(group, rate, value, methods):
 
 def is_ratelimited(request, group=None, fn=None, key=None, rate=None,
                    method=ALL, increment=False):
-    if not key:
-        raise ImproperlyConfigured('Ratelimit key must be specified')
     if group is None:
         if hasattr(fn, '__self__'):
             parts = fn.__module__, fn.__self__.__class__.__name__, fn.__name__
@@ -122,13 +120,22 @@ def is_ratelimited(request, group=None, fn=None, key=None, rate=None,
     if rate is None:
         request.limited = old_limited
         return False
+    usage = get_usage_count(request, group, fn, key, rate, method, increment)
 
+    limited = usage.get('count') > usage.get('limit')
+    if increment:
+        request.limited = old_limited or limited
+    return limited
+
+
+def get_usage_count(request, group=None, fn=None, key=None, rate=None,
+                    method=ALL, increment=False):
+    if not key:
+        raise ImproperlyConfigured('Ratelimit key must be specified')
     limit, period = _split_rate(rate)
-
     cache_name = getattr(settings, 'RATELIMIT_USE_CACHE', 'default')
     # TODO: Django 1.7+
     cache = get_cache(cache_name)
-
     if callable(key):
         value = key(group, request)
     elif key in _SIMPLE_KEYS:
@@ -145,8 +152,8 @@ def is_ratelimited(request, group=None, fn=None, key=None, rate=None,
     else:
         raise ImproperlyConfigured(
             'Could not understand ratelimit key: %s' % key)
-
     cache_key = _make_cache_key(group, rate, value, method)
+    time_left = _get_window(value, period) - int(time.time())
     initial_value = 1 if increment else 0
     added = cache.add(cache_key, initial_value)
     if added:
@@ -159,11 +166,7 @@ def is_ratelimited(request, group=None, fn=None, key=None, rate=None,
                 count = initial_value
         else:
             count = cache.get(cache_key, initial_value)
-    limited = count > limit
-    if increment:
-        request.limited = old_limited or limited
-    return limited
-
+    return {'count': count, 'limit': limit, 'time_left': time_left}
 
 is_ratelimited.ALL = ALL
 is_ratelimited.UNSAFE = UNSAFE
