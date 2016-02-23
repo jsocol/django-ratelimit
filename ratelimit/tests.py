@@ -47,7 +47,7 @@ class RatelimitTests(TestCase):
         cache.clear()
 
     def test_no_key(self):
-        @ratelimit()
+        @ratelimit(rate='1/m', block=True)
         def view(request):
             return True
 
