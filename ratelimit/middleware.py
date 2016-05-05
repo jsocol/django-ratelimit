@@ -1,6 +1,6 @@
-try:
+if django_version < (1, 8):
     from django.utils.importlib import import_module
-except ImportError:
+else:
     from importlib import import_module
 
 from django.conf import settings
