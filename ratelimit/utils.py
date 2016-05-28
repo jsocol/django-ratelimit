@@ -5,9 +5,9 @@ import zlib
 from importlib import import_module
 
 from django.conf import settings
+from django.core.cache import caches
 from django.core.exceptions import ImproperlyConfigured
 
-from ratelimit.compat import get_cache
 from ratelimit import ALL, UNSAFE
 
 
@@ -135,8 +135,8 @@ def get_usage_count(request, group=None, fn=None, key=None, rate=None,
         raise ImproperlyConfigured('Ratelimit key must be specified')
     limit, period = _split_rate(rate)
     cache_name = getattr(settings, 'RATELIMIT_USE_CACHE', 'default')
-    # TODO: Django 1.7+
-    cache = get_cache(cache_name)
+    cache = caches[cache_name]
+
     if callable(key):
         value = key(group, request)
     elif key in _SIMPLE_KEYS:
@@ -153,6 +153,7 @@ def get_usage_count(request, group=None, fn=None, key=None, rate=None,
     else:
         raise ImproperlyConfigured(
             'Could not understand ratelimit key: %s' % key)
+
     cache_key = _make_cache_key(group, rate, value, method)
     time_left = _get_window(value, period) - int(time.time())
     initial_value = 1 if increment else 0
