@@ -2,11 +2,12 @@ import hashlib
 import re
 import time
 import zlib
+from importlib import import_module
 
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 
-from ratelimit.compat import import_module, get_cache
+from ratelimit.compat import get_cache
 from ratelimit import ALL, UNSAFE
 
 
