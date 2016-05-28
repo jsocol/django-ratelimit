@@ -2,6 +2,14 @@
 Change Log
 ==========
 
+v1.0.0
+======
+
+- Allow requests through when cache backend is unavailable.
+- Add support for Django 1.9, drop support for Django <=1.7.
+- Fix several small documentation issues.
+- Fix support for missing headers.
+
 v0.6
 ====
 
