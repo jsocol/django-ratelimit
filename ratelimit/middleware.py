@@ -3,8 +3,12 @@ try:
 except ImportError:
     from importlib import import_module
 
+try:
+    from django.utils.deprecation import MiddlewareMixin
+except ImportError:
+    MiddlewareMixin = object
+
 from django.conf import settings
-from django.utils.deprecation import MiddlewareMixin
 
 from ratelimit.exceptions import Ratelimited
 
