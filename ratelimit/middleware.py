@@ -4,11 +4,12 @@ except ImportError:
     from importlib import import_module
 
 from django.conf import settings
+from django.utils.deprecation import MiddlewareMixin
 
 from ratelimit.exceptions import Ratelimited
 
 
-class RatelimitMiddleware(object):
+class RatelimitMiddleware(MiddlewareMixin):
     def process_exception(self, request, exception):
         if not isinstance(exception, Ratelimited):
             return
