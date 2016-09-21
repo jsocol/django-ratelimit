@@ -157,7 +157,7 @@ def get_usage_count(request, group=None, fn=None, key=None, rate=None,
     cache_key = _make_cache_key(group, rate, value, method)
     time_left = _get_window(value, period) - int(time.time())
     initial_value = 1 if increment else 0
-    added = cache.add(cache_key, initial_value)
+    added = cache.add(cache_key, initial_value, period)
     if added:
         count = initial_value
     else:
