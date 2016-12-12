@@ -44,6 +44,10 @@ class RatelimitMixin(object):
         # of a method if it is a callable (ie self is not passed).
         if callable(self.ratelimit_key):
             self.ratelimit_key = self.ratelimit_key.__func__
+            
+        if callable(self.ratelimit_rate):
+            self.ratelimit_rate = self.ratelimit_rate.__func__
+            
         return dict(
             group=self.ratelimit_group,
             key=self.ratelimit_key,
