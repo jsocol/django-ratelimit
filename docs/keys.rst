@@ -16,27 +16,40 @@ Common keys
 The following string values for ``key=`` provide shortcuts to commonly
 used ratelimit keys:
 
-* ``'ip'`` - Use the request IP address (i.e.
+- ``'ip'`` - Use the request IP address (i.e.
   ``request.META['REMOTE_ADDR']``)
 
     .. note::
        If you are using a reverse proxy, make sure this value is correct
        or use an appropriate ``header:`` value. See the :ref:`security
        <security-chapter>` notes.
-* ``'get:X'`` - Use the value of ``request.GET['X']``.
-* ``'post:X'`` - Use the value of ``request.POST['X']``.
-* ``'header:x-x'`` - Use the value of ``request.META['HTTP_X_X']``.
+- ``'get:X'`` - Use the value of ``request.GET.get('X', '')``.
+- ``'post:X'`` - Use the value of ``request.POST.get('X', '')``.
+- ``'header:x-x'`` - Use the value of ``request.META.get('HTTP_X_X',
+   '')``.
 
     .. note::
        The value right of the colon will be translated to all-caps and
        any dashes will be replaced with underscores, e.g.: x-client-ip
        => X_CLIENT_IP.
-* ``'user'`` - Use an appropriate value from ``request.user``. Do not use
+- ``'user'`` - Use an appropriate value from ``request.user``. Do not use
   with unauthenticated users.
-* ``'user_or_ip'`` - Use an appropriate value from ``request.user`` if
+- ``'user_or_ip'`` - Use an appropriate value from ``request.user`` if
   the user is authenticated, otherwise use
   ``request.META['REMOTE_ADDR']`` (see the note above about reverse
   proxies).
+
+.. note::
+
+    Missing headers, GET, and POST values will all be treated as empty
+    strings, and ratelimited in the same bucket.
+
+.. warning::
+
+    Using user-supplied data, like data from GET and POST or headers
+    directly from the User-Agent can allow users to trivially opt out of
+    ratelimiting. See the note in :ref:`the security chapter
+    <security-user-supplied>`.
 
 
 .. _keys-strings:
