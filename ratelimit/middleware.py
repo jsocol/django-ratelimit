@@ -1,6 +1,7 @@
-try:
+from django import VERSION as django_version
+if django_version < (1, 8):
     from django.utils.importlib import import_module
-except ImportError:
+else:
     from importlib import import_module
 
 try:
