@@ -122,7 +122,7 @@ def is_ratelimited(request, group=None, fn=None, key=None, rate=None,
         request.limited = old_limited
         return False
     usage = get_usage_count(request, group, fn, key, rate, method, increment)
-
+    request.usage_count = usage
     limited = usage.get('count') > usage.get('limit')
     if increment:
         request.limited = old_limited or limited
