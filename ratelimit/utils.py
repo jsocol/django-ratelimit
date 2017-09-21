@@ -24,8 +24,15 @@ _PERIODS = {
 def user_or_ip(request):
     if request.user.is_authenticated():
         return str(request.user.pk)
-    return request.META['REMOTE_ADDR']
+    
+    """
+        If present use HTTP_X_FORWARDED_FOR, if not use REMOTE_ADDR.
+    """
+    xff = request.META.get('HTTP_X_FORWARDED_FOR', None)
+    if xff:
+        return xff.split(',')[0].strip()
 
+    return request.META.get('REMOTE_ADDR', None)
 
 _SIMPLE_KEYS = {
     'ip': lambda r: r.META['REMOTE_ADDR'],
