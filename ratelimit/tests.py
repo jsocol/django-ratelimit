@@ -426,6 +426,17 @@ class RatelimitTests(TestCase):
         assert not do_increment(req)
         assert req.limited is False
 
+    @override_settings(RATELIMIT_USE_CACHE='instant-expiration')
+    def test_cache_timeout(self):
+        @ratelimit(key='ip', rate='1/m', block=True)
+        def view(request):
+            return True
+
+        req = rf.get('/')
+        assert view(req), 'First request works.'
+        with self.assertRaises(Ratelimited):
+            view(req)
+
 
 class RatelimitCBVTests(TestCase):
 

@@ -15,6 +15,11 @@ CACHES = {
         'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
         'LOCATION': 'test-connection-errors',
     },
+    'instant-expiration': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'test-instant-expiration',
+        'TIMEOUT': 0,
+    },
 }
 
 DATABASES = {
