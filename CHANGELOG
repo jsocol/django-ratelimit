@@ -7,6 +7,15 @@ Pending
 
 - New release notes here.
 
+v1.1.0
+======
+
+- Test against Django 1.11 and 2.0b
+- Fix #85, explicitly set cache expiration slightly longer than cache
+  window.
+- Add Django version classifiers.
+
+
 v1.0.1
 ======
 
