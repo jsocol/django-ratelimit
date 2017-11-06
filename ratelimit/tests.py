@@ -438,19 +438,27 @@ class RatelimitTests(TestCase):
             view(req)
 
     def test_is_ratelimited_increment_delta(self):
-        req = rf.post('/')
+        req = rf.get('/')
 
         def do_increment(request, delta):
             return is_ratelimited(request, method=is_ratelimited.ALL,
                                   group='a', key="ip", rate='10/m',
                                   increment=True, delta=delta)
 
+        def not_increment(request, delta):
+            return is_ratelimited(request, method=is_ratelimited.ALL,
+                                  group='a', key="ip", rate='10/m',
+                                  increment=False, delta=delta)
+
+        assert not not_increment(req, 4), 'First request is not limited.'
         assert not do_increment(req, 4), 'First request is not limited.'
-        del req.limited
+
+        assert not not_increment(req, 5), 'Second request is not limited.'
         assert not do_increment(req, 5), 'Second request is not limited.'
-        del req.limited
+
         # Count 11, 11 > 10
-        assert do_increment(req, 2), 'Third request is limited.'
+        assert not_increment(req, 2), 'Third request is limited.'
+        assert do_increment(req, 5), 'Second request is not limited.'
 
 
 class RatelimitCBVTests(TestCase):
