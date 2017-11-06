@@ -458,7 +458,7 @@ class RatelimitTests(TestCase):
 
         # Count 11, 11 > 10
         assert not_increment(req, 2), 'Third request is limited.'
-        assert do_increment(req, 5), 'Second request is not limited.'
+        assert do_increment(req, 2), 'Third request is limited.'
 
 
 class RatelimitCBVTests(TestCase):
