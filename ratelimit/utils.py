@@ -101,7 +101,7 @@ def _make_cache_key(group, rate, value, methods):
 
 
 def is_ratelimited(request, group=None, fn=None, key=None, rate=None,
-                   method=ALL, increment=False, delta=1):
+                   method=ALL, increment=False, delta=0):
     if group is None:
         if hasattr(fn, '__self__'):
             parts = fn.__module__, fn.__self__.__class__.__name__, fn.__name__
@@ -127,14 +127,18 @@ def is_ratelimited(request, group=None, fn=None, key=None, rate=None,
     usage = get_usage_count(
         request, group, fn, key, rate, method, increment, delta
     )
-    limited = usage.get('count') > usage.get('limit')
+
     if increment:
+        limited = usage.get('count') > usage.get('limit')
         request.limited = old_limited or limited
+    else:
+        limited = usage.get('count') + delta > usage.get('limit')
+
     return limited
 
 
 def get_usage_count(request, group=None, fn=None, key=None, rate=None,
-                    method=ALL, increment=False, delta=1):
+                    method=ALL, increment=False, delta=0):
     if not key:
         raise ImproperlyConfigured('Ratelimit key must be specified')
     limit, period = _split_rate(rate)
@@ -160,18 +164,18 @@ def get_usage_count(request, group=None, fn=None, key=None, rate=None,
 
     cache_key = _make_cache_key(group, rate, value, method)
     time_left = _get_window(value, period) - int(time.time())
-    initial_value = delta if increment else 0
-    added = cache.add(cache_key, initial_value, period + EXPIRATION_FUDGE)
+    delta = delta or 1 if increment else 0
+    added = cache.add(cache_key, delta, period + EXPIRATION_FUDGE)
     if added:
-        count = initial_value
+        count = delta
     else:
         if increment:
             try:
                 count = cache.incr(cache_key, delta)
             except ValueError:
-                count = initial_value
+                count = delta
         else:
-            count = cache.get(cache_key, initial_value)
+            count = cache.get(cache_key, delta)
     return {'count': count, 'limit': limit, 'time_left': time_left}
 
 
