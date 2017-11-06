@@ -205,7 +205,7 @@ Import::
     from ratelimit.utils import is_ratelimited
 
 
-.. py:function:: is_ratelimited(request, group=None, key=, rate=None, method=ALL, increment=False)
+.. py:function:: is_ratelimited(request, group=None, key=, rate=None, method=ALL, increment=False, delta=0)
 
    :arg request:
        *None* The HTTPRequest object.
@@ -235,6 +235,8 @@ Import::
    :arg increment:
        *False* Whether to increment the count or just check.
 
+   :arg delta:
+       *0* Add delta to value in the cache if *increment* is *True*.
 
 .. _usage-exception:
 
