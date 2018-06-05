@@ -126,7 +126,15 @@ def is_ratelimited(request, group=None, fn=None, key=None, rate=None,
         return False
     usage = get_usage_count(request, group, fn, key, rate, method, increment)
 
-    limited = usage.get('count') > usage.get('limit')
+    fail_open = getattr(settings, 'RATELIMIT_FAIL_OPEN', False)
+
+    usage_count = usage.get('count')
+    if usage_count is None:
+        limited = not fail_open
+    else:
+        usage_limit = usage.get('limit')
+        limited = usage_count > usage_limit
+
     if increment:
         request.limited = old_limited or limited
     return limited
