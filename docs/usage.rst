@@ -112,7 +112,7 @@ Examples
         # Allow 4 reqs/hour.
         return HttpResponse()
 
-    rate = lambda r: None if request.user.is_authenticated() else '100/h'
+    rate = lambda r: None if request.user.is_authenticated else '100/h'
     @ratelimit(key='ip', rate=rate)
     def skipif1(request):
         # Only rate limit anonymous requests

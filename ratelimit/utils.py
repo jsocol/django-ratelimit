@@ -25,7 +25,7 @@ EXPIRATION_FUDGE = 5
 
 
 def user_or_ip(request):
-    if request.user.is_authenticated():
+    if is_authenticated(request.user):
         return str(request.user.pk)
     return request.META['REMOTE_ADDR']
 
@@ -176,3 +176,11 @@ def get_usage_count(request, group=None, fn=None, key=None, rate=None,
 
 is_ratelimited.ALL = ALL
 is_ratelimited.UNSAFE = UNSAFE
+
+
+def is_authenticated(user):
+    # is_authenticated was a method in Django < 1.10
+    if callable(user.is_authenticated):
+        return user.is_authenticated()
+    else:
+        return user.is_authenticated

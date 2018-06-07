@@ -45,14 +45,14 @@ Callables receive two values, the :ref:`group <usage-chapter>` and the
 of integers ``(count, seconds)``. For example::
 
     def my_rate(group, request):
-        if request.user.is_authenticated():
+        if request.user.is_authenticated:
             return '1000/m'
         return '100/m'
 
 Or equivalently::
 
     def my_rate_tuples(group, request):
-        if request.user.is_authenticated():
+        if request.user.is_authenticated:
             return (1000, 60)
         return (100, 60)
 
