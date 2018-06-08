@@ -426,6 +426,20 @@ class RatelimitTests(TestCase):
         assert not do_increment(req)
         assert req.limited is False
 
+    @override_settings(RATELIMIT_USE_CACHE='connection-errors-redis')
+    def test_is_ratelimited_cache_connection_error_with_increment_redis(self):
+        def get_key(group, request):
+            return 'test_is_ratelimited_key'
+
+        def do_increment(request):
+            return is_ratelimited(request, increment=True,
+                                  method=is_ratelimited.ALL, key=get_key,
+                                  rate='1/m', group='a')
+
+        req = rf.get('/')
+        assert do_increment(req)
+        assert req.limited is True
+
     @override_settings(RATELIMIT_USE_CACHE='instant-expiration')
     def test_cache_timeout(self):
         @ratelimit(key='ip', rate='1/m', block=True)

@@ -15,6 +15,13 @@ CACHES = {
         'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
         'LOCATION': 'test-connection-errors',
     },
+    'connection-errors-redis': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': 'test-connection-errors',
+        'OPTIONS': {
+            'IGNORE_EXCEPTIONS': True,
+        }
+    },
     'instant-expiration': {
         'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
         'LOCATION': 'test-instant-expiration',
