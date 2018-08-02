@@ -25,8 +25,8 @@ used ratelimit keys:
        <security-chapter>` notes.
 - ``'get:X'`` - Use the value of ``request.GET.get('X', '')``.
 - ``'post:X'`` - Use the value of ``request.POST.get('X', '')``.
-- ``'header:x-x'`` - Use the value of ``request.META.get('HTTP_X_X',
-   '')``.
+- ``'header:x-x'`` - Use the value of
+  ``request.META.get('HTTP_X_X', '')``.
 
     .. note::
        The value right of the colon will be translated to all-caps and
