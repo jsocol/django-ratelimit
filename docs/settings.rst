@@ -43,6 +43,6 @@ conjunction with ``RatelimitMiddleware``, e.g. ``'myapp.views.ratelimited'``.
 Has no default - you must set this to use ``RatelimitMiddleware``.
 
 ``RATELIMIT_FAIL_OPEN``
-------------------
+-----------------------
 
 Whether to allow requests when the cache backend fails. Defaults to ``False``.

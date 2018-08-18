@@ -8,7 +8,9 @@ Contributing
 Set Up
 ======
 
-Create a virtualenv_ and install Django with pip_::
+Create a virtualenv_ and install Django with pip_:
+
+.. code-block:: sh
 
     $ pip install Django
 
@@ -16,19 +18,25 @@ Create a virtualenv_ and install Django with pip_::
 Running the Tests
 =================
 
-Running the tests is as easy as::
+Running the tests is as easy as:
+
+.. code-block:: sh
 
     $ ./run.sh test
 
 You may also run the test on multiple versions of Django using tox.
 
-- First install tox::
+- First install tox:
 
-    $ pip install tox
+  .. code-block:: sh
 
-- Then run the tests with tox::
+      $ pip install tox
 
-    $ tox
+- Then run the tests with tox:
+
+  .. code-block:: sh
+
+      $ tox
 
 
 Code Standards
