@@ -250,6 +250,18 @@ Exceptions
    if you don't need any special handling beyond the built-in 403
    processing, you don't have to do anything.
 
+   If you are setting |handler403|_ in your root URLconf, you can catch this
+   exception in your custom view to return a different response, for example:
+
+   .. code-block:: python
+
+       def handler403(request, exception=None):
+           if isinstance(exception, Ratelimited):
+               return HttpResponse('Sorry you are blocked', status=429)
+           return HttpResponseForbidden('Forbidden')
+
+.. |handler403| replace:: ``handler403``
+.. _handler403: https://docs.djangoproject.com/en/2.1/topics/http/urls/#error-handling
 
 .. _usage-middleware:
 
