@@ -57,7 +57,7 @@ def _method_match(request, method=ALL):
     return request.method in [m.upper() for m in method]
 
 
-rate_re = re.compile('([\d]+)/([\d]*)([smhd])?')
+rate_re = re.compile(r'([\d]+)/([\d]*)([smhd])?')
 
 
 def _split_rate(rate):
