@@ -13,6 +13,7 @@ setup(
     url='https://github.com/jsocol/django-ratelimit',
     license='Apache Software License',
     packages=find_packages(exclude=['test_settings']),
+    python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*',
     include_package_data=True,
     package_data={'': ['README.rst']},
     classifiers=[
@@ -31,7 +32,6 @@ setup(
         'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
