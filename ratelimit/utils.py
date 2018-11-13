@@ -187,8 +187,12 @@ is_ratelimited.UNSAFE = UNSAFE
 
 
 def is_authenticated(user):
-    # is_authenticated was a method in Django < 1.10
-    if callable(user.is_authenticated):
+    if getattr(user.is_authenticated, 'do_not_call_in_templates', False):
+        # is_authenticated is a CallableBool in Django 1.10, 1.11
+        # but calling raises RemovedInDjango20Warning
+        return user.is_authenticated
+    elif callable(user.is_authenticated):
+        # is_authenticated was a method in Django < 1.10
         return user.is_authenticated()
     else:
         return user.is_authenticated
