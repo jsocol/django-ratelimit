@@ -5,7 +5,9 @@ env:
  - DJANGO_VERSION=1.9
  - DJANGO_VERSION=1.10
  - DJANGO_VERSION=1.11
- - DJANGO_VERSION=2.0b1
+ - DJANGO_VERSION=2.0
+ - DJANGO_VERSION=2.1
+ - DJANGO_VERSION=master
 python:
  - "2.7"
  - "3.4"
@@ -16,13 +18,40 @@ install:
  - if [[ $TRAVIS_PYTHON_VERSION == 2* ]]; then pip install -q python-memcached>=1.57; fi
  - if [[ $TRAVIS_PYTHON_VERSION == 3* ]]; then pip install -q python3-memcached>=1.51; fi
  - if [[ $TRAVIS_PYTHON_VERSION == pypy ]]; then pip install -q python-memcached>=1.57; fi
- - pip install -q "Django>=${DJANGO_VERSION},<${DJANGO_VERSION}.99" flake8 django-redis==4.8.0
+ - if [[ $DJANGO_VERSION != master ]]; then pip install -q "Django>=${DJANGO_VERSION},<${DJANGO_VERSION}.99"; fi
+ - if [[ $DJANGO_VERSION == master ]]; then pip install https://github.com/django/django/archive/master.tar.gz; fi
+ - if [[ $DJANGO_VERSION == 1* ]]; then pip install django-redis==4.8.0; fi
+ - if [[ $DJANGO_VERSION != 1* ]]; then pip install django-redis==4.9.0; fi
+ - pip install flake8
 script:
  - ./run.sh test
  - ./run.sh flake8
 matrix:
   exclude:
     - python: "2.7"
-      env: DJANGO_VERSION=2.0b1
+      env: DJANGO_VERSION=2.0
+    - python: "2.7"
+      env: DJANGO_VERSION=2.1
+    - python: "2.7"
+      env: DJANGO_VERSION=master
+    - python: "3.4"
+      env: DJANGO_VERSION=2.1
+    - python: "3.4"
+      env: DJANGO_VERSION=master
+    - python: "3.6"
+      env: DJANGO_VERSION=1.8
+    - python: "3.6"
+      env: DJANGO_VERSION=1.9
+    - python: "3.6"
+      env: DJANGO_VERSION=1.10
     - python: "pypy"
-      env: DJANGO_VERSION=2.0b1
+      env: DJANGO_VERSION=2.0
+    - python: "pypy"
+      env: DJANGO_VERSION=2.1
+    - python: "pypy"
+      env: DJANGO_VERSION=master
+  allow_failures:
+    - python: "3.5"
+      env: DJANGO_VERSION=master
+    - python: "3.6"
+      env: DJANGO_VERSION=master
