@@ -86,7 +86,7 @@ a ``header:`` key::
     @ratelimit(key='header:x-real-ip', rate='10/s')
 
 .. _too much variation: http://en.wikipedia.org/wiki/Talk:X-Forwarded-For#Variations
-.. _Django dropped: https://docs.djangoproject.com/en/1.3/releases/1.1/#removed-setremoteaddrfromforwardedfor-middleware
+.. _Django dropped: https://docs.djangoproject.com/en/2.1/releases/1.1/#removed-setremoteaddrfromforwardedfor-middleware
 
 
 .. _security-brute-force:
