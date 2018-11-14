@@ -16,10 +16,7 @@ rf = RequestFactory()
 class MockUser(object):
     def __init__(self, authenticated=False):
         self.pk = 1
-        self.authenticated = authenticated
-
-    def is_authenticated(self):
-        return self.authenticated
+        self.is_authenticated = authenticated
 
 
 class RateParsingTests(TestCase):
@@ -212,7 +209,7 @@ class RatelimitTests(TestCase):
         unauth.user = MockUser(authenticated=False)
 
         def get_rate(group, request):
-            if request.user.is_authenticated():
+            if request.user.is_authenticated:
                 return (2, 60)
             return (1, 60)
 
@@ -252,7 +249,7 @@ class RatelimitTests(TestCase):
         unauth.user = MockUser(authenticated=False)
 
         def get_rate(group, request):
-            if request.user.is_authenticated():
+            if request.user.is_authenticated:
                 return '1/m'
             return '0/m'
 
@@ -578,7 +575,7 @@ class RatelimitCBVTests(TestCase):
         """Allow custom functions to set cache keys."""
 
         def user_or_ip(group, req):
-            if req.user.is_authenticated():
+            if req.user.is_authenticated:
                 return 'uip:%d' % req.user.pk
             return 'uip:%s' % req.META['REMOTE_ADDR']
 
