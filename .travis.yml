@@ -17,7 +17,7 @@ install:
  - if [[ $TRAVIS_PYTHON_VERSION == pypy ]]; then pip install -q python-memcached>=1.57; fi
  - if [[ $DJANGO_VERSION != master ]]; then pip install -q "Django>=${DJANGO_VERSION},<${DJANGO_VERSION}.99"; fi
  - if [[ $DJANGO_VERSION == master ]]; then pip install https://github.com/django/django/archive/master.tar.gz; fi
- - pip install django-redis==4.9.0 flake8
+ - pip install "redis<3" django-redis==4.9.0 flake8
 script:
  - ./run.sh test
  - ./run.sh flake8
