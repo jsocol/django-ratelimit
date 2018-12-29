@@ -94,7 +94,7 @@ Examples
         return HttpResponse()
 
     @ratelimit(key='post:username', rate='5/m')
-    @ratelimit(key='post:password', rate='5/m')
+    @ratelimit(key='post:tenant', rate='5/m')
     def login(request):
         # Use multiple keys by stacking decorators.
         return HttpResponse()
