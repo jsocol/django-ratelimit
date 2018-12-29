@@ -116,16 +116,16 @@ Protecting against the single IP address cases is easy::
     def login_view(request):
         pass
 
-Also limiting by username and password provides better protection::
+Also limiting by username provides better protection::
 
     @ratelimit(key='ip')
     @ratelimit(key='post:username')
-    @ratelimit(key='post:password')
     def login_view(request):
         pass
 
-Key values are never stored in a raw form, even as cache keys, but
-they are constructed with a fast hash function.
+**Using passwords as key values is not recommended.** Key values are
+never stored in a raw form, even as cache keys, but they are constructed
+with a fast hash function.
 
 
 Denial of Service
