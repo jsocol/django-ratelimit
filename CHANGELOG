@@ -6,6 +6,12 @@ Pending
 =======
 
 - New release notes here.
+
+v2.0.0
+======
+
+- A number of docs fixes
+- Fail open when cache is unavailable
 - Drop support for Django 1.8, 1.9, and 1.10
 - Fix Django 2.0 compatibility and update documentation
 - Test Django 2.1 support
