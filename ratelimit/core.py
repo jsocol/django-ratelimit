@@ -111,6 +111,10 @@ def is_ratelimited(request, group=None, fn=None, key=None, rate=None,
 
 def get_usage(request, group=None, fn=None, key=None, rate=None, method=ALL,
               increment=False):
+    if group is None and fn is None:
+        raise ImproperlyConfigured('get_usage must be called with either '
+                                   '`group` or `fn` arguments')
+
     if not getattr(settings, 'RATELIMIT_ENABLE', True):
         return None
 

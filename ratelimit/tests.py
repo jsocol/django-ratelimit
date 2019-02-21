@@ -347,6 +347,10 @@ class FunctionsTests(TestCase):
         self.assertLessEqual(usage['time_left'], 60)
         self.assertTrue(usage['should_limit'])
 
+    def test_get_usage_called_without_group_or_fn(self):
+        with self.assertRaises(ImproperlyConfigured):
+            get_usage(rf.get('/'), key='ip')
+
 
 class RatelimitCBVTests(TestCase):
     def setUp(self):
