@@ -104,7 +104,6 @@ def _make_cache_key(group, rate, value, methods):
 def is_ratelimited(request, group=None, fn=None, key=None, rate=None,
                    method=ALL, increment=False):
     if not getattr(settings, 'RATELIMIT_ENABLE', True):
-        request.limited = False
         return False
 
     if not _method_match(request, method):
@@ -130,13 +129,10 @@ def is_ratelimited(request, group=None, fn=None, key=None, rate=None,
         parts.append(fn.__qualname__)
         group = '.'.join(parts)
 
-    old_limited = getattr(request, 'limited', False)
-
     if callable(rate):
         rate = rate(group, request)
 
     if rate is None:
-        request.limited = old_limited
         return False
     usage = get_usage_count(request, group, fn, key, rate, method, increment)
 
@@ -149,8 +145,6 @@ def is_ratelimited(request, group=None, fn=None, key=None, rate=None,
         usage_limit = usage.get('limit')
         limited = usage_count > usage_limit
 
-    if increment:
-        request.limited = old_limited or limited
     return limited
 
 
