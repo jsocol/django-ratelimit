@@ -347,7 +347,7 @@ There is optional middleware to use a custom view to handle ``Ratelimited``
 exceptions.
 
 To use it, add ``ratelimit.middleware.RatelimitMiddleware`` to your
-``MIDDLEWARE_CLASSES`` (toward the bottom of the list) and set
+``MIDDLEWARE`` (toward the bottom of the list) and set
 ``RATELIMIT_VIEW`` to the full path of a view you want to use.
 
 The view specified in ``RATELIMIT_VIEW`` will get two arguments, the
