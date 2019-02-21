@@ -201,7 +201,7 @@ Class-Based View Mixin
 ======================
 
 .. versionadded:: 0.4
-.. versionremoved:: 3.0
+.. deprecated:: 3.0
 
 The ``RatelimitMixin`` was never as powerful or flexible as the
 ``@ratelimit`` decorator, and given that it is possible to use the
@@ -211,21 +211,23 @@ deprecated.
 
 .. _usage-helper:
 
-Helper Function
-===============
+Core Methods
+============
 
-.. versionchanged:: 3.0
+.. versionadded:: 3.0
 
-In some cases the decorator is not flexible enough. If this is an
-issue you use the ``is_ratelimited`` helper function. It's similar to
-the decorator.
+In some cases the decorator is not flexible enough to, e.g.,
+conditionally apply rate limits. In these cases, you can access the core
+functionality in ``ratelimit.core``. The two major methods are
+``get_usage`` and ``is_ratelimited``.
+
 
 .. code-block:: python
 
-    from ratelimit.utils import is_ratelimited
+    from ratelimit.core import get_usage, is_ratelimited
 
-
-.. py:function:: is_ratelimited(request, group=None, key=, rate=None, method=ALL, increment=False)
+.. py:function:: get_usage(request, group=None, fn=None, key=None, \
+                           rate=None, method=ALL, increment=False)
 
    :arg request:
        *None* The HTTPRequest object.
@@ -233,6 +235,10 @@ the decorator.
    :arg group:
        *None* A group of rate limits to count together. Defaults to the
        dotted name of the view.
+
+   :arg fn:
+       *None* A view function which can be used to calculate the group
+       as if it was decorated by :ref:`@ratelimit <usage-decorator>`.
 
    :arg key:
        What key to use, see :ref:`Keys <keys-chapter>`.
@@ -254,6 +260,55 @@ the decorator.
 
    :arg increment:
        *False* Whether to increment the count or just check.
+
+   :returns dict or None:
+       Either returns None, indicating that ratelimiting was not active
+       for this request (for some reason) or returns a dict including
+       the current count, limit, time left in the window, and whether
+       this request should be limited.
+
+.. py:function:: is_ratelimited(request, group=None, fn=None, \
+                                key=None, rate=None, method=ALL, \
+                                increment=False)
+
+   :arg request:
+       *None* The HTTPRequest object.
+
+   :arg group:
+       *None* A group of rate limits to count together. Defaults to the
+       dotted name of the view.
+
+   :arg fn:
+       *None* A view function which can be used to calculate the group
+       as if it was decorated by :ref:`@ratelimit <usage-decorator>`.
+
+   :arg key:
+       What key to use, see :ref:`Keys <keys-chapter>`.
+
+   :arg rate:
+       *'5/m'* The number of requests per unit time allowed. Valid
+       units are:
+
+       * ``s`` - seconds
+       * ``m`` - minutes
+       * ``h`` - hours
+       * ``d`` - days
+
+       Also accepts callables. See :ref:`Rates <rates-chapter>`.
+
+   :arg method:
+       *ALL* Which HTTP method(s) to rate-limit. May be a string, a
+       list/tuple, or ``None`` for all methods.
+
+   :arg increment:
+       *False* Whether to increment the count or just check.
+
+   :returns bool:
+       Whether this request should be limited or not.
+
+
+``is_ratelimited`` is a thin wrapper around ``get_usage`` that is
+maintained for compatibility. It provides strictly less information.
 
 
 .. _usage-exception:
