@@ -1,23 +1,18 @@
-try:
-    from django.utils.importlib import import_module
-except ImportError:
-    from importlib import import_module
-
-try:
-    from django.utils.deprecation import MiddlewareMixin
-except ImportError:
-    MiddlewareMixin = object
-
 from django.conf import settings
+from django.utils.module_loading import import_string
 
 from ratelimit.exceptions import Ratelimited
 
 
-class RatelimitMiddleware(MiddlewareMixin):
+class RatelimitMiddleware:
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        return self.get_response(request)
+
     def process_exception(self, request, exception):
         if not isinstance(exception, Ratelimited):
-            return
-        module_name, _, view_name = settings.RATELIMIT_VIEW.rpartition('.')
-        module = import_module(module_name)
-        view = getattr(module, view_name)
+            return None
+        view = import_string(settings.RATELIMIT_VIEW)
         return view(request, exception)
