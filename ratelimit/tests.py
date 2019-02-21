@@ -2,11 +2,11 @@ from django.core.cache import cache, InvalidCacheBackendError
 from django.core.exceptions import ImproperlyConfigured
 from django.test import RequestFactory, TestCase
 from django.test.utils import override_settings
+from django.utils.decorators import method_decorator
 from django.views.generic import View
 
 from ratelimit.decorators import ratelimit
 from ratelimit.exceptions import Ratelimited
-from ratelimit.mixins import RatelimitMixin
 from ratelimit.utils import is_ratelimited, _split_rate
 
 
@@ -450,166 +450,73 @@ class RatelimitTests(TestCase):
 
 
 class RatelimitCBVTests(TestCase):
-
     def setUp(self):
         cache.clear()
 
-    def test_limit_ip(self):
-
-        class RLView(RatelimitMixin, View):
-            ratelimit_key = 'ip'
-            ratelimit_method = ratelimit.ALL
-            ratelimit_rate = '1/m'
-            ratelimit_block = True
-
-        rlview = RLView.as_view()
-
-        req = rf.get('/')
-        assert rlview(req), 'First request works.'
-        with self.assertRaises(Ratelimited):
-            rlview(req)
-
-    def test_block(self):
-
-        class BlockedView(RatelimitMixin, View):
-            ratelimit_group = 'cbv:block'
-            ratelimit_key = 'ip'
-            ratelimit_method = ratelimit.ALL
-            ratelimit_rate = '1/m'
-            ratelimit_block = True
-
-            def get(self, request, *args, **kwargs):
-                return request.limited
-
-        class UnBlockedView(RatelimitMixin, View):
-            ratelimit_group = 'cbv:block'
-            ratelimit_key = 'ip'
-            ratelimit_method = ratelimit.ALL
-            ratelimit_rate = '1/m'
-            ratelimit_block = False
-
-            def get(self, request, *args, **kwargs):
-                return request.limited
-
-        blocked = BlockedView.as_view()
-        unblocked = UnBlockedView.as_view()
-
-        req = rf.get('/')
-
-        assert not blocked(req), 'First request works.'
-        with self.assertRaises(Ratelimited):
-            blocked(req)
-
-        assert unblocked(req), 'Request is limited but not blocked.'
-
-    def test_method(self):
-        post = rf.post('/')
-        get = rf.get('/')
-
-        class LimitPostView(RatelimitMixin, View):
-            ratelimit_group = 'cbv:method'
-            ratelimit_key = 'ip'
-            ratelimit_method = ['POST']
-            ratelimit_rate = '1/m'
-
-            def post(self, request, *args, **kwargs):
-                return request.limited
-            get = post
-
-        class LimitGetView(RatelimitMixin, View):
-            ratelimit_group = 'cbv:method'
-            ratelimit_key = 'ip'
-            ratelimit_method = ['POST', 'GET']
-            ratelimit_rate = '1/m'
-
-            def post(self, request, *args, **kwargs):
-                return request.limited
-            get = post
-
-        limit_post = LimitPostView.as_view()
-        limit_get = LimitGetView.as_view()
-
-        assert not limit_post(post), 'Do not limit first POST.'
-        assert limit_post(post), 'Limit second POST.'
-        assert not limit_post(get), 'Do not limit GET.'
-
-        assert limit_get(post), 'Limit first POST.'
-        assert limit_get(get), 'Limit first GET.'
-
-    def test_rate(self):
-        req = rf.post('/')
-
-        class TwiceView(RatelimitMixin, View):
-            ratelimit_key = 'ip'
-            ratelimit_rate = '2/m'
-
-            def post(self, request, *args, **kwargs):
-                return request.limited
-            get = post
-
-        twice = TwiceView.as_view()
-
-        assert not twice(req), 'First request is not limited.'
-        assert not twice(req), 'Second request is not limited.'
-        assert twice(req), 'Third request is limited.'
-
-    @override_settings(RATELIMIT_USE_CACHE='fake-cache')
-    def test_bad_cache(self):
-        """The RATELIMIT_USE_CACHE setting works if the cache exists."""
-        self.skipTest('I do not know why this fails when the other works.')
-
-        class BadCacheView(RatelimitMixin, View):
-            ratelimit_key = 'ip'
-
-            def post(self, request, *args, **kwargs):
-                return request
-            get = post
-        view = BadCacheView.as_view()
-
-        req = rf.post('/')
-
-        with self.assertRaises(InvalidCacheBackendError):
-            view(req)
-
-    def test_keys(self):
-        """Allow custom functions to set cache keys."""
-
-        def user_or_ip(group, req):
-            if req.user.is_authenticated:
-                return 'uip:%d' % req.user.pk
-            return 'uip:%s' % req.META['REMOTE_ADDR']
-
-        class KeysView(RatelimitMixin, View):
-            ratelimit_key = user_or_ip
-            ratelimit_block = False
-            ratelimit_rate = '1/m'
-
-            def post(self, request, *args, **kwargs):
-                return request.limited
-            get = post
-        view = KeysView.as_view()
-
-        req = rf.post('/')
-        req.user = MockUser(authenticated=False)
-
-        assert not view(req), 'First unauthenticated request is allowed.'
-        assert view(req), 'Second unauthenticated request is limited.'
-
-        del req.limited
-        req.user = MockUser(authenticated=True)
-
-        assert not view(req), 'First authenticated request is allowed.'
-        assert view(req), 'Second authenticated is limited.'
-
     def test_method_decorator(self):
         class TestView(View):
-            @ratelimit(key='ip', rate='1/m', block=False)
+            @method_decorator(ratelimit(key='ip', rate='1/m', block=False))
             def post(self, request):
                 return request.limited
 
         view = TestView.as_view()
 
-        req = rf.post('/')
+        assert not view(rf.post('/'))
+        assert view(rf.post('/'))
 
-        assert not view(req)
-        assert view(req)
+    def test_class_decorator(self):
+        @method_decorator(ratelimit(key='ip', rate='1/m', block=False),
+                          name='get')
+        class TestView(View):
+            def get(self, request):
+                return request.limited
+
+        view = TestView.as_view()
+
+        assert not view(rf.get('/'))
+        assert view(rf.get('/'))
+
+    def test_wrap_view(self):
+        class TestView(View):
+            def get(self, request):
+                return request.limited
+
+        view = TestView.as_view()
+        wrapped = ratelimit(key='ip', rate='1/m', block=False)(view)
+
+        assert not wrapped(rf.get('/'))
+        assert wrapped(rf.get('/'))
+
+    def test_methods_counted_separately(self):
+        class TestView(View):
+            @method_decorator(ratelimit(key='ip', rate='1/m', method='GET'))
+            def get(self, request):
+                return request.limited
+
+            @method_decorator(ratelimit(key='ip', rate='1/m', method='POST'))
+            def post(self, request):
+                return request.limited
+
+        view = TestView.as_view()
+
+        assert not view(rf.get('/'))
+        assert view(rf.get('/'))
+        assert not view(rf.post('/'))
+
+    def test_views_counted_separately(self):
+        class TestView(View):
+            @method_decorator(ratelimit(key='ip', rate='1/m', method='GET'))
+            def get(self, request):
+                return request.limited
+
+        class AnotherTestView(View):
+            @method_decorator(ratelimit(key='ip', rate='1/m', method='GET'))
+            def get(self, request):
+                return request.limited
+
+        test_view = TestView.as_view()
+        another_view = AnotherTestView.as_view()
+
+        assert not test_view(rf.get('/'))
+        assert test_view(rf.get('/'))
+        assert not another_view(rf.get('/'))
