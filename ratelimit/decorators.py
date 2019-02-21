@@ -14,10 +14,11 @@ def ratelimit(group=None, key=None, rate=None, method=ALL, block=False):
     def decorator(fn):
         @wraps(fn)
         def _wrapped(request, *args, **kw):
-            request.limited = getattr(request, 'limited', False)
+            old_limited = getattr(request, 'limited', False)
             ratelimited = is_ratelimited(request=request, group=group, fn=fn,
                                          key=key, rate=rate, method=method,
                                          increment=True)
+            request.limited = ratelimited or old_limited
             if ratelimited and block:
                 raise Ratelimited()
             return fn(request, *args, **kw)

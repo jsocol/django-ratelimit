@@ -23,9 +23,8 @@ CACHES = {
         }
     },
     'instant-expiration': {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
         'LOCATION': 'test-instant-expiration',
-        'TIMEOUT': 0,
     },
 }
 

@@ -53,160 +53,112 @@ class RatelimitTests(TestCase):
             view(req)
 
     def test_ip(self):
-        @ratelimit(key='ip', rate='1/m', block=True)
+        @ratelimit(key='ip', rate='1/m')
         def view(request):
-            return True
+            return request.limited
 
-        req = rf.get('/')
-        assert view(req), 'First request works.'
-        with self.assertRaises(Ratelimited):
-            view(req)
+        assert not view(rf.get('/')), 'First request works.'
+        assert view(rf.get('/')), 'Second request is limited'
 
     def test_block(self):
         @ratelimit(key='ip', rate='1/m', block=True)
         def blocked(request):
             return request.limited
 
-        @ratelimit(key='ip', rate='1/m', block=False)
-        def unblocked(request):
-            return request.limited
-
-        req = rf.get('/')
-
-        assert not blocked(req), 'First request works.'
+        assert not blocked(rf.get('/')), 'First request works.'
         with self.assertRaises(Ratelimited):
-            blocked(req)
-
-        assert unblocked(req), 'Request is limited but not blocked.'
+            blocked(rf.get('/')), 'Second request is blocked.'
 
     def test_method(self):
-        post = rf.post('/')
-        get = rf.get('/')
-
         @ratelimit(key='ip', method='POST', rate='1/m', group='a')
         def limit_post(request):
             return request.limited
 
-        @ratelimit(key='ip', method=['POST', 'GET'], rate='1/m', group='a')
-        def limit_get(request):
-            return request.limited
-
-        assert not limit_post(post), 'Do not limit first POST.'
-        assert limit_post(post), 'Limit second POST.'
-        assert not limit_post(get), 'Do not limit GET.'
-
-        assert limit_get(post), 'Limit first POST.'
-        assert limit_get(get), 'Limit first GET.'
+        assert not limit_post(rf.post('/')), 'Do not limit first POST.'
+        assert limit_post(rf.post('/')), 'Limit second POST.'
+        assert not limit_post(rf.get('/')), 'Do not limit GET.'
 
     def test_unsafe_methods(self):
         @ratelimit(key='ip', method=ratelimit.UNSAFE, rate='0/m')
         def limit_unsafe(request):
             return request.limited
 
-        get = rf.get('/')
-        head = rf.head('/')
-        options = rf.options('/')
-
-        delete = rf.delete('/')
-        post = rf.post('/')
-        put = rf.put('/')
-
-        assert not limit_unsafe(get)
-        assert not limit_unsafe(head)
-        assert not limit_unsafe(options)
-        assert limit_unsafe(delete)
-        assert limit_unsafe(post)
-        assert limit_unsafe(put)
-
-        # TODO: When all supported versions have this, drop the `if`.
-        if hasattr(rf, 'patch'):
-            patch = rf.patch('/')
-            assert limit_unsafe(patch)
+        assert not limit_unsafe(rf.get('/'))
+        assert not limit_unsafe(rf.head('/'))
+        assert not limit_unsafe(rf.options('/'))
+        assert limit_unsafe(rf.delete('/'))
+        assert limit_unsafe(rf.post('/'))
+        assert limit_unsafe(rf.put('/'))
+        assert limit_unsafe(rf.patch('/'))
 
     def test_key_get(self):
-        req_a = rf.get('/', {'foo': 'a'})
-        req_b = rf.get('/', {'foo': 'b'})
-
         @ratelimit(key='get:foo', rate='1/m', method='GET')
         def view(request):
             return request.limited
 
-        assert not view(req_a)
-        assert view(req_a)
-        assert not view(req_b)
-        assert view(req_b)
+        assert not view(rf.get('/', {'foo': 'a'}))
+        assert view(rf.get('/', {'foo': 'a'}))
+        assert not view(rf.get('/', {'foo': 'b'}))
+        assert view(rf.get('/', {'foo': 'b'}))
 
     def test_key_post(self):
-        req_a = rf.post('/', {'foo': 'a'})
-        req_b = rf.post('/', {'foo': 'b'})
-
         @ratelimit(key='post:foo', rate='1/m')
         def view(request):
             return request.limited
 
-        assert not view(req_a)
-        assert view(req_a)
-        assert not view(req_b)
-        assert view(req_b)
+        assert not view(rf.post('/', {'foo': 'a'}))
+        assert view(rf.post('/', {'foo': 'a'}))
+        assert not view(rf.post('/', {'foo': 'b'}))
+        assert view(rf.post('/', {'foo': 'b'}))
 
     def test_key_header(self):
-        req = rf.post('/')
-        req.META['HTTP_X_REAL_IP'] = '1.2.3.4'
+        def _req():
+            req = rf.post('/')
+            req.META['HTTP_X_REAL_IP'] = '1.2.3.4'
+            return req
 
         @ratelimit(key='header:x-real-ip', rate='1/m')
         @ratelimit(key='header:x-missing-header', rate='1/m')
         def view(request):
             return request.limited
 
-        assert not view(req)
-        assert view(req)
+        assert not view(_req())
+        assert view(_req())
 
     def test_rate(self):
-        req = rf.post('/')
-
         @ratelimit(key='ip', rate='2/m')
         def twice(request):
             return request.limited
 
-        assert not twice(req), 'First request is not limited.'
-        del req.limited
-        assert not twice(req), 'Second request is not limited.'
-        del req.limited
-        assert twice(req), 'Third request is limited.'
+        assert not twice(rf.post('/')), 'First request is not limited.'
+        assert not twice(rf.post('/')), 'Second request is not limited.'
+        assert twice(rf.post('/')), 'Third request is limited.'
 
     def test_zero_rate(self):
-        req = rf.post('/')
-
         @ratelimit(key='ip', rate='0/m')
         def never(request):
             return request.limited
 
-        assert never(req)
+        assert never(rf.post('/'))
 
     def test_none_rate(self):
-        req = rf.post('/')
-
         @ratelimit(key='ip', rate=None)
         def always(request):
             return request.limited
 
-        assert not always(req)
-        del req.limited
-        assert not always(req)
-        del req.limited
-        assert not always(req)
-        del req.limited
-        assert not always(req)
-        del req.limited
-        assert not always(req)
-        del req.limited
-        assert not always(req)
+        assert not always(rf.post('/'))
+        assert not always(rf.post('/'))
+        assert not always(rf.post('/'))
+        assert not always(rf.post('/'))
+        assert not always(rf.post('/'))
+        assert not always(rf.post('/'))
+        assert not always(rf.post('/'))
 
     def test_callable_rate(self):
-        auth = rf.post('/')
-        unauth = rf.post('/')
-        auth.user = MockUser(authenticated=True)
-        unauth.user = MockUser(authenticated=False)
+        def _req(auth):
+            req = rf.post('/')
+            req.user = MockUser(authenticated=auth)
+            return req
 
         def get_rate(group, request):
             if request.user.is_authenticated:
@@ -217,15 +169,17 @@ class RatelimitTests(TestCase):
         def view(request):
             return request.limited
 
-        assert not view(unauth)
-        assert view(unauth)
-        assert not view(auth)
-        assert not view(auth)
-        assert view(auth)
+        assert not view(_req(auth=False))
+        assert view(_req(auth=False))
+        assert not view(_req(auth=True))
+        assert not view(_req(auth=True))
+        assert view(_req(auth=True))
 
     def test_callable_rate_none(self):
-        req = rf.post('/')
-        req.never_limit = False
+        def _req(never_limit=False):
+            req = rf.post('/')
+            req.never_limit = never_limit
+            return req
 
         get_rate = lambda g, r: None if r.never_limit else '1/m'
 
@@ -233,20 +187,16 @@ class RatelimitTests(TestCase):
         def view(request):
             return request.limited
 
-        assert not view(req)
-        del req.limited
-        assert view(req)
-        req.never_limit = True
-        del req.limited
-        assert not view(req)
-        del req.limited
-        assert not view(req)
+        assert not view(_req())
+        assert view(_req())
+        assert not view(_req(never_limit=True))
+        assert not view(_req(never_limit=True))
 
     def test_callable_rate_zero(self):
-        auth = rf.post('/')
-        unauth = rf.post('/')
-        auth.user = MockUser(authenticated=True)
-        unauth.user = MockUser(authenticated=False)
+        def _req(auth):
+            req = rf.post('/')
+            req.user = MockUser(authenticated=auth)
+            return req
 
         def get_rate(group, request):
             if request.user.is_authenticated:
@@ -257,12 +207,9 @@ class RatelimitTests(TestCase):
         def view(request):
             return request.limited
 
-        assert view(unauth)
-        del unauth.limited
-        assert not view(auth)
-        del auth.limited
-        assert view(auth)
-        assert view(unauth)
+        assert view(_req(auth=False))
+        assert not view(_req(auth=True))
+        assert view(_req(auth=True))
 
     @override_settings(RATELIMIT_USE_CACHE='fake-cache')
     def test_bad_cache(self):
@@ -272,10 +219,8 @@ class RatelimitTests(TestCase):
         def view(request):
             return request
 
-        req = rf.post('/')
-
         with self.assertRaises(InvalidCacheBackendError):
-            view(req)
+            view(rf.post('/'))
 
     @override_settings(RATELIMIT_USE_CACHE='connection-errors')
     def test_cache_connection_error(self):
@@ -284,45 +229,44 @@ class RatelimitTests(TestCase):
         def view(request):
             return request
 
-        req = rf.post('/')
-        assert view(req)
+        assert view(rf.post('/'))
 
     def test_user_or_ip(self):
         """Allow custom functions to set cache keys."""
+
+        def _req(auth):
+            req = rf.post('/')
+            req.user = MockUser(authenticated=auth)
+            return req
 
         @ratelimit(key='user_or_ip', rate='1/m', block=False)
         def view(request):
             return request.limited
 
-        unauth = rf.post('/')
-        unauth.user = MockUser(authenticated=False)
-
-        assert not view(unauth), 'First unauthenticated request is allowed.'
-        assert view(unauth), 'Second unauthenticated request is limited.'
+        assert not view(_req(auth=False))
+        assert view(_req(auth=False))
 
         auth = rf.post('/')
         auth.user = MockUser(authenticated=True)
 
-        assert not view(auth), 'First authenticated request is allowed.'
-        assert view(auth), 'Second authenticated is limited.'
+        assert not view(_req(auth=True))
+        assert view(_req(auth=True))
 
     def test_key_path(self):
         @ratelimit(key='ratelimit.tests.mykey', rate='1/m')
         def view(request):
             return request.limited
 
-        req = rf.post('/')
-        assert not view(req)
-        assert view(req)
+        assert not view(rf.post('/'))
+        assert view(rf.post('/'))
 
     def test_callable_key(self):
         @ratelimit(key=mykey, rate='1/m')
         def view(request):
             return request.limited
 
-        req = rf.post('/')
-        assert not view(req)
-        assert view(req)
+        assert not view(rf.post('/'))
+        assert view(rf.post('/'))
 
     def test_stacked_decorator(self):
         """Allow @ratelimit to be stacked."""
@@ -333,9 +277,8 @@ class RatelimitTests(TestCase):
         def view(request):
             return request.limited
 
-        req = rf.post('/')
-        assert not view(req), 'First unauthenticated request is allowed.'
-        assert view(req), 'Second unauthenticated request is limited.'
+        assert not view(rf.post('/'))
+        assert view(rf.post('/'))
 
     def test_stacked_methods(self):
         """Different methods should result in different counts."""
@@ -344,13 +287,10 @@ class RatelimitTests(TestCase):
         def view(request):
             return request.limited
 
-        get = rf.get('/')
-        post = rf.post('/')
-
-        assert not view(get)
-        assert not view(post)
-        assert view(get)
-        assert view(post)
+        assert not view(rf.get('/'))
+        assert not view(rf.post('/'))
+        assert view(rf.get('/'))
+        assert view(rf.post('/'))
 
     def test_sorted_methods(self):
         """Order of the methods shouldn't matter."""
@@ -362,9 +302,8 @@ class RatelimitTests(TestCase):
         def post_get(request):
             return request.limited
 
-        req = rf.get('/')
-        assert not get_post(req)
-        assert post_get(req)
+        assert not get_post(rf.get('/'))
+        assert post_get(rf.get('/'))
 
     def test_is_ratelimited(self):
         def get_key(group, request):
@@ -380,21 +319,20 @@ class RatelimitTests(TestCase):
                                   method=is_ratelimited.ALL, key=get_key,
                                   rate='1/m', group='a')
 
-        req = rf.get('/')
         # Does not increment. Count still 0. Does not rate limit
         # because 0 < 1.
-        assert not not_increment(req), 'Request should not be rate limited.'
+        assert not not_increment(rf.get('/'))
 
         # Increments. Does not rate limit because 0 < 1. Count now 1.
-        assert not do_increment(req), 'Request should not be rate limited.'
+        assert not do_increment(rf.get('/'))
 
         # Does not increment. Count still 1. Not limited because 1 > 1
         # is false.
-        assert not not_increment(req), 'Request should not be rate limited.'
+        assert not not_increment(rf.get('/'))
 
         # Count = 2, 2 > 1.
-        assert do_increment(req), 'Request should be rate limited.'
-        assert not_increment(req), 'Request should be rate limited.'
+        assert do_increment(rf.get('/'))
+        assert not_increment(rf.get('/'))
 
     @override_settings(RATELIMIT_USE_CACHE='connection-errors')
     def test_is_ratelimited_cache_connection_error_without_increment(self):
@@ -406,8 +344,8 @@ class RatelimitTests(TestCase):
                                   method=is_ratelimited.ALL, key=get_key,
                                   rate='1/m', group='a')
 
-        req = rf.get('/')
-        assert not not_increment(req)
+        assert not not_increment(rf.get('/'))
+        assert not not_increment(rf.get('/'))
 
     @override_settings(RATELIMIT_USE_CACHE='connection-errors')
     def test_is_ratelimited_cache_connection_error_with_increment(self):
@@ -419,9 +357,8 @@ class RatelimitTests(TestCase):
                                   method=is_ratelimited.ALL, key=get_key,
                                   rate='1/m', group='a')
 
-        req = rf.get('/')
-        assert not do_increment(req)
-        assert req.limited is False
+        assert not do_increment(rf.get('/'))
+        assert not do_increment(rf.get('/'))
 
     @override_settings(RATELIMIT_USE_CACHE='connection-errors-redis')
     def test_is_ratelimited_cache_connection_error_with_increment_redis(self):
@@ -433,9 +370,8 @@ class RatelimitTests(TestCase):
                                   method=is_ratelimited.ALL, key=get_key,
                                   rate='1/m', group='a')
 
-        req = rf.get('/')
-        assert do_increment(req)
-        assert req.limited is True
+        assert do_increment(rf.get('/'))
+        assert do_increment(rf.get('/'))
 
     @override_settings(RATELIMIT_USE_CACHE='instant-expiration')
     def test_cache_timeout(self):
@@ -443,10 +379,8 @@ class RatelimitTests(TestCase):
         def view(request):
             return True
 
-        req = rf.get('/')
-        assert view(req), 'First request works.'
-        with self.assertRaises(Ratelimited):
-            view(req)
+        assert view(rf.get('/'))
+        assert view(rf.get('/'))
 
 
 class RatelimitCBVTests(TestCase):
