@@ -1,3 +1,4 @@
+import functools
 import hashlib
 import re
 import time
@@ -102,19 +103,32 @@ def _make_cache_key(group, rate, value, methods):
 
 def is_ratelimited(request, group=None, fn=None, key=None, rate=None,
                    method=ALL, increment=False):
-    if group is None:
-        if hasattr(fn, '__self__'):
-            parts = fn.__module__, fn.__self__.__class__.__name__, fn.__name__
-        else:
-            parts = (fn.__module__, fn.__name__)
-        group = '.'.join(parts)
-
     if not getattr(settings, 'RATELIMIT_ENABLE', True):
         request.limited = False
         return False
 
     if not _method_match(request, method):
         return False
+
+    if group is None:
+        parts = []
+
+        if isinstance(fn, functools.partial):
+            fn = fn.func
+
+        # Django <2.1 doesn't use a partial. This is ugly and inelegant, but
+        # throwing __qualname__ into the list below helps.
+        if fn.__name__ == 'bound_func':
+            fn = fn.__closure__[0].cell_contents
+
+        if hasattr(fn, '__module__'):
+            parts.append(fn.__module__)
+
+        if hasattr(fn, '__self__'):
+            parts.append(fn.__self__.__class__.__name__)
+
+        parts.append(fn.__qualname__)
+        group = '.'.join(parts)
 
     old_limited = getattr(request, 'limited', False)
 

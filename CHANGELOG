@@ -2,10 +2,22 @@
 Change Log
 ==========
 
-Pending
-=======
+3.0a
+====
 
-- New release notes here.
+Breaking changes:
+-----------------
+
+- Drop Python 2 support (#167)
+- Drop Django < 1.11 support (#167)
+- @ratelimit no longer directly supports class methods, use
+  @method_decorator
+- Drop RatelimitMixin in favor of @method_decorator
+
+Minor changes:
+--------------
+
+- Update RatelimitMiddleware to modern style (#168)
 
 v2.0.0
 ======

@@ -6,6 +6,79 @@ Upgrade Notes
 
 See also the `CHANGELOG <../CHANGELOG>`.
 
+.. _upgrading-3.0:
+
+From 2.0 to 3.0
+===============
+
+Quickly:
+
+- Ratelimit now supports Django >=1.11 and Python >=3.4.
+- ``@ratelimit`` no longer works directly on class methods, add
+  ``@method_decorator``.
+- ``RatelimitMixin`` is gone, migrate to ``@method_decorator``.
+
+``@ratelimit`` decorator on class methods
+-----------------------------------------
+
+In 3.0, the decorator has been simplified and must now be used with
+Django's excellent ``@method_decorator`` utility. Migrating should be
+relatively straight-forward:
+
+.. code-block:: python
+
+    from django.views.generic import View
+    from ratelimit.decorators import ratelimit
+
+    class MyView(View):
+        @ratelimit(key='ip', rate='1/m', method='GET')
+        def get(self, request):
+            pass
+
+changes to
+
+.. code-block:: python
+
+    from django.utils.decorators import method_decorator
+    from django.views.generic import View
+    from ratelimit.decorators import ratelimit
+
+    class MyView(View):
+        @method_decorator(ratelimit(key='ip', rate='1/m', method='GET'))
+        def get(self, request):
+            pass
+
+``RatelimitMixin``
+------------------
+
+``RatelimitMixin`` is a vestige of an older version of Ratelimit that
+did not support multiple rates per method. As such, it is significantly
+less powerful than the current ``@ratelimit`` decorator. To migrate to
+the decorator, use the ``@method_decorator`` from Django:
+
+.. code-block:: python
+
+    class MyView(RatelimitMixin, View):
+        ratelimit_key = 'ip'
+        ratelimit_rate = '10/m'
+        ratelimit_method = 'GET'
+
+        def get(self, request):
+            pass
+
+becomes
+
+.. code-block:: python
+
+    class MyView(View):
+        @method_decorator(ratelimit(key='ip', rate='10/m', method='GET'))
+        def get(self, request):
+            pass
+
+The major benefit is that it is now possible to apply multiple limits to
+the same method, as with :ref:`the decorator <usage-decorator>`_.
+
+
 
 .. _upgrading-0.5:
 

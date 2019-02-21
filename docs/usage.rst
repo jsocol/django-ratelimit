@@ -53,8 +53,10 @@ Each decorator can be limited to one or more HTTP methods. The
 tuple of strings (e.g. ``('GET', 'OPTIONS')``).
 
 There are two special shortcuts values, both accessible from the
-``ratelimit`` decorator, the ``RatelimitMixin`` class, or the
-``is_ratelimited`` helper, as well as on the root ``ratelimit`` module::
+``ratelimit`` decorator or the ``is_ratelimited`` helper, as well as on
+the root ``ratelimit`` module:
+
+.. code-block:: python
 
     from ratelimit.decorators import ratelimit
 
@@ -149,16 +151,46 @@ Class-Based Views
 -----------------
 
 .. versionadded:: 0.5
+.. versionchanged:: 3.0
 
-The ``@ratelimit`` decorator also works on class-based view methods,
-though *make sure the ``method`` argument matches the decorator*::
+To use the ``@ratelimit`` decorator with class-based views, use the
+Django ``@method_decorator``:
+
+.. code-block:: python
+
+    from django.utils.decorators import method_decorator
+    from django.views.generic import View
 
     class MyView(View):
-        @ratelimit(key='ip', method='POST')
-        def post(self, request, *args):
-            # Something expensive...
+        @method_decorator(ratelimit(key='ip', rate='1/m', method='GET'))
+        def get(self, request):
+            pass
+
+    @method_decorator(ratelimit(key='ip', rate='1/m', method='GET'), name='get')
+    class MyOtherView(View):
+        def get(self, request):
+            pass
+
+It is also possible to wrap a whole view later, e.g.:
+
+.. code-block:: python
+
+    from django.urls import path
+
+    from myapp.views import MyView
+
+    from ratelimit.decorators import ratelimit
+
+    urlpatterns = [
+        path('/', ratelimit(key='ip', method='GET', rate='1/m')(MyView.as_view())),
+    ]
+
+.. warning::
+
+    Make sure the ``method`` argument matches the method decorated.
 
 .. note::
+
    Unless given an explicit ``group`` argument, different methods of a
    class-based view will be limited separate.
 
@@ -168,27 +200,13 @@ though *make sure the ``method`` argument matches the decorator*::
 Class-Based View Mixin
 ======================
 
-.. py:class:: ratelimit.mixins.RatelimitMixin
-
 .. versionadded:: 0.4
+.. versionremoved:: 3.0
 
-Ratelimits can also be applied to class-based views with the
-``ratelimit.mixins.RatelimitMixin`` mixin. They are configured via class
-attributes that are the same as the :ref:`decorator <usage-decorator>`,
-prefixed with ``ratelimit_``, e.g.::
-
-    class MyView(RatelimitMixin, View):
-        ratelimit_key = 'ip'
-        ratelimit_rate = '10/m'
-        ratelimit_block = False
-        ratelimit_method = 'GET'
-
-        def get(self, request, *args, **kwargs):
-            # Calculate expensive report...
-
-.. versionchanged:: 0.5
-   The name of the mixin changed from ``RateLimitMixin`` to
-   ``RatelimitMixin`` for consistency.
+The ``RatelimitMixin`` was never as powerful or flexible as the
+``@ratelimit`` decorator, and given that it is possible to use the
+decorator through Django's ``@method_decorator``, the mixin has been
+deprecated.
 
 
 .. _usage-helper:
@@ -196,11 +214,13 @@ prefixed with ``ratelimit_``, e.g.::
 Helper Function
 ===============
 
+.. versionchanged:: 3.0
+
 In some cases the decorator is not flexible enough. If this is an
 issue you use the ``is_ratelimited`` helper function. It's similar to
 the decorator.
 
-Import::
+.. code-block:: python
 
     from ratelimit.utils import is_ratelimited
 
