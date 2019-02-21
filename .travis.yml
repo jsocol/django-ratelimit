@@ -1,46 +1,39 @@
+dist: xenial
 language: python
 sudo: false
 env:
  - DJANGO_VERSION=1.11
  - DJANGO_VERSION=2.0
  - DJANGO_VERSION=2.1
+ - DJANGO_VERSION=2.2b
  - DJANGO_VERSION=master
 python:
- - "2.7"
  - "3.4"
  - "3.5"
  - "3.6"
- - "pypy"
+ - "3.7"
+ - "pypy3.5"
 install:
- - if [[ $TRAVIS_PYTHON_VERSION == 2* ]]; then pip install -q python-memcached>=1.57; fi
- - if [[ $TRAVIS_PYTHON_VERSION == 3* ]]; then pip install -q python3-memcached>=1.51; fi
- - if [[ $TRAVIS_PYTHON_VERSION == pypy ]]; then pip install -q python-memcached>=1.57; fi
- - if [[ $DJANGO_VERSION != master ]]; then pip install -q "Django>=${DJANGO_VERSION},<${DJANGO_VERSION}.99"; fi
+ - if [[ $DJANGO_VERSION != master ]]; then pip install --pre -q "Django>=${DJANGO_VERSION},<${DJANGO_VERSION}.99"; fi
  - if [[ $DJANGO_VERSION == master ]]; then pip install https://github.com/django/django/archive/master.tar.gz; fi
- - pip install "redis<3" django-redis==4.9.0 flake8
+ - pip install django-redis==4.10.0 flake8 python3-memcached>=1.51
 script:
  - ./run.sh test
  - ./run.sh flake8
 matrix:
   exclude:
-    - python: "2.7"
-      env: DJANGO_VERSION=2.0
-    - python: "2.7"
-      env: DJANGO_VERSION=2.1
-    - python: "2.7"
-      env: DJANGO_VERSION=master
     - python: "3.4"
       env: DJANGO_VERSION=2.1
     - python: "3.4"
+      env: DJANGO_VERSION=2.2b
+    - python: "3.4"
       env: DJANGO_VERSION=master
-    - python: "pypy"
-      env: DJANGO_VERSION=2.0
-    - python: "pypy"
-      env: DJANGO_VERSION=2.1
-    - python: "pypy"
-      env: DJANGO_VERSION=master
-  allow_failures:
     - python: "3.5"
       env: DJANGO_VERSION=master
+    - python: "pypy3.5"
+      env: DJANGO_VERSION=master
+  allow_failures:
     - python: "3.6"
+      env: DJANGO_VERSION=master
+    - python: "3.7"
       env: DJANGO_VERSION=master
