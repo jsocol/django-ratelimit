@@ -17,7 +17,7 @@ CACHES = {
     },
     'connection-errors-redis': {
         'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': 'test-connection-errors',
+        'LOCATION': 'redis://test-connection-errors',
         'OPTIONS': {
             'IGNORE_EXCEPTIONS': True,
         }

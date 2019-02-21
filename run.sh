@@ -11,13 +11,16 @@ usage() {
     exit 1
 }
 
+
 case "$1" in
     "test" )
         shift;
-        django-admin.py test ratelimit $@;;
+        echo "Django version: $(django-admin.py --version)"
+        django-admin.py test ratelimit "$@";;
     "flake8" )
         shift;
-        flake8 $@ ratelimit/;;
+        echo "Flake8 version: $(flake8 --version)"
+        flake8 "$@" ratelimit/;;
     "shell" )
         django-admin.py shell ;;
     * )
