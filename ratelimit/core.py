@@ -12,7 +12,7 @@ from django.utils.module_loading import import_string
 from ratelimit import ALL, UNSAFE
 
 
-__all__ = ['is_ratelimited']
+__all__ = ['is_ratelimited', 'get_usage']
 
 _PERIODS = {
     's': 1,
@@ -206,3 +206,5 @@ def get_usage(request, group=None, fn=None, key=None, rate=None, method=ALL,
 
 is_ratelimited.ALL = ALL
 is_ratelimited.UNSAFE = UNSAFE
+get_usage.ALL = ALL
+get_usage.UNSAFE = UNSAFE

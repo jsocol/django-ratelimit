@@ -4,7 +4,7 @@ from functools import wraps
 
 from ratelimit import ALL, UNSAFE
 from ratelimit.exceptions import Ratelimited
-from ratelimit.utils import is_ratelimited
+from ratelimit.core import is_ratelimited
 
 
 __all__ = ['ratelimit']

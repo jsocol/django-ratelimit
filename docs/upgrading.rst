@@ -17,6 +17,8 @@ Quickly:
 - ``@ratelimit`` no longer works directly on class methods, add
   ``@method_decorator``.
 - ``RatelimitMixin`` is gone, migrate to ``@method_decorator``.
+- Moved ``is_ratelimted`` method from ``ratelimit.utils`` to
+  ``ratelimit.core``.
 
 ``@ratelimit`` decorator on class methods
 -----------------------------------------

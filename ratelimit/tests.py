@@ -1,3 +1,5 @@
+from functools import partial
+
 from django.core.cache import cache, InvalidCacheBackendError
 from django.core.exceptions import ImproperlyConfigured
 from django.test import RequestFactory, TestCase
@@ -7,7 +9,7 @@ from django.views.generic import View
 
 from ratelimit.decorators import ratelimit
 from ratelimit.exceptions import Ratelimited
-from ratelimit.utils import is_ratelimited, _split_rate
+from ratelimit.core import get_usage, is_ratelimited, _split_rate
 
 
 rf = RequestFactory()
@@ -285,34 +287,65 @@ class RatelimitTests(TestCase):
         assert not get_post(rf.get('/'))
         assert post_get(rf.get('/'))
 
+
+class FunctionsTests(TestCase):
+    def setUp(self):
+        cache.clear()
+
     def test_is_ratelimited(self):
-        def get_key(group, request):
-            return 'test_is_ratelimited_key'
-
-        def not_increment(request):
-            return is_ratelimited(request, increment=False,
-                                  method=is_ratelimited.ALL, key=get_key,
-                                  rate='1/m', group='a')
-
-        def do_increment(request):
-            return is_ratelimited(request, increment=True,
-                                  method=is_ratelimited.ALL, key=get_key,
-                                  rate='1/m', group='a')
+        not_increment = partial(is_ratelimited, increment=False, rate='1/m',
+                                method=is_ratelimited.ALL, key='ip', group='a')
 
         # Does not increment. Count still 0. Does not rate limit
         # because 0 < 1.
         assert not not_increment(rf.get('/'))
 
-        # Increments. Does not rate limit because 0 < 1. Count now 1.
-        assert not do_increment(rf.get('/'))
-
         # Does not increment. Count still 1. Not limited because 1 > 1
         # is false.
         assert not not_increment(rf.get('/'))
 
+    def test_is_ratelimited_increment(self):
+        do_increment = partial(is_ratelimited, increment=True, rate='1/m',
+                               method=is_ratelimited.ALL, key='ip', group='a')
+
+        # Increments. Does not rate limit because 0 < 1. Count now 1.
+        assert not do_increment(rf.get('/'))
+
         # Count = 2, 2 > 1.
         assert do_increment(rf.get('/'))
-        assert not_increment(rf.get('/'))
+
+    def test_get_usage(self):
+        _get_usage = partial(get_usage, method=get_usage.ALL, key='ip',
+                             rate='1/m', group='a')
+        usage = _get_usage(rf.get('/'))
+
+        self.assertEqual(usage['count'], 0)
+        self.assertEqual(usage['limit'], 1)
+        self.assertLessEqual(usage['time_left'], 60)
+        self.assertFalse(usage['should_limit'])
+
+    def test_get_usage_increment(self):
+        _get_usage = partial(get_usage, method=get_usage.ALL, key='ip',
+                             rate='1/m', group='a', increment=True)
+        _get_usage(rf.get('/'))
+        usage = _get_usage(rf.get('/'))
+
+        self.assertEqual(usage['count'], 2)
+        self.assertEqual(usage['limit'], 1)
+        self.assertLessEqual(usage['time_left'], 60)
+        self.assertTrue(usage['should_limit'])
+
+    def test_not_increment_after_increment(self):
+        _get_usage = partial(get_usage, method=get_usage.ALL, key='ip',
+                             rate='1/m', group='a')
+        _get_usage(rf.get('/'), increment=True)
+        _get_usage(rf.get('/'), increment=True)
+        usage = _get_usage(rf.get('/'))
+
+        self.assertEqual(usage['count'], 2)
+        self.assertEqual(usage['limit'], 1)
+        self.assertLessEqual(usage['time_left'], 60)
+        self.assertTrue(usage['should_limit'])
 
 
 class RatelimitCBVTests(TestCase):

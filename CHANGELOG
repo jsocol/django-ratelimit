@@ -13,11 +13,20 @@ Breaking changes:
 - @ratelimit no longer directly supports class methods, use
   @method_decorator
 - Drop RatelimitMixin in favor of @method_decorator
+- Moved is_ratelimited to ratelimit.core from ratelimit.utils
+- Moved ratelimit.utils.get_usage_count to ratelimit.core.get_usage
+
+Additions:
+----------
+
+- Made ratelimit.core.get_usage a documented, public method.
 
 Minor changes:
 --------------
 
 - Update RatelimitMiddleware to modern style (#168)
+- Refactor is_ratelimited and get_usage so is_ratelimited is a thinner
+  wrapper
 
 v2.0.0
 ======
