@@ -310,6 +310,12 @@ functionality in ``ratelimit.core``. The two major methods are
 ``is_ratelimited`` is a thin wrapper around ``get_usage`` that is
 maintained for compatibility. It provides strictly less information.
 
+.. warning::
+    
+    ``get_usage`` and ``is_ratelimited`` require either ``group=`` or
+    ``fn=`` to be passed, or they cannot determine the rate limiting
+    state and will throw.
+
 
 .. _usage-exception:
 
