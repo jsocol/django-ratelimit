@@ -33,7 +33,9 @@ Import::
         * ``h`` - hours
         * ``d`` - days
 
-        Also accepts callables. See :ref:`Rates <rates-chapter>`.
+        Also accepts callables. See :ref:`Rates <rates-chapter>`. A rate
+        of ``0/s`` disallows all requests. A rate of ``None`` means "no
+        limit" and will allow all requests.
 
    :arg method:
         *ALL* Which HTTP method(s) to rate-limit. May be a string, a
