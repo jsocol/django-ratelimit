@@ -19,12 +19,16 @@ Project
 Quickstart
 ==========
 
-Install::
+Install:
 
-   pip install django-ratelimit
+.. code-block:: shell
+
+   $ pip install django-ratelimit
 
 
-Use as a decorator in ``views.py``::
+Use as a decorator in ``views.py``:
+
+.. code-block:: python
 
     from ratelimit.decorators import ratelimit
 
@@ -53,6 +57,7 @@ Contents
    security
    upgrading
    contributing
+   cookbook/index
 
 
 Indices and tables
