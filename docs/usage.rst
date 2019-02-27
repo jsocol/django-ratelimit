@@ -10,7 +10,9 @@ Using Django Ratelimit
 Use as a decorator
 ==================
 
-Import::
+Import:
+
+.. code-block:: python
 
     from ratelimit.decorators import ratelimit
 

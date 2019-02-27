@@ -1,0 +1,107 @@
+.. _recipe-429:
+
+=================================
+Sending ``429 Too Many Requests``
+=================================
+
+`RFC 6585`_ introduced a status code specific to rate-limiting
+situations: `HTTP 429 Too Many Requests`_. Here's one way to send this
+status with Django Ratelimit.
+
+
+Create a custom error view
+==========================
+
+First, create a view that returns the correct type of response (e.g.
+content-type, shape, information, etc) for your application. For
+example, a JSON API may return something like ``{"error":
+"ratelimited"}``, while other applications may return XML, HTML, etc, as
+needed. Or you may need to decide based on the type of request. Set the
+status code of the response to 429.
+
+.. code-block:: python
+
+    # myapp/views.py
+    def ratelimited_error(request, exception):
+        # e.g. to return HTML
+        return render(request, 'ratelimited.html', status=429)
+
+    def ratelimited_error(request, exception):
+        # or other types:
+        return JsonResponse({'error': 'ratelimited'], status=429)
+
+In your app's settings, install the ``RatelimitMiddleware``
+:ref:`middleware <usage-middleware>` toward the bottom of the list. You
+must define ``RATELIMIT_VIEW`` as a dotted-path to your error view:
+
+.. code-block:: python
+
+    MIDDLEWARE = (
+        # ... toward the bottom ...
+        'ratelimit.middleware.RatelimitMiddleware',
+        # ...
+    )
+
+    RATELIMIT_VIEW = 'myapp.views.ratelimited_error'
+
+
+That's it! If you already have :ref:`the decorator <usage-decorator>`
+installed, you're good to go. Otherwise, you'll need to install it in
+order to trigger the error view.
+
+
+Check the exception type in ``handler403``
+==========================================
+
+Alternatively, if you already have a ``handler403`` view defined, you
+can check the exception type and return a specific status code:
+
+.. code-block:: python
+
+    from ratelimit.exceptions import Ratelimited
+
+    def my_403_handler(request, exception):
+        if isinstance(exception, Ratelimited):
+            return render(request, '429.html', status=429)
+        return render(request, '403.html', status=403)
+
+
+Context
+=======
+
+**Why doesn't Django Ratelimit handle this itself?**
+
+There are a couple of main reasons. The first is that Django has no
+built-in concept of a ratelimit exception, but it does have
+``PermissionDenied``. When a view throws a ``PermissionDenied``
+exception, Django has built-in facilities for handling it as a client
+error (it returns an HTTP 403) instead of a server error (i.e. a 5xx
+status code).
+
+The ``Ratelimited`` exception extends ``PermissionDenied`` so that, if
+nothing else, there should already be a way to make sure the application
+is sending a 4xx status code—even if it's not the most-correct status
+code available. ``Ratelimited`` should not be treated as a server error
+because the server is working correctly. (NB: That also means that the
+typical "error"-level logging is not invoked.) There is no way to
+convince the built-in handler to send any status besides 403.
+
+Furthermore, it's impossible for Django Ratelimit to provide a default
+view that does a better job guessing at the appropriate response type
+than Django's built-in ``PermissionDenied`` view already does. We could
+include a default ``429.html`` template with as little information as
+Django's built-in ``403.html``, but it would only be slightly more
+correct.
+
+The correct response for your users will depend on your application.
+This means creating the right content-type (e.g. JSON, XML, HTML, etc)
+and content (whether it's an API error response or a human-readable
+one). Django Ratelimit can't guess that, so it's up to you to define.
+
+Finally, a small historical note. Django Ratelimit actually predates RFC
+6585 by about a year. At the time, 403 was as common as any status for
+ratelimit situations. Others were creating custom statuses, like
+Twitter's ``420 Enhance Your Calm``.
+
+.. _RFC 6585: https://tools.ietf.org/html/rfc6585
+.. _HTTP 429 Too Many Requests: https://tools.ietf.org/html/rfc6585#section-4
