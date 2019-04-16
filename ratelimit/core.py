@@ -34,7 +34,7 @@ def ip_mask(ip):
         # IPv4
         mask = getattr(settings, 'RATELIMIT_IPV4_MASK', 32)
 
-    network = ipaddress.ip_network((ip, mask), strict=False)
+    network = ipaddress.ip_network('{}/{}'.format(ip, mask), strict=False)
 
     return str(network.network_address)
 
