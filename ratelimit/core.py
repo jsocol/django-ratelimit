@@ -1,3 +1,4 @@
+import ipaddress
 import functools
 import hashlib
 import re
@@ -24,15 +25,27 @@ _PERIODS = {
 # Extend the expiration time by a few seconds to avoid misses.
 EXPIRATION_FUDGE = 5
 
+def ip_mask(ip):
+    if ':' in ip:
+        # IPv6
+        mask = getattr(settings, 'RATELIMIT_IPV6_MASK', 64)
+    else:
+        # IPv4
+        mask = getattr(settings, 'RATELIMIT_IPV4_MASK', 32)
+    
+    network = ipaddress.ip_network((ip, mask), strict=False)
+
+    return str(network.network_address)
+    
 
 def user_or_ip(request):
     if request.user.is_authenticated:
         return str(request.user.pk)
-    return request.META['REMOTE_ADDR']
+    return ip_mask(request.META['REMOTE_ADDR'])
 
 
 _SIMPLE_KEYS = {
-    'ip': lambda r: r.META['REMOTE_ADDR'],
+    'ip': lambda r: ip_mask(r.META['REMOTE_ADDR']),
     'user': lambda r: str(r.user.pk),
     'user_or_ip': user_or_ip,
 }

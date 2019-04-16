@@ -9,7 +9,7 @@ from django.views.generic import View
 
 from ratelimit.decorators import ratelimit
 from ratelimit.exceptions import Ratelimited
-from ratelimit.core import get_usage, is_ratelimited, _split_rate
+from ratelimit.core import get_usage, is_ratelimited, _split_rate, ip_mask
 
 
 rf = RequestFactory()
@@ -313,6 +313,15 @@ class FunctionsTests(TestCase):
 
         # Count = 2, 2 > 1.
         assert do_increment(rf.get('/'))
+
+    def test_ip_mask(self):
+        with self.settings(RATELIMIT_IPV4_MASK=32, RATELIMIT_IPV6_MASK=128):
+            self.assertEqual(ip_mask('10.1.1.1'), '10.1.1.1')
+            self.assertEqual(ip_mask('2001:db8::1000'), '2001:db8::1000')
+
+        with self.settings(RATELIMIT_IPV4_MASK=16, RATELIMIT_IPV6_MASK=64):
+            self.assertEqual(ip_mask('10.1.1.1'), '10.1.0.0')
+            self.assertEqual(ip_mask('2001:db8::1000'), '2001:db8::')
 
     def test_get_usage(self):
         _get_usage = partial(get_usage, method=get_usage.ALL, key='ip',

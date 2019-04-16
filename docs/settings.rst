@@ -46,3 +46,14 @@ Has no default - you must set this to use ``RatelimitMiddleware``.
 -----------------------
 
 Whether to allow requests when the cache backend fails. Defaults to ``False``.
+
+``RATELIMIT_IPV4_MASK``
+-----------------------
+
+IPv4 mask for IP-based rate limit. Defaults to ``32`` (which is no masking)
+
+``RATELIMIT_IPV6_MASK``
+-----------------------
+
+IPv6 mask for IP-based rate limit. Defaults to ``64`` (which mask the last 64 bits).
+Typical end site IPv6 assignment are from /48 to /64.
