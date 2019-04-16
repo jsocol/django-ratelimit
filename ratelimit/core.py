@@ -25,6 +25,7 @@ _PERIODS = {
 # Extend the expiration time by a few seconds to avoid misses.
 EXPIRATION_FUDGE = 5
 
+
 def ip_mask(ip):
     if ':' in ip:
         # IPv6
@@ -32,11 +33,11 @@ def ip_mask(ip):
     else:
         # IPv4
         mask = getattr(settings, 'RATELIMIT_IPV4_MASK', 32)
-    
+
     network = ipaddress.ip_network((ip, mask), strict=False)
 
     return str(network.network_address)
-    
+
 
 def user_or_ip(request):
     if request.user.is_authenticated:
