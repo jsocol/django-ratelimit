@@ -89,15 +89,21 @@ def _get_window(value, period):
 def _make_cache_key(group, window, rate, value, methods):
     count, period = _split_rate(rate)
     safe_rate = '%d/%ds' % (count, period)
-    parts = [group, safe_rate, value, str(window)]
+    parts = [safe_rate, value, str(window)]
     if methods is not None:
         if methods == ALL:
             methods = ''
         elif isinstance(methods, (list, tuple)):
             methods = ''.join(sorted([m.upper() for m in methods]))
         parts.append(methods)
-    prefix = getattr(settings, 'RATELIMIT_CACHE_PREFIX', 'rl:')
-    return prefix + hashlib.md5(u''.join(parts).encode('utf-8')).hexdigest()
+    return "%(prefix)s:%(group)s:%(parts)s" % {
+        "prefix": getattr(settings, 'RATELIMIT_CACHE_PREFIX', 'rl:'),
+        "group": hashlib.md5(group.encode('utf-8')).hexdigest(),
+        "parts": hashlib.new(
+            getattr(settings, 'RATELIMIT_HASH_ALGORITHM', 'md5'),
+            u''.join(parts).encode('utf-8')
+        ).hexdigest()
+    }
 
 
 def is_ratelimited(request, group=None, fn=None, key=None, rate=None,
