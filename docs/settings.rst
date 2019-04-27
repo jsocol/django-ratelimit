@@ -46,3 +46,10 @@ Has no default - you must set this to use ``RatelimitMiddleware``.
 -----------------------
 
 Whether to allow requests when the cache backend fails. Defaults to ``False``.
+
+``RATELIMIT_HASH_ALGORITHM``
+-----------------------
+
+Which hash algorithm to use for creating cache key. Defaults to ``md5``.
+
+Note: the group part of the key uses always md5.
