@@ -9,7 +9,7 @@ from django.views.generic import View
 
 from ratelimit.decorators import ratelimit
 from ratelimit.exceptions import Ratelimited
-from ratelimit.core import get_usage, is_ratelimited, _split_rate, ip_mask
+from ratelimit.core import get_usage, is_ratelimited, _split_rate
 
 
 rf = RequestFactory()
@@ -301,7 +301,7 @@ class RatelimitTests(TestCase):
             req = rf.get('/')
             req.META['REMOTE_ADDR'] = '10.1.1.2'
             assert not view(req)
-    
+
     def test_ratelimit_full_mask_v6(self):
         @ratelimit(rate='1/m', key='ip')
         def view(request):
@@ -316,7 +316,7 @@ class RatelimitTests(TestCase):
             req = rf.get('/')
             req.META['REMOTE_ADDR'] = '2001:db8::1001'
             assert not view(req)
-    
+
     def test_ratelimit_mask_v4(self):
         @ratelimit(rate='1/m', key='ip')
         def view(request):
@@ -335,7 +335,7 @@ class RatelimitTests(TestCase):
             req = rf.get('/')
             req.META['REMOTE_ADDR'] = '192.168.1.1'
             assert not view(req)
-    
+
     def test_ratelimit_mask_v6(self):
         @ratelimit(rate='1/m', key='ip')
         def view(request):
