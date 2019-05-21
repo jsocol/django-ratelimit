@@ -287,6 +287,74 @@ class RatelimitTests(TestCase):
         assert not get_post(rf.get('/'))
         assert post_get(rf.get('/'))
 
+    def test_ratelimit_full_mask_v4(self):
+        @ratelimit(rate='1/m', key='ip')
+        def view(request):
+            return request.limited
+
+        with self.settings(RATELIMIT_IPV4_MASK=32):
+            req = rf.get('/')
+            req.META['REMOTE_ADDR'] = '10.1.1.1'
+            assert not view(req)
+            assert view(req)
+
+            req = rf.get('/')
+            req.META['REMOTE_ADDR'] = '10.1.1.2'
+            assert not view(req)
+
+    def test_ratelimit_full_mask_v6(self):
+        @ratelimit(rate='1/m', key='ip')
+        def view(request):
+            return request.limited
+
+        with self.settings(RATELIMIT_IPV6_MASK=128):
+            req = rf.get('/')
+            req.META['REMOTE_ADDR'] = '2001:db8::1000'
+            assert not view(req)
+            assert view(req)
+
+            req = rf.get('/')
+            req.META['REMOTE_ADDR'] = '2001:db8::1001'
+            assert not view(req)
+
+    def test_ratelimit_mask_v4(self):
+        @ratelimit(rate='1/m', key='ip')
+        def view(request):
+            return request.limited
+
+        with self.settings(RATELIMIT_IPV4_MASK=16):
+            req = rf.get('/')
+            req.META['REMOTE_ADDR'] = '10.1.1.1'
+            assert not view(req)
+            assert view(req)
+
+            req = rf.get('/')
+            req.META['REMOTE_ADDR'] = '10.1.0.1'
+            assert view(req)
+
+            req = rf.get('/')
+            req.META['REMOTE_ADDR'] = '192.168.1.1'
+            assert not view(req)
+
+    def test_ratelimit_mask_v6(self):
+        @ratelimit(rate='1/m', key='ip')
+        def view(request):
+            return request.limited
+
+        with self.settings(RATELIMIT_IPV6_MASK=64):
+            req = rf.get('/')
+            req.META['REMOTE_ADDR'] = '2001:db8::1000'
+            assert not view(req)
+            assert view(req)
+
+            req = rf.get('/')
+            req.META['REMOTE_ADDR'] = '2001:db8::1001'
+            assert view(req)
+
+            req = rf.get('/')
+            req.META['REMOTE_ADDR'] = '2001:db9::1000'
+            assert not view(req)
+
 
 class FunctionsTests(TestCase):
     def setUp(self):
