@@ -77,7 +77,7 @@ Examples
 --------
 
 
-::
+.. code-block:: python
 
     @ratelimit(key='ip', rate='5/m')
     def myview(request):
@@ -118,7 +118,7 @@ Examples
         # Allow 4 reqs/hour.
         return HttpResponse()
 
-    rate = lambda r: None if request.user.is_authenticated else '100/h'
+    rate = lambda g, r: None if request.user.is_authenticated else '100/h'
     @ratelimit(key='ip', rate=rate)
     def skipif1(request):
         # Only rate limit anonymous requests
@@ -144,8 +144,8 @@ Examples
         # Uses the X-Cluster-Client-IP header value.
         return HttpResponse()
 
-    @ratelimit(key=lambda r: r.META.get('HTTP_X_CLUSTER_CLIENT_IP',
-                                        r.META['REMOTE_ADDR'])
+    @ratelimit(key=lambda g, r: r.META.get('HTTP_X_CLUSTER_CLIENT_IP',
+                                           r.META['REMOTE_ADDR'])
     def myview(request):
         # Use `X-Cluster-Client-IP` but fall back to REMOTE_ADDR.
         return HttpResponse()
