@@ -6,6 +6,10 @@ from importlib import import_module
 
 from django.conf import settings
 from django.core.cache import caches
+try:
+    from django_redis.cache import RedisCache
+except ImportErro:
+    RedisCache = None
 from django.core.exceptions import ImproperlyConfigured
 
 from ratelimit import ALL, UNSAFE
@@ -168,7 +172,11 @@ def get_usage_count(request, group=None, fn=None, key=None, rate=None,
     cache_key = _make_cache_key(group, rate, value, method)
     time_left = _get_window(value, period) - int(time.time())
     initial_value = 1 if increment else 0
-    added = cache.add(cache_key, initial_value, period + EXPIRATION_FUDGE)
+    if isinstance(cache, RedisCache):
+        added = cache.set(cache_key, initial_value, period + EXPIRATION_FUDGE,
+                          nx=True)
+    else:
+        added = cache.add(cache_key, initial_value, period + EXPIRATION_FUDGE)
     if added:
         count = initial_value
     else:
