@@ -12,6 +12,10 @@ from django.utils.module_loading import import_string
 
 from ratelimit import ALL, UNSAFE
 
+try:
+    from django_redis.cache import RedisCache
+except ImportError:
+    RedisCache = None
 
 __all__ = ['is_ratelimited', 'get_usage']
 
@@ -187,7 +191,11 @@ def get_usage(request, group=None, fn=None, key=None, rate=None, method=ALL,
     cache_key = _make_cache_key(group, window, rate, value, method)
 
     count = None
-    added = cache.add(cache_key, initial_value, period + EXPIRATION_FUDGE)
+    if isinstance(cache, RedisCache):
+        added = cache.set(cache_key, initial_value, period + EXPIRATION_FUDGE,
+                          nx=True)
+    else:
+        added = cache.add(cache_key, initial_value, period + EXPIRATION_FUDGE)
     if added:
         count = initial_value
     else:
