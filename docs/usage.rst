@@ -199,20 +199,6 @@ It is also possible to wrap a whole view later, e.g.:
    class-based view will be limited separate.
 
 
-.. _usage-mixin:
-
-Class-Based View Mixin
-======================
-
-.. versionadded:: 0.4
-.. deprecated:: 3.0
-
-The ``RatelimitMixin`` was never as powerful or flexible as the
-``@ratelimit`` decorator, and given that it is possible to use the
-decorator through Django's ``@method_decorator``, the mixin has been
-deprecated.
-
-
 .. _usage-helper:
 
 Core Methods
