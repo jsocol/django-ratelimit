@@ -28,7 +28,7 @@ status code of the response to 429.
 
     def ratelimited_error(request, exception):
         # or other types:
-        return JsonResponse({'error': 'ratelimited'], status=429)
+        return JsonResponse({'error': 'ratelimited'}, status=429)
 
 In your app's settings, install the ``RatelimitMiddleware``
 :ref:`middleware <usage-middleware>` toward the bottom of the list. You
