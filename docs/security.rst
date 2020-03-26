@@ -136,7 +136,7 @@ Denial of Service
 However, limiting based on field values may open a `denial of service`_
 vector against your users, preventing them from logging in.
 
-For pages like login forms, consider implenting a soft blocking
+For pages like login forms, consider implementing a soft blocking
 mechanism, such as requiring a captcha, rather than a hard block with a
 ``PermissionDenied`` error.
 
