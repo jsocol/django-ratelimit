@@ -18,7 +18,7 @@ python:
 install:
  - if [[ $DJANGO_VERSION != master ]]; then pip install --pre -q "Django>=${DJANGO_VERSION},<${DJANGO_VERSION}.99"; fi
  - if [[ $DJANGO_VERSION == master ]]; then pip install https://github.com/django/django/archive/master.tar.gz; fi
- - pip install django-redis>=4.10.0 flake8 python3-memcached>=1.51
+ - pip install django-redis flake8 python3-memcached
 script:
  - ./run.sh test
  - ./run.sh flake8
