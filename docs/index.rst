@@ -5,7 +5,9 @@ Django Ratelimit
 Project
 =======
 
-**Django Ratelimit** is a ratelimiting decorator for Django views.
+**Django Ratelimit** is a ratelimiting decorator for Django views,
+storing rate data in the configured `Django cache backend
+<https://docs.djangoproject.com/en/dev/topics/cache/>`__.
 
 .. image:: https://travis-ci.org/jsocol/django-ratelimit.png?branch=master
    :target: https://travis-ci.org/jsocol/django-ratelimit
@@ -40,6 +42,11 @@ Use as a decorator in ``views.py``:
     def secondview(request):
         # ...
 
+After activating django-ratelimit, you should ensure that your cache
+backend is setup to be both persistent and work across multiple
+deployment worker instances (for instance UWSGI workers). Read more in
+the Django docs on `caching
+<https://docs.djangoproject.com/en/dev/topics/cache/>`__.
 
 .. _PyPI: http://pypi.python.org/pypi/django-ratelimit
 
