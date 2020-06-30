@@ -2,14 +2,14 @@
 Change Log
 ==========
 
-3.0a
+3.0
 ====
 
 Breaking changes:
 -----------------
 
 - Drop Python 2 support (#167)
-- Drop Django < 1.11 support (#167)
+- Drop Django < 2.1 support (#167, #198)
 - @ratelimit no longer directly supports class methods, use
   @method_decorator
 - Drop RatelimitMixin in favor of @method_decorator
@@ -20,6 +20,8 @@ Additions:
 ----------
 
 - Made ratelimit.core.get_usage a documented, public method.
+- Add IP address masking (#178)
+- Add "Recipes" section to documentation
 
 Minor changes:
 --------------

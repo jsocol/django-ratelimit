@@ -34,6 +34,3 @@ DATABASES = {
         'NAME': 'test.db',
     },
 }
-
-# silence system check about unset `MIDDLEWARE_CLASSES`
-SILENCED_SYSTEM_CHECKS = ['1_7.W001']
