@@ -4,7 +4,7 @@
 Upgrade Notes
 =============
 
-See also the `CHANGELOG <../CHANGELOG>`.
+See also the :ref:`CHANGELOG <../CHANGELOG>`.
 
 .. _upgrading-3.0:
 
