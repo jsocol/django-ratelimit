@@ -2,6 +2,14 @@
 Change Log
 ==========
 
+3.0.1
+=====
+
+Bug fixes
+---------
+
+- Fix import path values for rate= argument (#206)
+
 3.0
 ====
 
