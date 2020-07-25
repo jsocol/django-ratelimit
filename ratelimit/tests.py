@@ -37,6 +37,12 @@ class RateParsingTests(TestCase):
             assert o == _split_rate(i)
 
 
+def callable_rate(group, request):
+    if request.user.is_authenticated:
+        return None
+    return (0, 1)
+
+
 def mykey(group, request):
     return request.META['REMOTE_ADDR'][::-1]
 
@@ -213,6 +219,19 @@ class RatelimitTests(TestCase):
         assert not view(_req(auth=True))
         assert view(_req(auth=True))
 
+    def test_callable_rate_import(self):
+        def _req(auth):
+            req = rf.post('/')
+            req.user = MockUser(authenticated=auth)
+            return req
+
+        @ratelimit(key='user_or_ip', rate='ratelimit.tests.callable_rate')
+        def view(request):
+            return request.limited
+
+        assert view(_req(auth=False))
+        assert not view(_req(auth=True))
+
     def test_user_or_ip(self):
         """Allow custom functions to set cache keys."""
 
@@ -234,7 +253,7 @@ class RatelimitTests(TestCase):
         assert not view(_req(auth=True))
         assert view(_req(auth=True))
 
-    def test_key_path(self):
+    def test_callable_key_path(self):
         @ratelimit(key='ratelimit.tests.mykey', rate='1/m')
         def view(request):
             return request.limited
