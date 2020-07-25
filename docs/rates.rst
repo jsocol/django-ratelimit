@@ -46,7 +46,7 @@ Callables
 .. versionadded:: 0.5
 
 Rates can also be callables (or dotted paths to callables, which are
-assumed if there is no ``/`` in the value).
+assumed if there is a ``.`` in the value).
 
 Callables receive two values, the :ref:`group <usage-chapter>` and the
 ``request`` object. They should return a simple rate string, or a tuple

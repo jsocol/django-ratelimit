@@ -157,9 +157,15 @@ def get_usage(request, group=None, fn=None, key=None, rate=None, method=ALL,
 
     if callable(rate):
         rate = rate(group, request)
+    elif isinstance(rate, str) and '.' in rate:
+        ratefn = import_string(rate)
+        rate = ratefn(group, request)
+
     if rate is None:
         return None
     limit, period = _split_rate(rate)
+    if period <= 0:
+        raise ImproperlyConfigured('Ratelimit period must be greater than 0')
 
     if not key:
         raise ImproperlyConfigured('Ratelimit key must be specified')
