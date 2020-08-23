@@ -42,11 +42,11 @@ def ip_mask(ip):
 def user_or_ip(request):
     if request.user.is_authenticated:
         return str(request.user.pk)
-    return ip_mask(request.META['REMOTE_ADDR'])
+    return ip_mask(request.META[getattr(settings, 'RATELIMIT_IP_HEADER', 'REMOTE_ADDR')])
 
 
 _SIMPLE_KEYS = {
-    'ip': lambda r: ip_mask(r.META['REMOTE_ADDR']),
+    'ip': lambda r: ip_mask(r.META[getattr(settings, 'RATELIMIT_IP_HEADER', 'REMOTE_ADDR')]),
     'user': lambda r: str(r.user.pk),
     'user_or_ip': user_or_ip,
 }
