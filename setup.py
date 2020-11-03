@@ -14,6 +14,7 @@ setup(
     license='Apache Software License',
     packages=find_packages(exclude=['test_settings']),
     python_requires='>=3.4',
+    install_requires=["django-ipware>=3,<4"],
     include_package_data=True,
     package_data={'': ['README.rst']},
     classifiers=[
