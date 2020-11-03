@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.utils.translation import gettext_lazy as _
 
 from ratelimit.conf import settings
 from ratelimit.models import ExceededLimitRecord
@@ -16,6 +17,11 @@ class ExceededLimitRecordAdmin(admin.ModelAdmin):
     )
 
     list_filter = ["blocked_at", "path_info", "last_blocked_at"]
+
+    fieldsets = (
+        (None, {"fields": ("path_info", "access_attempt_failures")}),
+        (_("Meta Data"), {"fields": ("user_agent", "ip_address")}),
+    )
 
     search_fields = ["ip_address", "username", "user_agent", "path_info"]
 
