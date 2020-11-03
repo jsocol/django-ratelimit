@@ -6,7 +6,6 @@ import ipware.ip
 from django.core.cache import BaseCache, caches
 from django.http import HttpRequest
 from django.utils.module_loading import import_string
-
 from ratelimit.conf import settings
 
 
@@ -109,16 +108,12 @@ def make_cache_key(key_components):
     return cache_key
 
 
-def get_client_cache_key(request: HttpRequest) -> str:
+def get_client_cache_key(username: str, ip_address: str, user_agent: str) -> str:
     """
     Build cache key name from request.
 
     :return cache_key: Hash key that is usable for Django cache backends
     """
-
-    username = get_client_username(request)
-    ip_address = get_client_ip_address(request)
-    user_agent = get_client_user_agent(request)
 
     key_components = {
         "username": username,
