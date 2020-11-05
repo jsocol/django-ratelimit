@@ -75,9 +75,14 @@ but more secure way to record your logs depending on your throughput.
 Defaults to ``ratelimit.record_handlers.database.DatabaseRecordHandler``
 
 - ``ratelimit.record_handlers.database.DatabaseRecordHandler``
-To record logs in database
+
 - ``ratelimit.record_handlers.cache.CacheRecordHandler``
-To monitor logs in cache backend
+
+You should provide one of the above as a string , e.g.  
+
+.. code-block:: python
+
+    RATELIMIT_RECORD_HANDLER = "ratelimit.record_handlers.cache.CacheRecordHandler"
 
 ``RATELIMIT_ENABLE_ADMIN``
 --------------------------

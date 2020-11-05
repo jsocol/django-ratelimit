@@ -1,7 +1,5 @@
 SECRET_KEY = "ratelimit"
 
-INSTALLED_APPS = ("ratelimit",)
-
 RATELIMIT_USE_CACHE = "default"
 
 CACHES = {
@@ -33,12 +31,10 @@ DATABASES = {
     },
 }
 
-
 INSTALLED_APPS = [
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
-    "django.contrib.sites",
     "django.contrib.messages",
     "django.contrib.admin",
     "ratelimit",
