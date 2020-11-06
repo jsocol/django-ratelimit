@@ -4,7 +4,6 @@ from typing import Callable, Optional
 
 import ipware.ip
 from django.core.cache import BaseCache, caches
-from django.http import HttpRequest
 from django.utils.module_loading import import_string
 from ratelimit.conf import settings
 
@@ -103,7 +102,7 @@ def make_cache_key(key_components):
 
     cache_key_components = "".join(value for value in key_components.values() if value)
     cache_key_digest = md5(cache_key_components.encode()).hexdigest()
-    cache_key = f"drl-{cache_key_digest}"
+    cache_key = "drl-{}".format(cache_key_digest)
 
     return cache_key
 

@@ -2,8 +2,6 @@ from __future__ import absolute_import
 
 from functools import wraps
 
-from django.conf import settings
-
 from ratelimit import ALL, UNSAFE
 from ratelimit.core import is_ratelimited
 from ratelimit.exceptions import Ratelimited
