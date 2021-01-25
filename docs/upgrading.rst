@@ -4,7 +4,9 @@
 Upgrade Notes
 =============
 
-See also the `CHANGELOG <../CHANGELOG>`.
+See also the CHANGELOG_.
+
+.. _CHANGELOG: https://github.com/jsocol/django-ratelimit/blob/main/CHANGELOG
 
 .. _upgrading-3.0:
 
