@@ -29,18 +29,24 @@ EXPIRATION_FUDGE = 5
 def _get_ip(request):
     ip_meta = getattr(settings, 'RATELIMIT_IP_META_KEY', None)
     if not ip_meta:
-        return request.META['REMOTE_ADDR']
-    if callable(ip_meta):
-        return ip_meta(request)
-    if isinstance(ip_meta, str) and '.' in ip_meta:
+        ip = request.META['REMOTE_ADDR']
+        if not ip:
+            raise ImproperlyConfigured(
+                'IP address in REMOTE_ADDR is empty. This can happen when '
+                'using a reverse proxy and connecting to the app server with '
+                'Unix sockets. See the documentation for '
+                'RATELIMIT_IP_META_KEY: https://bit.ly/3iIpy2x')
+    elif callable(ip_meta):
+        ip = ip_meta(request)
+    elif isinstance(ip_meta, str) and '.' in ip_meta:
         ip_meta_fn = import_string(ip_meta)
-        return ip_meta_fn(request)
-    if ip_meta in request.META:
-        return request.META[ip_meta]
-    raise ImproperlyConfigured('Could not get IP address from "%s"' % ip_meta)
+        ip = ip_meta_fn(request)
+    elif ip_meta in request.META:
+        ip = request.META[ip_meta]
+    else:
+        raise ImproperlyConfigured(
+            'Could not get IP address from "%s"' % ip_meta)
 
-
-def ip_mask(ip):
     if ':' in ip:
         # IPv6
         mask = getattr(settings, 'RATELIMIT_IPV6_MASK', 64)
@@ -56,11 +62,11 @@ def ip_mask(ip):
 def user_or_ip(request):
     if request.user.is_authenticated:
         return str(request.user.pk)
-    return ip_mask(_get_ip(request))
+    return _get_ip(request)
 
 
 _SIMPLE_KEYS = {
-    'ip': lambda r: ip_mask(_get_ip(r)),
+    'ip': lambda r: _get_ip(r),
     'user': lambda r: str(r.user.pk),
     'user_or_ip': user_or_ip,
 }
