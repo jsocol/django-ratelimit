@@ -20,7 +20,7 @@ def ratelimit(group=None, key=None, rate=None, method=ALL, block=False):
                                          increment=True)
             request.limited = ratelimited or old_limited
             if ratelimited and block:
-                raise Ratelimited()
+                raise Ratelimited(group=group, key=key, rate=rate)
             return fn(request, *args, **kw)
         return _wrapped
     return decorator
