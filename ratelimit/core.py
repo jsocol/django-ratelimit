@@ -27,7 +27,17 @@ EXPIRATION_FUDGE = 5
 
 
 def _get_ip(request):
-    return request.META['REMOTE_ADDR']
+    ip_meta = getattr(settings, 'RATELIMIT_IP_META_KEY', None)
+    if not ip_meta:
+        return request.META['REMOTE_ADDR']
+    if callable(ip_meta):
+        return ip_meta(request)
+    if isinstance(ip_meta, str) and '.' in ip_meta:
+        ip_meta_fn = import_string(ip_meta)
+        return ip_meta_fn(request)
+    if ip_meta in request.META:
+        return request.META[ip_meta]
+    raise ImproperlyConfigured('Could not get IP address from "%s"' % ip_meta)
 
 
 def ip_mask(ip):
