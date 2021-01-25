@@ -11,18 +11,24 @@ usage() {
     exit 1
 }
 
+if command -v django-admin.py; then
+    ENTRY=django-admin.py
+else
+    ENTRY=django-admin
+fi
+
 
 case "$1" in
     "test" )
         shift;
-        echo "Django version: $(django-admin.py --version)"
-        django-admin.py test ratelimit "$@";;
+        echo "Django version: $($ENTRY --version)"
+        $ENTRY test ratelimit "$@";;
     "flake8" )
         shift;
         echo "Flake8 version: $(flake8 --version)"
         flake8 "$@" ratelimit/;;
     "shell" )
-        django-admin.py shell ;;
+        $ENTRY shell ;;
     * )
         usage ;;
 esac
