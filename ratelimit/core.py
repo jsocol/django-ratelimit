@@ -26,6 +26,10 @@ _PERIODS = {
 EXPIRATION_FUDGE = 5
 
 
+def _get_ip(request):
+    return request.META['REMOTE_ADDR']
+
+
 def ip_mask(ip):
     if ':' in ip:
         # IPv6
@@ -42,11 +46,11 @@ def ip_mask(ip):
 def user_or_ip(request):
     if request.user.is_authenticated:
         return str(request.user.pk)
-    return ip_mask(request.META['REMOTE_ADDR'])
+    return ip_mask(_get_ip(request))
 
 
 _SIMPLE_KEYS = {
-    'ip': lambda r: ip_mask(r.META['REMOTE_ADDR']),
+    'ip': lambda r: ip_mask(_get_ip(r)),
     'user': lambda r: str(r.user.pk),
     'user_or_ip': user_or_ip,
 }

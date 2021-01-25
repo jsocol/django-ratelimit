@@ -2,6 +2,14 @@
 Change Log
 ==========
 
+UNRELEASED
+==========
+
+Minor changes:
+--------------
+
+- Factor up _get_ip() logic into a single place
+
 3.0.1
 =====
 
