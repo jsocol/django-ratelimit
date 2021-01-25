@@ -14,6 +14,7 @@ Minor changes:
 --------------
 
 - Factor up _get_ip() logic into a single place (#218)
+- Exception on empty REMOTE_ADDR is clearer (#220)
 
 3.0.1
 =====

@@ -622,3 +622,10 @@ class IpMetaTests(TestCase):
         req.META['MY_THING'] = '5.6.7.8'
 
         assert '5.6.7.8' == _get_ip(req)
+
+    def test_empty_ip(self):
+        req = rf.get('/')
+        req.META['REMOTE_ADDR'] = ''
+
+        with self.assertRaises(ImproperlyConfigured):
+            _get_ip(req)
