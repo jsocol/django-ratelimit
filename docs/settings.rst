@@ -47,6 +47,30 @@ Has no default - you must set this to use ``RatelimitMiddleware``.
 
 Whether to allow requests when the cache backend fails. Defaults to ``False``.
 
+``RATELIMIT_IP_META_KEY``
+-------------------------
+
+Set the source of the client IP address in the request.META object. Defaults to
+``None``.
+
+There are several potential values:
+
+``None``
+  Use ``request.META['REMOTE_ADDR']`` as the source of the client IP address.
+
+A callable object
+  If set to a callable, the callable will be passed the full ``request``
+  object. The callable must return the client IP address. For example:
+  ``RATELIMIT_IP_META_KEY = lambda r: r.META['HTTP_X_CLIENT_IP']``
+
+A dotted path to a callable
+  Any string containing a ``.`` will be treated as a dotted path to a callable,
+  which will be imported and called on the ``request`` object, as above.
+
+Any other string
+  Any other string will be treated as a key for the ``request.META`` object,
+  e.g. ``RATELIMIT_IP_META_KEY = 'HTTP_X_REAL_IP'``
+
 ``RATELIMIT_IPV4_MASK``
 -----------------------
 

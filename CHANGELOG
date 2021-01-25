@@ -2,6 +2,19 @@
 Change Log
 ==========
 
+UNRELEASED
+==========
+
+Additions:
+----------
+
+- Add RATELIMIT_IP_META_KEY setting (#218)
+
+Minor changes:
+--------------
+
+- Factor up _get_ip() logic into a single place (#218)
+
 3.0.1
 =====
 

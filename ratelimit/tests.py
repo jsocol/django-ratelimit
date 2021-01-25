@@ -9,7 +9,7 @@ from django.views.generic import View
 
 from ratelimit.decorators import ratelimit
 from ratelimit.exceptions import Ratelimited
-from ratelimit.core import get_usage, is_ratelimited, _split_rate
+from ratelimit.core import get_usage, is_ratelimited, _split_rate, _get_ip
 
 
 rf = RequestFactory()
@@ -578,3 +578,47 @@ class CacheFailTests(TestCase):
 
         assert view(rf.get('/'))
         assert view(rf.get('/'))
+
+
+def my_ip(req):
+    return req.META['MY_THING']
+
+
+class IpMetaTests(TestCase):
+    def test_default(self):
+        req = rf.get('/')
+        req.META['REMOTE_ADDR'] = '1.2.3.4'
+
+        assert '1.2.3.4' == _get_ip(req)
+
+    @override_settings(RATELIMIT_IP_META_KEY='fake')
+    def test_bad_config(self):
+        req = rf.get('/')
+        req.META['REMOTE_ADDR'] = '1.2.3.4'
+
+        with self.assertRaises(ImproperlyConfigured):
+            _get_ip(req)
+
+    @override_settings(RATELIMIT_IP_META_KEY='HTTP_X_CLIENT_IP')
+    def test_alternate_header(self):
+        req = rf.get('/')
+        req.META['REMOTE_ADDR'] = '1.2.3.4'
+        req.META['HTTP_X_CLIENT_IP'] = '5.6.7.8'
+
+        assert '5.6.7.8' == _get_ip(req)
+
+    @override_settings(RATELIMIT_IP_META_KEY='ratelimit.tests.my_ip')
+    def test_path_to_ip_key_callable(self):
+        req = rf.get('/')
+        req.META['REMOTE_ADDR'] = '1.2.3.4'
+        req.META['MY_THING'] = '5.6.7.8'
+
+        assert '5.6.7.8' == _get_ip(req)
+
+    @override_settings(RATELIMIT_IP_META_KEY=my_ip)
+    def test_callable_ip_key(self):
+        req = rf.get('/')
+        req.META['REMOTE_ADDR'] = '1.2.3.4'
+        req.META['MY_THING'] = '5.6.7.8'
+
+        assert '5.6.7.8' == _get_ip(req)
