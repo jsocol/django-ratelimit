@@ -5,6 +5,11 @@ Change Log
 UNRELEASED
 ==========
 
+Breaking changes:
+-----------------
+
+- Renamed the package from ratelimit to django_ratelimit (#226)
+
 Additions:
 ----------
 

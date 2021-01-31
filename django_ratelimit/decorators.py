@@ -2,9 +2,9 @@ from __future__ import absolute_import
 
 from functools import wraps
 
-from ratelimit import ALL, UNSAFE
-from ratelimit.exceptions import Ratelimited
-from ratelimit.core import is_ratelimited
+from django_ratelimit import ALL, UNSAFE
+from django_ratelimit.exceptions import Ratelimited
+from django_ratelimit.core import is_ratelimited
 
 
 __all__ = ['ratelimit']
