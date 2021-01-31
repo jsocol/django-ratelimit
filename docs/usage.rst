@@ -14,7 +14,7 @@ Import:
 
 .. code-block:: python
 
-    from ratelimit.decorators import ratelimit
+    from django_ratelimit.decorators import ratelimit
 
 
 .. py:decorator:: ratelimit(group=None, key=, rate=None, method=ALL, block=False)
@@ -62,7 +62,7 @@ the root ``ratelimit`` module:
 
 .. code-block:: python
 
-    from ratelimit.decorators import ratelimit
+    from django_ratelimit.decorators import ratelimit
 
     @ratelimit(key='ip', method=ratelimit.ALL)
     @ratelimit(key='ip', method=ratelimit.UNSAFE)
@@ -183,7 +183,7 @@ It is also possible to wrap a whole view later, e.g.:
 
     from myapp.views import MyView
 
-    from ratelimit.decorators import ratelimit
+    from django_ratelimit.decorators import ratelimit
 
     urlpatterns = [
         path('/', ratelimit(key='ip', method='GET', rate='1/m')(MyView.as_view())),
@@ -214,7 +214,7 @@ functionality in ``ratelimit.core``. The two major methods are
 
 .. code-block:: python
 
-    from ratelimit.core import get_usage, is_ratelimited
+    from django_ratelimit.core import get_usage, is_ratelimited
 
 .. py:function:: get_usage(request, group=None, fn=None, key=None, \
                            rate=None, method=ALL, increment=False)

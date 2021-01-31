@@ -10,7 +10,7 @@ from django.core.cache import caches
 from django.core.exceptions import ImproperlyConfigured
 from django.utils.module_loading import import_string
 
-from ratelimit import ALL, UNSAFE
+from django_ratelimit import ALL, UNSAFE
 
 
 __all__ = ['is_ratelimited', 'get_usage']

@@ -8,6 +8,16 @@ See also the CHANGELOG_.
 
 .. _CHANGELOG: https://github.com/jsocol/django-ratelimit/blob/main/CHANGELOG
 
+.. _upgrading-4.0:
+
+From 3.x to 4.0
+===============
+
+Quickly:
+
+- Rename imports from ``from ratelimit`` to ``from django_ratelimit``
+
+
 .. _upgrading-3.0:
 
 From 2.0 to 3.0

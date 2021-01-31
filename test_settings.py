@@ -1,7 +1,7 @@
 SECRET_KEY = 'ratelimit'
 
 INSTALLED_APPS = (
-    'ratelimit',
+    'django_ratelimit',
 )
 
 RATELIMIT_USE_CACHE = 'default'

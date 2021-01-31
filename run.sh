@@ -22,11 +22,11 @@ case "$1" in
     "test" )
         shift;
         echo "Django version: $($ENTRY --version)"
-        $ENTRY test ratelimit "$@";;
+        $ENTRY test django_ratelimit "$@";;
     "flake8" )
         shift;
         echo "Flake8 version: $(flake8 --version)"
-        flake8 "$@" ratelimit/;;
+        flake8 "$@" django_ratelimit/;;
     "shell" )
         $ENTRY shell ;;
     * )

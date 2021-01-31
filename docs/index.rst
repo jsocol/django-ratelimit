@@ -32,7 +32,7 @@ Use as a decorator in ``views.py``:
 
 .. code-block:: python
 
-    from ratelimit.decorators import ratelimit
+    from django_ratelimit.decorators import ratelimit
 
     @ratelimit(key='ip')
     def myview(request):
