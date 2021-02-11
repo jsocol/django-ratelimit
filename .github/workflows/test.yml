@@ -17,6 +17,10 @@ jobs:
             django: 3.1
           - python-version: 3.5
             django: master
+          - python-version: 3.6
+            django: master
+          - python-version: 3.7
+            django: master
 
     steps:
     - uses: actions/checkout@v2
