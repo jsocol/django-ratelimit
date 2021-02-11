@@ -109,11 +109,19 @@ def _split_rate(rate):
 
 
 def _get_window(value, period):
+    """
+    Given a value, and time period return when the end of the current time
+    period for rate evaluation is.
+    """
     ts = int(time.time())
     if period == 1:
         return ts
     if not isinstance(value, bytes):
         value = value.encode('utf-8')
+    # This logic determines either the last or current end of a time period.
+    # Subtracting (ts % period) gives us the a consistent edge from the epoch.
+    # We use (zlib.crc32(value) % period) to add a consistent jitter so that
+    # all time periods don't end at the same time.
     w = ts - (ts % period) + (zlib.crc32(value) % period)
     if w < ts:
         return w + period
