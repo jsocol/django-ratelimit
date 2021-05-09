@@ -1,5 +1,11 @@
 from django.core.exceptions import PermissionDenied
 
 
-class Ratelimited(PermissionDenied):
-    pass
+try:
+    from rest_framework.exceptions import Throttled
+
+    class Ratelimited(PermissionDenied):
+        pass
+except ImportError:
+    class Ratelimited(PermissionDenied, Throttled):
+        pass
