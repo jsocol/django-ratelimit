@@ -76,76 +76,101 @@ is a shortcut for ``('POST', 'PUT', 'PATCH', 'DELETE')``.
 Examples
 --------
 
+When a request has been detected as needing to be rate limited, the default action is to merely annotate
+the `request` with an attribute of `limited`. Effectively, unless you take action based on the added
+annotation, nothing will happen. However, if you choose, you can set the `block` keyword argument that will 
+then raise a `Ratelimited()` exception. When using the middleware, this exception is specifically caught
+and the `RATELIMIT_VIEW` is called instead.
+
+Typical use case if you want to control what happens when the request needs to be rate limited:
 
 .. code-block:: python
 
     @ratelimit(key='ip', rate='5/m')
     def myview(request):
-        # Will be true if the same IP makes more than 5 POST
-        # requests/minute.
+        # Will be true if the same IP makes more than 5 requests per minute.
         was_limited = getattr(request, 'limited', False)
+        
+        if was_limited:
+            raise HttpResponse("Limited response")
+            
         return HttpResponse()
+        
+Typical use case for using the middleware instead of self-handling the rate limit.
+.. code-block:: python
 
     @ratelimit(key='ip', rate='5/m', block=True)
     def myview(request):
-        # If the same IP makes >5 reqs/min, will raise Ratelimited
+        # If the same IP makes >5 reqs/min, will raise Ratelimited()
         return HttpResponse()
 
+Additional examples
+.. code-block:: python
+
+    # self-handling the rate limiting
     @ratelimit(key='post:username', rate='5/m', method=['GET', 'POST'])
     def login(request):
         # If the same username is used >5 times/min, this will be True.
         # The `username` value will come from GET or POST, determined by the
         # request method.
         was_limited = getattr(request, 'limited', False)
+        if was_limited:
+            raise HttpResponse("Limited response")
+            
         return HttpResponse()
 
+    # Use multiple keys by stacking decorators.
     @ratelimit(key='post:username', rate='5/m')
     @ratelimit(key='post:tenant', rate='5/m')
     def login(request):
-        # Use multiple keys by stacking decorators.
+        
+        was_limited = getattr(request, 'limited', False)
+        if was_limited:
+            raise HttpResponse("Limited response")
+            
         return HttpResponse()
 
-    @ratelimit(key='get:q', rate='5/m')
-    @ratelimit(key='post:q', rate='5/m')
+    # use the middleware to show the error to the user
+    @ratelimit(key='get:q', rate='5/m', block=True)
+    @ratelimit(key='post:q', rate='5/m', block=True)
     def search(request):
         # These two decorators combine to form one rate limit: the same search
         # query can only be tried 5 times a minute, regardless of the request
         # method (GET or POST)
         return HttpResponse()
 
-    @ratelimit(key='ip', rate='4/h')
+    @ratelimit(key='ip', rate='4/h', block=True)
     def slow(request):
         # Allow 4 reqs/hour.
         return HttpResponse()
 
     rate = lambda g, r: None if r.user.is_authenticated else '100/h'
-    @ratelimit(key='ip', rate=rate)
+    @ratelimit(key='ip', rate=rate, block=True)
     def skipif1(request):
         # Only rate limit anonymous requests
         return HttpResponse()
 
-    @ratelimit(key='user_or_ip', rate='10/s')
-    @ratelimit(key='user_or_ip', rate='100/m')
+    @ratelimit(key='user_or_ip', rate='10/s', block=True)
+    @ratelimit(key='user_or_ip', rate='100/m', block=True)
     def burst_limit(request):
         # Implement a separate burst limit.
         return HttpResponse()
 
-    @ratelimit(group='expensive', key='user_or_ip', rate='10/h')
+    @ratelimit(group='expensive', key='user_or_ip', rate='10/h', block=True)
     def expensive_view_a(request):
         return something_expensive()
 
-    @ratelimit(group='expensive', key='user_or_ip', rate='10/h')
+    @ratelimit(group='expensive', key='user_or_ip', rate='10/h', block=True)
     def expensive_view_b(request):
         # Shares a counter with expensive_view_a
         return something_else_expensive()
 
-    @ratelimit(key='header:x-cluster-client-ip')
+    @ratelimit(key='header:x-cluster-client-ip', block=True)
     def post(request):
         # Uses the X-Cluster-Client-IP header value.
         return HttpResponse()
 
-    @ratelimit(key=lambda g, r: r.META.get('HTTP_X_CLUSTER_CLIENT_IP',
-                                           r.META['REMOTE_ADDR'])
+    @ratelimit(key=lambda g, r: r.META.get('HTTP_X_CLUSTER_CLIENT_IP', r.META['REMOTE_ADDR'], block=True)
     def myview(request):
         # Use `X-Cluster-Client-IP` but fall back to REMOTE_ADDR.
         return HttpResponse()
@@ -166,11 +191,12 @@ Django ``@method_decorator``:
     from django.views.generic import View
 
     class MyView(View):
-        @method_decorator(ratelimit(key='ip', rate='1/m', method='GET'))
+    
+        @method_decorator(ratelimit(key='ip', rate='1/m', method='GET', block=True))
         def get(self, request):
             pass
 
-    @method_decorator(ratelimit(key='ip', rate='1/m', method='GET'), name='get')
+    @method_decorator(ratelimit(key='ip', rate='1/m', method='GET', block=True), name='get')
     class MyOtherView(View):
         def get(self, request):
             pass
@@ -186,7 +212,7 @@ It is also possible to wrap a whole view later, e.g.:
     from django_ratelimit.decorators import ratelimit
 
     urlpatterns = [
-        path('/', ratelimit(key='ip', method='GET', rate='1/m')(MyView.as_view())),
+        path('/', ratelimit(key='ip', method='GET', rate='1/m', block=True)(MyView.as_view())),
     ]
 
 .. warning::
