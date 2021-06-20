@@ -18,7 +18,7 @@ usage() {
 case "$CMD" in
     "test" )
         echo "Django version: $(python -m django --version)"
-        python -m django test django_ratelimit "$@";;
+        python -m django test django_ratelimit/tests "$@";;
     "flake8" )
         echo "Flake8 version: $(flake8 --version)"
         flake8 "$@" django_ratelimit/;;

@@ -3,26 +3,36 @@ from __future__ import absolute_import
 from functools import wraps
 
 from django_ratelimit import ALL, UNSAFE
-from django_ratelimit.exceptions import Ratelimited
 from django_ratelimit.core import is_ratelimited
+from django_ratelimit.exceptions import Ratelimited
+from django_ratelimit.record_handlers.proxy import RateLimitRecordProxy
 
-
-__all__ = ['ratelimit']
+__all__ = ["ratelimit"]
 
 
 def ratelimit(group=None, key=None, rate=None, method=ALL, block=False):
     def decorator(fn):
         @wraps(fn)
         def _wrapped(request, *args, **kw):
-            old_limited = getattr(request, 'limited', False)
-            ratelimited = is_ratelimited(request=request, group=group, fn=fn,
-                                         key=key, rate=rate, method=method,
-                                         increment=True)
+            old_limited = getattr(request, "limited", False)
+            ratelimited = is_ratelimited(
+                request=request,
+                group=group,
+                fn=fn,
+                key=key,
+                rate=rate,
+                method=method,
+                increment=True,
+            )
             request.limited = ratelimited or old_limited
+            if ratelimited:
+                RateLimitRecordProxy.exceeded_limit_record(request=request)
             if ratelimited and block:
                 raise Ratelimited()
             return fn(request, *args, **kw)
+
         return _wrapped
+
     return decorator
 
 
