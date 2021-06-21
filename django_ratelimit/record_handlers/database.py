@@ -1,5 +1,6 @@
 from logging import getLogger
 
+from django.db.models import F
 from django_ratelimit.models import ExceededLimitRecord
 from django_ratelimit.record_handlers.base import AbstractRateLimitRecordHandler
 from django_ratelimit.record_handlers.helpers import (
@@ -33,13 +34,13 @@ class DatabaseRecordHandler(AbstractRateLimitRecordHandler):
         user_agent = get_client_user_agent(request)
 
         try:
-            limit_record = ExceededLimitRecord.objects.get(
+            limit_record = ExceededLimitRecord.objects.only("id").get(
                 user_agent=user_agent,
                 ip_address=client_ip_address,
                 username=username,
                 path_info=path_info,
             )
-            limit_record.access_attempt_failures += 1
+            limit_record.access_attempt_failures = F("access_attempt_failures") + 1
             limit_record.save()
 
         except ExceededLimitRecord.DoesNotExist:

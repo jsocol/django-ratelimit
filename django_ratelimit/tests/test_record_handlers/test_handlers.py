@@ -1,6 +1,7 @@
 from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
+from django.db.models import F
 from django.http import HttpRequest
 from django.test import TestCase
 from django.urls import reverse
@@ -48,3 +49,21 @@ class DatabaseRecordHandlerTestCase(TestCase):
         self.assertEquals(self.ip_address, model_object.ip_address)
         self.assertEquals(self.path_info, model_object.path_info)
         self.assertEquals(1, ExceededLimitRecord.objects.count())
+
+    def test_efficient_updating_access_atempts(self):
+        ExceededLimitRecord.objects.create(
+            user_agent=self.user_agent,
+            access_attempt_failures=2,
+            ip_address=self.ip_address,
+            username=self.username,
+            path_info=self.path_info,
+        )
+        with self.assertNumQueries(2):
+            limit_record = ExceededLimitRecord.objects.only("id").get(
+                user_agent=self.user_agent,
+                ip_address=self.ip_address,
+                username=self.username,
+                path_info=self.path_info,
+            )
+            limit_record.access_attempt_failures = F("access_attempt_failures") + 1
+            limit_record.save()
