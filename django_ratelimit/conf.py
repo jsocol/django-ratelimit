@@ -18,5 +18,5 @@ settings.RATELIMIT_ENABLE_ADMIN = getattr(settings, "RATELIMIT_ENABLE_ADMIN", Tr
 settings.RATELIMIT_RECORD_HANDLER = getattr(
     settings,
     "RATELIMIT_RECORD_HANDLER",
-    "ratelimit.record_handlers.database.DatabaseRecordHandler",
+    "django_ratelimit.record_handlers.database.DatabaseRecordHandler",
 )

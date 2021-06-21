@@ -1,8 +1,8 @@
 from django.contrib import admin
 from django.utils.translation import gettext_lazy as _
 
-from ratelimit.conf import settings
-from ratelimit.models import ExceededLimitRecord
+from django_ratelimit.conf import settings
+from django_ratelimit.models import ExceededLimitRecord
 
 
 class ExceededLimitRecordAdmin(admin.ModelAdmin):

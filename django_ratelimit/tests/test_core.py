@@ -6,9 +6,9 @@ from django.test import RequestFactory, TestCase
 from django.test.utils import override_settings
 from django.utils.decorators import method_decorator
 from django.views.generic import View
-from ratelimit.core import _split_rate, get_usage, is_ratelimited
-from ratelimit.decorators import ratelimit
-from ratelimit.exceptions import Ratelimited
+from django_ratelimit.core import _split_rate, get_usage, is_ratelimited
+from django_ratelimit.decorators import ratelimit
+from django_ratelimit.exceptions import Ratelimited
 
 rf = RequestFactory()
 
@@ -223,7 +223,9 @@ class RatelimitTests(TestCase):
             req.user = MockUser(authenticated=auth)
             return req
 
-        @ratelimit(key="user_or_ip", rate="ratelimit.tests.test_core.callable_rate")
+        @ratelimit(
+            key="user_or_ip", rate="django_ratelimit.tests.test_core.callable_rate"
+        )
         def view(request):
             return request.limited
 
@@ -252,7 +254,7 @@ class RatelimitTests(TestCase):
         assert view(_req(auth=True))
 
     def test_callable_key_path(self):
-        @ratelimit(key="ratelimit.tests.test_core.mykey", rate="1/m")
+        @ratelimit(key="django_ratelimit.tests.test_core.mykey", rate="1/m")
         def view(request):
             return request.limited
 

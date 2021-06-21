@@ -3,26 +3,27 @@
 export PYTHONPATH=".:$PYTHONPATH"
 export DJANGO_SETTINGS_MODULE="test_settings"
 
+PROG="$0"
+CMD="$1"
+shift
+
 usage() {
-    echo "USAGE: $0 [command]"
+    echo "USAGE: $PROG [command]"
     echo "  test - run the ratelimit tests"
     echo "  flake8 - run flake8"
     echo "  shell - open the Django shell"
     exit 1
 }
 
-
-case "$1" in
+case "$CMD" in
     "test" )
-        shift;
-        echo "Django version: $(django-admin.py --version)"
-        django-admin.py test ratelimit "$@";;
+        echo "Django version: $(python -m django --version)"
+        python -m django test django_ratelimit/tests "$@";;
     "flake8" )
-        shift;
         echo "Flake8 version: $(flake8 --version)"
-        flake8 "$@" ratelimit/;;
+        flake8 "$@" django_ratelimit/;;
     "shell" )
-        django-admin.py shell ;;
+        python -m django shell ;;
     * )
         usage ;;
 esac

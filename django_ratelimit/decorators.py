@@ -2,10 +2,10 @@ from __future__ import absolute_import
 
 from functools import wraps
 
-from ratelimit import ALL, UNSAFE
-from ratelimit.core import is_ratelimited
-from ratelimit.exceptions import Ratelimited
-from ratelimit.record_handlers.proxy import RateLimitRecordProxy
+from django_ratelimit import ALL, UNSAFE
+from django_ratelimit.core import is_ratelimited
+from django_ratelimit.exceptions import Ratelimited
+from django_ratelimit.record_handlers.proxy import RateLimitRecordProxy
 
 __all__ = ["ratelimit"]
 

@@ -2,6 +2,25 @@
 Change Log
 ==========
 
+UNRELEASED
+==========
+
+Breaking changes:
+-----------------
+
+- Renamed the package from ratelimit to django_ratelimit (#226)
+
+Additions:
+----------
+
+- Add RATELIMIT_IP_META_KEY setting (#218)
+
+Minor changes:
+--------------
+
+- Factor up _get_ip() logic into a single place (#218)
+- Exception on empty REMOTE_ADDR is clearer (#220)
+
 3.0.1
 =====
 

@@ -1,8 +1,8 @@
 from logging import getLogger
 
-from ratelimit.models import ExceededLimitRecord
-from ratelimit.record_handlers.base import AbstractRateLimitRecordHandler
-from ratelimit.record_handlers.helpers import (
+from django_ratelimit.models import ExceededLimitRecord
+from django_ratelimit.record_handlers.base import AbstractRateLimitRecordHandler
+from django_ratelimit.record_handlers.helpers import (
     get_client_ip_address,
     get_client_path_info,
     get_client_user_agent,

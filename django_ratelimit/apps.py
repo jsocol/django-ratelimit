@@ -4,7 +4,7 @@ from django.apps import AppConfig
 
 
 class RateLimitConfig(AppConfig):
-    name = "ratelimit"
+    name = "django_ratelimit"
 
     def ready(self):
-        import ratelimit.signals
+        import django_ratelimit.signals

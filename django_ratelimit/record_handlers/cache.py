@@ -1,7 +1,7 @@
 from logging import getLogger
 
-from ratelimit.record_handlers.base import AbstractRateLimitRecordHandler
-from ratelimit.record_handlers.helpers import (
+from django_ratelimit.record_handlers.base import AbstractRateLimitRecordHandler
+from django_ratelimit.record_handlers.helpers import (
     get_cache,
     get_cache_timeout,
     get_client_cache_key,

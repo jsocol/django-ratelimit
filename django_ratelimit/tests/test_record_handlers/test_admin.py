@@ -4,8 +4,8 @@ from importlib import reload
 from django.contrib import admin
 from django.test import TestCase, override_settings
 
-import ratelimit.admin
-from ratelimit.models import ExceededLimitRecord
+import django_ratelimit.admin
+from django_ratelimit.models import ExceededLimitRecord
 
 
 class RateLimitAdminFlag(TestCase):
@@ -15,9 +15,9 @@ class RateLimitAdminFlag(TestCase):
 
     @override_settings(RATELIMIT_ENABLE_ADMIN=False)
     def test_disable_admin(self):
-        reload(ratelimit.admin)
+        reload(django_ratelimit.admin)
         self.assertFalse(admin.site.is_registered(ExceededLimitRecord))
 
     def test_enable_admin_by_default(self):
-        reload(ratelimit.admin)
+        reload(django_ratelimit.admin)
         self.assertTrue(admin.site.is_registered(ExceededLimitRecord))

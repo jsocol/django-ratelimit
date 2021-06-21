@@ -1,7 +1,7 @@
 from django.core.signals import setting_changed
 from django.dispatch import receiver
 
-from ratelimit.record_handlers.proxy import RateLimitRecordProxy
+from django_ratelimit.record_handlers.proxy import RateLimitRecordProxy
 
 
 @receiver(setting_changed)

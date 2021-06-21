@@ -1,11 +1,11 @@
-SECRET_KEY = "ratelimit"
+SECRET_KEY = "django_ratelimit"
 
 RATELIMIT_USE_CACHE = "default"
 
 CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
-        "LOCATION": "ratelimit-tests",
+        "LOCATION": "django_ratelimit-tests",
     },
     "connection-errors": {
         "BACKEND": "django.core.cache.backends.memcached.MemcachedCache",
@@ -37,7 +37,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.admin",
-    "ratelimit",
+    "django_ratelimit",
 ]
 
 TEMPLATES = [
@@ -63,4 +63,4 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
 ]
 
-ROOT_URLCONF = "ratelimit.tests.urls"
+ROOT_URLCONF = "django_ratelimit.tests.urls"

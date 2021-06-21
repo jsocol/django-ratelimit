@@ -5,7 +5,8 @@ from typing import Callable, Optional
 import ipware.ip
 from django.core.cache import BaseCache, caches
 from django.utils.module_loading import import_string
-from ratelimit.conf import settings
+
+from django_ratelimit.conf import settings
 
 
 def get_client_ip_address(request) -> str:

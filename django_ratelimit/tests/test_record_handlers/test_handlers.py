@@ -4,19 +4,21 @@ from django.contrib.auth import get_user_model
 from django.http import HttpRequest
 from django.test import TestCase
 from django.urls import reverse
-
-from ratelimit.models import ExceededLimitRecord
-from ratelimit.record_handlers.database import DatabaseRecordHandler
-from ratelimit.record_handlers.proxy import RateLimitRecordProxy
+from django_ratelimit.models import ExceededLimitRecord
+from django_ratelimit.record_handlers.database import DatabaseRecordHandler
+from django_ratelimit.record_handlers.proxy import RateLimitRecordProxy
 
 
 class RateLimitRecordProxyHandlerTestCase(TestCase):
-    @patch("ratelimit.record_handlers.proxy.RateLimitRecordProxy.implementation", None)
+    @patch(
+        "django_ratelimit.record_handlers.proxy.RateLimitRecordProxy.implementation",
+        None,
+    )
     def test_setting_changed_signal_triggers_handler_reimport(self):
         self.assertIsNone(RateLimitRecordProxy.implementation)
 
         with self.settings(
-            RATELIMIT_RECORD_HANDLER="ratelimit.record_handlers.database.DatabaseRecordHandler"
+            RATELIMIT_RECORD_HANDLER="django_ratelimit.record_handlers.database.DatabaseRecordHandler"
         ):
             self.assertIsNotNone(RateLimitRecordProxy.implementation)
 

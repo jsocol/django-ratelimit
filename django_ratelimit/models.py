@@ -11,7 +11,7 @@ class BaseModel(models.Model):
 
     class Meta:
         abstract = True
-        app_label = "ratelimit"
+        app_label = "django_ratelimit"
         ordering = ["-blocked_at"]
 
 

@@ -1,10 +1,11 @@
 from django.utils.module_loading import import_string
-from ratelimit.conf import settings
-from ratelimit.record_handlers.base import (
+
+from django_ratelimit.conf import settings
+from django_ratelimit.record_handlers.base import (
     AbstractRateLimitRecordHandler,
     RateLimitRecordHandler,
 )
-from ratelimit.record_handlers.helpers import toggleable
+from django_ratelimit.record_handlers.helpers import toggleable
 
 
 class RateLimitRecordProxy(AbstractRateLimitRecordHandler):

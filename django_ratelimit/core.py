@@ -10,7 +10,7 @@ from django.core.cache import caches
 from django.core.exceptions import ImproperlyConfigured
 from django.utils.module_loading import import_string
 
-from ratelimit import ALL, UNSAFE
+from django_ratelimit import ALL, UNSAFE
 
 
 __all__ = ['is_ratelimited', 'get_usage']
@@ -26,7 +26,27 @@ _PERIODS = {
 EXPIRATION_FUDGE = 5
 
 
-def ip_mask(ip):
+def _get_ip(request):
+    ip_meta = getattr(settings, 'RATELIMIT_IP_META_KEY', None)
+    if not ip_meta:
+        ip = request.META['REMOTE_ADDR']
+        if not ip:
+            raise ImproperlyConfigured(
+                'IP address in REMOTE_ADDR is empty. This can happen when '
+                'using a reverse proxy and connecting to the app server with '
+                'Unix sockets. See the documentation for '
+                'RATELIMIT_IP_META_KEY: https://bit.ly/3iIpy2x')
+    elif callable(ip_meta):
+        ip = ip_meta(request)
+    elif isinstance(ip_meta, str) and '.' in ip_meta:
+        ip_meta_fn = import_string(ip_meta)
+        ip = ip_meta_fn(request)
+    elif ip_meta in request.META:
+        ip = request.META[ip_meta]
+    else:
+        raise ImproperlyConfigured(
+            'Could not get IP address from "%s"' % ip_meta)
+
     if ':' in ip:
         # IPv6
         mask = getattr(settings, 'RATELIMIT_IPV6_MASK', 64)
@@ -42,11 +62,11 @@ def ip_mask(ip):
 def user_or_ip(request):
     if request.user.is_authenticated:
         return str(request.user.pk)
-    return ip_mask(request.META['REMOTE_ADDR'])
+    return _get_ip(request)
 
 
 _SIMPLE_KEYS = {
-    'ip': lambda r: ip_mask(r.META['REMOTE_ADDR']),
+    'ip': lambda r: _get_ip(r),
     'user': lambda r: str(r.user.pk),
     'user_or_ip': user_or_ip,
 }
@@ -89,11 +109,19 @@ def _split_rate(rate):
 
 
 def _get_window(value, period):
+    """
+    Given a value, and time period return when the end of the current time
+    period for rate evaluation is.
+    """
     ts = int(time.time())
     if period == 1:
         return ts
     if not isinstance(value, bytes):
         value = value.encode('utf-8')
+    # This logic determines either the last or current end of a time period.
+    # Subtracting (ts % period) gives us the a consistent edge from the epoch.
+    # We use (zlib.crc32(value) % period) to add a consistent jitter so that
+    # all time periods don't end at the same time.
     w = ts - (ts % period) + (zlib.crc32(value) % period)
     if w < ts:
         return w + period

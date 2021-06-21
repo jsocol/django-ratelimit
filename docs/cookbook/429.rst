@@ -58,7 +58,7 @@ can check the exception type and return a specific status code:
 
 .. code-block:: python
 
-    from ratelimit.exceptions import Ratelimited
+    from django_ratelimit.exceptions import Ratelimited
 
     def my_403_handler(request, exception):
         if isinstance(exception, Ratelimited):

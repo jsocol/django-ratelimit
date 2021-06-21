@@ -1,0 +1,42 @@
+name: test
+
+on: [push, pull_request]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.5, 3.6, 3.7, 3.8]
+        django: [2.2, 3.0, 3.1, master]
+        exclude:
+          - python-version: 3.5
+            django: 3.0
+          - python-version: 3.5
+            django: 3.1
+          - python-version: 3.5
+            django: master
+          - python-version: 3.6
+            django: master
+          - python-version: 3.7
+            django: master
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        if [[ ${{ matrix.django }} != master ]]; then pip install --pre -q "Django>=${{ matrix.django }},<${{ matrix.django }}.99"; fi
+        if [[ ${{ matrix.django }} == master ]]; then pip install https://github.com/django/django/archive/master.tar.gz; fi
+        pip install flake8 django-redis python3-memcached
+    - name: Lint with flake8
+      run: |
+        ./run.sh flake8
+    - name: Test
+      run: |
+        ./run.sh test

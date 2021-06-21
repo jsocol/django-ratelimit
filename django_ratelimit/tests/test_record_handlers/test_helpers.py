@@ -1,8 +1,7 @@
 from datetime import timedelta
 
 from django.test import TestCase, override_settings
-
-from ratelimit.record_handlers.helpers import resolve_cache_timeout
+from django_ratelimit.record_handlers.helpers import resolve_cache_timeout
 
 
 def mock_resolve_cache_timeout_str():
@@ -23,7 +22,7 @@ class RateLimitCacheRecordTimeTestCase(TestCase):
         self.assertEqual(resolve_cache_timeout(), timedelta(seconds=30))
 
     @override_settings(
-        RATELIMIT_CACHE_RECORD_TIME="ratelimit.tests.test_record_handlers.test_helpers.mock_resolve_cache_timeout_str"
+        RATELIMIT_CACHE_RECORD_TIME="django_ratelimit.tests.test_record_handlers.test_helpers.mock_resolve_cache_timeout_str"
     )
     def test_resolve_cache_timeout_path(self):
         self.assertEqual(resolve_cache_timeout(), timedelta(seconds=30))

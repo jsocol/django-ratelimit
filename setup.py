@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-from ratelimit import __version__
+from django_ratelimit import __version__
 
 
 setup(
