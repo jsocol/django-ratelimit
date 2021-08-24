@@ -10,15 +10,15 @@ jobs:
       matrix:
         python-version: ['3.6', '3.7', '3.8', '3.9']
         django: ['2.2', '3.1', '3.2', 'main']
-        memcache: ['pylibmc', 'pymemcache', 'memcache']
+        memcache: ['pylibmc', 'pymemcache', 'python-memcached']
         exclude:
           - python-version: '3.6'
             django: 'main'
           - python-version: '3.7'
             django: 'main'
-          - memcache: 'memcache'
+          - memcache: 'memcached'
             django: '3.2'
-          - memcache: 'memcache'
+          - memcache: 'memcached'
             django: 'main'
           - memcache: 'pymemcache'
             django: '2.2'
@@ -32,7 +32,7 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install PyLibMC Dependencies
-      if: ${{ matrix.memcache }} == 'pylibmc'
+      if: ${{ matrix.memcache == 'pylibmc' }}
       run: |
         sudo apt-get install -y libmemcached-dev zlib1g-dev
     - name: Install dependencies
@@ -40,7 +40,7 @@ jobs:
         python -m pip install --upgrade pip
         if [[ ${{ matrix.django }} != main ]]; then pip install --pre -q "Django>=${{ matrix.django }},<${{ matrix.django }}.99"; fi
         if [[ ${{ matrix.django }} == main ]]; then pip install https://github.com/django/django/archive/main.tar.gz; fi
-        pip install flake8 django-redis python3-memcached
+        pip install flake8 django-redis ${{ matrix.memcache }} 
     - name: Lint with flake8
       run: |
         ./run.sh flake8
