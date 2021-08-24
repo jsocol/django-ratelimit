@@ -1,3 +1,14 @@
+try:
+    import pylibmc  # noqa: F401
+    memcache_backend = "PyLibMCCache"
+except ImportError:
+    try:
+        import pymemcache  # noqa: F401
+        memcache_backend = "PyMemcacheCache"
+    except ImportError:
+        import memcache  # noqa: F401
+        memcache_backend = "MemcachedCache"
+
 SECRET_KEY = 'ratelimit'
 
 INSTALLED_APPS = (
@@ -12,7 +23,7 @@ CACHES = {
         'LOCATION': 'ratelimit-tests',
     },
     'connection-errors': {
-        'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
+        'BACKEND': f'django.core.cache.backends.memcached.{memcache_backend}',
         'LOCATION': 'test-connection-errors',
     },
     'connection-errors-redis': {

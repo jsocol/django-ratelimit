@@ -10,11 +10,20 @@ jobs:
       matrix:
         python-version: ['3.6', '3.7', '3.8', '3.9']
         django: ['2.2', '3.1', '3.2', 'main']
+        memcache: ['pylibmc', 'pymemcache', 'memcache']
         exclude:
           - python-version: '3.6'
             django: 'main'
           - python-version: '3.7'
             django: 'main'
+          - memcache: 'memcache'
+            django: '3.2'
+          - memcache: 'memcache'
+            django: 'main'
+          - memcache: 'pymemcache'
+            django: '2.2'
+          - memcache: 'pymemcache'
+            django: '3.1'
 
     steps:
     - uses: actions/checkout@v2
@@ -22,6 +31,10 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: ${{ matrix.python-version }}
+    - name: Install PyLibMC Dependencies
+      if: ${{ matrix.memcache }} == 'pylibmc'
+      run: |
+        sudo apt-get install -y libmemcached-dev zlib1g-dev
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
