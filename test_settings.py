@@ -24,7 +24,7 @@ CACHES = {
     },
     'connection-errors': {
         'BACKEND': f'django.core.cache.backends.memcached.{memcache_backend}',
-        'LOCATION': 'test-connection-errors',
+        'LOCATION': '127.0.0.1:11211',
     },
     'connection-errors-redis': {
         'BACKEND': 'django_redis.cache.RedisCache',
