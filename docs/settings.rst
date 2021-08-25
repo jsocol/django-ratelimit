@@ -86,3 +86,9 @@ IPv4 mask for IP-based rate limit. Defaults to ``32`` (which is no masking)
 
 IPv6 mask for IP-based rate limit. Defaults to ``64`` (which mask the last 64 bits).
 Typical end site IPv6 assignment are from /48 to /64.
+
+``RATELIMIT_EXCEPTION_CLASS``
+-----------------------------
+
+A custom exception class, or a dotted path to a custom exception class, that will be
+raised by ratelimit when a limit is exceeded and ``block=True``.
