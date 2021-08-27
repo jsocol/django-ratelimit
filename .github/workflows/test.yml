@@ -10,7 +10,7 @@ jobs:
       memcached:
         image: memcached
         ports:
-          - 57823:11211
+          - 11211:11211
     strategy:
       fail-fast: false
       matrix:
