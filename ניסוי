@@ -1,0 +1,19 @@
+
+from ratelimit.decorators import ratelimit
+
+@ratelimit(key='post:username', rate='10/d') # 1
+def login(request):
+    # ... yout logic here
+    pass
+
+@ratelimit(key='ip', rate='1000/h') # 2
+def login(request):
+    # ... yout logic here
+    pass
+
+rate = lambda request: None if request.user.is_authenticated() else '100/h'
+key = lambda request: request.POST["search_type"]
+@ratelimit(key=key, rate=rate) # 3
+def search(request):
+    # ... yout logic here
+    pass
