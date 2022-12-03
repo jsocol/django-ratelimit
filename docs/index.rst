@@ -21,11 +21,17 @@ storing rate data in the configured `Django cache backend
 Quickstart
 ==========
 
+.. warning::
+   `django_ratelimit` requires a Django cache backend that supports `atomic
+   increment`_ operations. The Memcached and Redis backends do, but the
+   database backend does not. More information can be found in
+   :ref:`Installation <installation-cache>`
+
 Install:
 
 .. code-block:: shell
 
-   $ pip install django-ratelimit
+   pip install django-ratelimit
 
 
 Use as a decorator in ``views.py``:
@@ -49,6 +55,7 @@ the Django docs on `caching
 <https://docs.djangoproject.com/en/dev/topics/cache/>`__.
 
 .. _PyPI: http://pypi.python.org/pypi/django-ratelimit
+.. _atomic increment: https://docs.djangoproject.com/en/4.1/topics/cache/#django.core.caches.cache.incr
 
 
 Contents
@@ -57,6 +64,7 @@ Contents
 .. toctree::
    :maxdepth: 2
 
+   installation
    settings
    usage
    keys

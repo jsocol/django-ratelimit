@@ -196,7 +196,7 @@ It is also possible to wrap a whole view later, e.g.:
 .. note::
 
    Unless given an explicit ``group`` argument, different methods of a
-   class-based view will be limited separate.
+   class-based view will be limited separately.
 
 
 .. _usage-helper:
