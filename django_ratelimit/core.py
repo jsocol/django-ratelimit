@@ -240,7 +240,6 @@ def get_usage(request, group=None, fn=None, key=None, rate=None, method=ALL,
         else:
             count = cache.get(cache_key, initial_value)
 
-    print(f'The count is {count}')
     # Getting or setting the count from the cache failed
     if count is None or count is False:
         if getattr(settings, 'RATELIMIT_FAIL_OPEN', False):
