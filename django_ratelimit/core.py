@@ -55,7 +55,7 @@ def _get_ip(request):
         # IPv4
         mask = getattr(settings, 'RATELIMIT_IPV4_MASK', 32)
 
-    network = ipaddress.ip_network('{}/{}'.format(ip, mask), strict=False)
+    network = ipaddress.ip_network(f'{ip}/{mask}', strict=False)
 
     return str(network.network_address)
 
@@ -140,7 +140,7 @@ def _make_cache_key(group, window, rate, value, methods):
             methods = ''.join(sorted([m.upper() for m in methods]))
         parts.append(methods)
     prefix = getattr(settings, 'RATELIMIT_CACHE_PREFIX', 'rl:')
-    return prefix + hashlib.md5(u''.join(parts).encode('utf-8')).hexdigest()
+    return prefix + hashlib.md5(''.join(parts).encode('utf-8')).hexdigest()
 
 
 def is_ratelimited(request, group=None, fn=None, key=None, rate=None,
