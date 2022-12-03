@@ -32,6 +32,11 @@ for example:
 ``RATELIMIT_USE_CACHE``
 -----------------------
 
+.. warning::
+   `django_ratelimit` requires a Django cache backend that supports _`atomic
+   increment` operations. The Memcached and Redis backends do, but the database
+   backend does not.
+
 The name of the cache (from the ``CACHES`` dict) to use. Defaults to
 ``'default'``.
 
