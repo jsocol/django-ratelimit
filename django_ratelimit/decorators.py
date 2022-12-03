@@ -1,5 +1,8 @@
 from functools import wraps
 
+from django.conf import settings
+from django.utils.module_loading import import_string
+
 from django_ratelimit import ALL, UNSAFE
 from django_ratelimit.exceptions import Ratelimited
 from django_ratelimit.core import is_ratelimited
@@ -18,7 +21,9 @@ def ratelimit(group=None, key=None, rate=None, method=ALL, block=False):
                                          increment=True)
             request.limited = ratelimited or old_limited
             if ratelimited and block:
-                raise Ratelimited()
+                cls = getattr(
+                    settings, 'RATELIMIT_EXCEPTION_CLASS', Ratelimited)
+                raise (import_string(cls) if isinstance(cls, str) else cls)()
             return fn(request, *args, **kw)
         return _wrapped
     return decorator

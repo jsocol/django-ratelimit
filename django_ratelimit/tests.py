@@ -48,6 +48,10 @@ def mykey(group, request):
     return request.META['REMOTE_ADDR'][::-1]
 
 
+class CustomRatelimitedException(Exception):
+    pass
+
+
 class RatelimitTests(TestCase):
     def setUp(self):
         cache.clear()
@@ -77,6 +81,34 @@ class RatelimitTests(TestCase):
         assert not blocked(rf.get('/')), 'First request works.'
         with self.assertRaises(Ratelimited):
             blocked(rf.get('/')), 'Second request is blocked.'
+
+    def test_ratelimit_custom_string_exception_class(self):
+        @ratelimit(key='ip', rate='1/m', block=True)
+        def view(request):
+            return request.limited
+
+        with self.settings(
+            RATELIMIT_EXCEPTION_CLASS=(
+                "django_ratelimit.tests.CustomRatelimitedException"
+            )
+        ):
+            req = rf.get("")
+            assert not view(req)
+            with self.assertRaises(CustomRatelimitedException):
+                view(req)
+
+    def test_ratelimit_custom_exception_class(self):
+        @ratelimit(key='ip', rate='1/m', block=True)
+        def view(request):
+            return request.limited
+
+        with self.settings(
+            RATELIMIT_EXCEPTION_CLASS=CustomRatelimitedException
+        ):
+            req = rf.get("")
+            assert not view(req)
+            with self.assertRaises(CustomRatelimitedException):
+                view(req)
 
     def test_method(self):
         @ratelimit(key='ip', method='POST', rate='1/m', group='a')
