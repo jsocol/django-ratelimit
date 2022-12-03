@@ -2,6 +2,7 @@ import ipaddress
 import functools
 import hashlib
 import re
+import socket
 import time
 import zlib
 
@@ -221,7 +222,10 @@ def get_usage(request, group=None, fn=None, key=None, rate=None, method=ALL,
     cache_key = _make_cache_key(group, window, rate, value, method)
 
     count = None
-    added = cache.add(cache_key, initial_value, period + EXPIRATION_FUDGE)
+    try:
+        added = cache.add(cache_key, initial_value, period + EXPIRATION_FUDGE)
+    except socket.gaierror:  # for redis
+        added = False
     if added:
         count = initial_value
     else:
@@ -236,8 +240,9 @@ def get_usage(request, group=None, fn=None, key=None, rate=None, method=ALL,
         else:
             count = cache.get(cache_key, initial_value)
 
+    print(f'The count is {count}')
     # Getting or setting the count from the cache failed
-    if count is None:
+    if count is None or count is False:
         if getattr(settings, 'RATELIMIT_FAIL_OPEN', False):
             return None
         return {
