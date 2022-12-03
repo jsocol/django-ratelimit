@@ -16,7 +16,7 @@ from django_ratelimit.core import (get_usage, is_ratelimited,
 rf = RequestFactory()
 
 
-class MockUser(object):
+class MockUser:
     def __init__(self, authenticated=False):
         self.pk = 1
         self.is_authenticated = authenticated
