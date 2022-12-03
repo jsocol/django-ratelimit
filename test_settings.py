@@ -12,7 +12,7 @@ CACHES = {
         'LOCATION': 'ratelimit-tests',
     },
     'connection-errors': {
-        'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
+        'BACKEND': 'django.core.cache.backends.memcached.PyMemcacheCache',
         'LOCATION': 'test-connection-errors',
     },
     'connection-errors-redis': {
