@@ -17,7 +17,7 @@ Import:
     from django_ratelimit.decorators import ratelimit
 
 
-.. py:decorator:: ratelimit(group=None, key=, rate=None, method=ALL, block=False)
+.. py:decorator:: ratelimit(group=None, key=, rate=None, method=ALL, block=True)
 
    :arg group:
        *None* A group of rate limits to count together. Defaults to the
@@ -46,7 +46,7 @@ Import:
         ``PATCH``).
 
    :arg block:
-       *False* Whether to block the request instead of annotating.
+       *True* Whether to block the request instead of annotating.
 
 
 HTTP Methods
@@ -79,7 +79,7 @@ Examples
 
 .. code-block:: python
 
-    @ratelimit(key='ip', rate='5/m')
+    @ratelimit(key='ip', rate='5/m', block=False)
     def myview(request):
         # Will be true if the same IP makes more than 5 POST
         # requests/minute.
@@ -91,7 +91,8 @@ Examples
         # If the same IP makes >5 reqs/min, will raise Ratelimited
         return HttpResponse()
 
-    @ratelimit(key='post:username', rate='5/m', method=['GET', 'POST'])
+    @ratelimit(key='post:username', rate='5/m',
+               method=['GET', 'POST'], block=False)
     def login(request):
         # If the same username is used >5 times/min, this will be True.
         # The `username` value will come from GET or POST, determined by the
@@ -118,8 +119,8 @@ Examples
         # Allow 4 reqs/hour.
         return HttpResponse()
 
-    rate = lambda g, r: None if r.user.is_authenticated else '100/h'
-    @ratelimit(key='ip', rate=rate)
+    get_rate = lambda g, r: None if r.user.is_authenticated else '100/h'
+    @ratelimit(key='ip', rate=get_rate)
     def skipif1(request):
         # Only rate limit anonymous requests
         return HttpResponse()
