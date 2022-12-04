@@ -1,29 +1,23 @@
-name: ci
+name: release
 
 on:
   push:
-    branches:
-      - main
-  pull_request:
-    types: [opened, synchronize, reopened, ready_for_review]
-  schedule:
-    - cron: '21 7 * * 0' # run weekly on sundays
+    tags:
+      - v*
 
 jobs:
   test:
     runs-on: ubuntu-latest
     strategy:
-      fail-fast: false
+      fail-fast: true
       matrix:
         python-version: ['3.7', '3.8', '3.9', '3.10', '3.11']
-        django: ['3.2', '4.0', '4.1', 'main']
+        django: ['3.2', '4.0', '4.1']
         exclude:
           - python-version: '3.7'
             django: '4.0'
           - python-version: '3.7'
             django: '4.1'
-          - python-version: '3.7'
-            django: 'main'
 
     steps:
     - uses: actions/checkout@v3
@@ -33,19 +27,30 @@ jobs:
         python-version: ${{ matrix.python-version }}
         django-version: ${{ matrix.django }}
 
-  lint:
+  release:
     runs-on: ubuntu-latest
-
+    needs: [test]
     steps:
+
     - uses: actions/checkout@v3
 
-    - uses: actions/setup-python@v2
+    - name: Set up Python
+      uses: actions/setup-python@v2
       with:
-        python-version: '3.11'
+        python-version: 3.11
 
-    - name: install flake8
-      run: pip install flake8
-
-    - name: Lint with flake8
+    - name: install dependencies
       run: |
-        ./run.sh flake8
+        python -m pip install --upgrade pip
+        pip install build twine
+
+    - name: build
+      run: ./run.sh build
+
+    - name: check
+      run: ./run.sh check
+
+    - name: release
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        password: ${{ secrets.PYPI_DEPLOY_TOKEN }}
