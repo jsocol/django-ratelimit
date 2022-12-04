@@ -48,7 +48,7 @@ Use as a decorator in ``views.py``:
     def secondview(request):
         # ...
 
-After activating django-ratelimit, you should ensure that your cache
+Before activating django-ratelimit, you should ensure that your cache
 backend is setup to be both persistent and work across multiple
 deployment worker instances (for instance UWSGI workers). Read more in
 the Django docs on `caching

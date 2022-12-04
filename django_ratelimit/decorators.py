@@ -11,7 +11,7 @@ from django_ratelimit.core import is_ratelimited
 __all__ = ['ratelimit']
 
 
-def ratelimit(group=None, key=None, rate=None, method=ALL, block=False):
+def ratelimit(group=None, key=None, rate=None, method=ALL, block=True):
     def decorator(fn):
         @wraps(fn)
         def _wrapped(request, *args, **kw):
