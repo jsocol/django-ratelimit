@@ -215,7 +215,7 @@ def get_usage(request, group=None, fn=None, key=None, rate=None, method=ALL,
             'Could not understand ratelimit key: %s' % key)
 
     window = _get_window(value, period)
-    initial_value = 1 if increment else 0
+    initial_value = 1
 
     cache_name = getattr(settings, 'RATELIMIT_USE_CACHE', 'default')
     cache = caches[cache_name]
