@@ -5,31 +5,41 @@ Change Log
 UNRELEASED
 ==========
 
+v4.0
+====
+
 Breaking changes:
 -----------------
 
 - Renamed the package from ratelimit to django_ratelimit (#226)
+- Changed the default value of the decorator's block kwarg to True (#271)
+- Dropped support for Django versions < 3.2 (#263)
+- Dropped support for Python versions < 3.7 (#263, #254, #266)
 
 Additions:
 ----------
 
 - Add RATELIMIT_IP_META_KEY setting (#218)
+- Add RATELIMIT_EXCEPTION_CLASS setting (#247)
+- Add a system check for cache configuration (#268)
 
 Minor changes:
 --------------
 
 - Factor up _get_ip() logic into a single place (#218)
 - Exception on empty REMOTE_ADDR is clearer (#220)
+- Moved CI process to GitHub Actions (#219, #225)
+- Automated release process (#273)
 
-3.0.1
-=====
+v3.0.1
+======
 
 Bug fixes
 ---------
 
 - Fix import path values for rate= argument (#206)
 
-3.0
+v3.0
 ====
 
 Breaking changes:
