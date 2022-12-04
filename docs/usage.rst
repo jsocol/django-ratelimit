@@ -10,6 +10,8 @@ Using Django Ratelimit
 Use as a decorator
 ==================
 
+.. versionchanged:: 4.0
+
 Import:
 
 .. code-block:: python

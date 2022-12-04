@@ -16,6 +16,62 @@ From 3.x to 4.0
 Quickly:
 
 - Rename imports from ``from ratelimit`` to ``from django_ratelimit``
+- Check all uses of the ``@ratelimit`` decorator. If the ``block`` argument is
+  not set, add ``block=False`` to retain the current behavior. ``block=True``
+  may optionally be removed.
+- Django versions below 3.2 and Python versions below 3.7 are no longer
+  supported.
+
+Package name changed
+--------------------
+
+To disambiguate with other ratelimit packages on PyPI and resolve distro
+packaging issues, the package name has been changed from ``ratelimit`` to
+``django_ratelimit``. See `issue 214`_ for more information on this change.
+
+When upgrading, import paths need to change to use the new package name.
+
+Old:
+
+.. code-block:: python
+
+    from ratelimit.decorators import ratelimit
+    from ratelimit import ALL, UNSAFE
+
+New:
+
+.. code-block:: python
+
+    from django_ratelimit.decorators import ratelimit
+    from django_ratelimit import ALL, UNSAFE
+
+.. _issue 214: https://github.com/jsocol/django-ratelimit/issues/214
+
+
+Default decorator behavior changed
+----------------------------------
+
+In previous versions, the ``@ratelimit`` decorator did not block traffic that
+exceeded the rate limits by default. This has been reversed, and now the
+default behavior *is* to block requests once a rate limit has been exceeded.
+The old behavior of annotating the request object with a ``.limited`` property
+can be restored by explicitly setting ``block=False`` on the decorator.
+
+Historically, the first use cases Django Ratelimit was built to support were
+HTML views like login and password-reset pages, rather than APIs. In these
+cases, rate limiting is often done based on user input like the username or
+email address. Instead of blocking requests, which could lead to a
+denial-of-service (DOS) attack against particular users, it is common to
+trigger some additional security measures to prevent brute-force attacks, like
+a CAPTCHA, temporary account lock, or even notify those users via email.
+
+However, it has become obvious that the majority of views using the
+``@ratelimit`` decorator tend to be either specific pages or API endpoints that
+do not present a DOS attack vector against other users, and that a more
+intuitive default behavior is to block requests that exceed the limits. Since
+there tend to only be a couple of pages or routes for uses like authentication,
+it makes more sense to opt those uses *out* of blocking, than opt all the
+others *in*.
 
 
 .. _upgrading-3.0:
