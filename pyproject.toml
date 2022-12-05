@@ -26,7 +26,7 @@ classifiers = [
     "Framework :: Django",
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
-urls = {Homepage = "https://github.com/jsocol/pystatsd"}
+urls = {Homepage = "https://github.com/jsocol/django-ratelimit"}
 
 [tool.distutils.bdist_wheel]
 universal = 1
