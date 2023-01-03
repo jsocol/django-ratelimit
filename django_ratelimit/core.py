@@ -140,7 +140,12 @@ def _make_cache_key(group, window, rate, value, methods):
             methods = ''.join(sorted([m.upper() for m in methods]))
         parts.append(methods)
     prefix = getattr(settings, 'RATELIMIT_CACHE_PREFIX', 'rl:')
-    return prefix + hashlib.md5(''.join(parts).encode('utf-8')).hexdigest()
+    attr = getattr(settings, 'RATELIMIT_HASH_ALGORITHM', hashlib.sha512)
+    algo_cls = (import_string(f'{attr}')
+                if isinstance(attr, str)
+                else attr
+                )
+    return prefix + algo_cls(''.join(parts).encode('utf-8')).hexdigest()
 
 
 def is_ratelimited(request, group=None, fn=None, key=None, rate=None,
