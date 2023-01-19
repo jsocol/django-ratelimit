@@ -140,7 +140,7 @@ def _make_cache_key(group, window, rate, value, methods):
             methods = ''.join(sorted([m.upper() for m in methods]))
         parts.append(methods)
     prefix = getattr(settings, 'RATELIMIT_CACHE_PREFIX', 'rl:')
-    attr = getattr(settings, 'RATELIMIT_HASH_ALGORITHM', hashlib.sha512)
+    attr = getattr(settings, 'RATELIMIT_HASH_ALGORITHM', hashlib.sha256)
     algo_cls = (import_string(f'{attr}')
                 if isinstance(attr, str)
                 else attr
