@@ -36,3 +36,5 @@ DATABASES = {
         'NAME': 'test.db',
     },
 }
+
+USE_TZ = True
