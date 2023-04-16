@@ -10,6 +10,12 @@ Settings
 An optional cache prefix for ratelimit keys (in addition to the ``PREFIX``
 value defined on the cache backend). Defaults to ``'rl:'``.
 
+``RATELIMIT_HASH_ALGORITHM``
+-----------------------------
+
+An optional functionion to overide the default hashing algorithm used to derive the cache
+key. Defaults to ``'hashlib.sha512'``.
+
 ``RATELIMIT_ENABLE``
 --------------------
 
