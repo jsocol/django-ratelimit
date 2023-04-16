@@ -20,7 +20,14 @@ usage() {
 case "$CMD" in
     "test" )
         echo "Django version: $(python -m django --version)"
-        python -m django test django_ratelimit "$@"
+        python \
+            -W error::ResourceWarning \
+            -W error::DeprecationWarning \
+            -W error::PendingDeprecationWarning \
+            -m django \
+            test \
+            django_ratelimit \
+            "$@"
         ;;
     "lint"|"flake8" )
         echo "Flake8 version: $(flake8 --version)"
