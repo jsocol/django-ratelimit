@@ -14,7 +14,7 @@ value defined on the cache backend). Defaults to ``'rl:'``.
 -----------------------------
 
 An optional functionion to overide the default hashing algorithm used to derive the cache
-key. Defaults to ``'hashlib.sha512'``.
+key. Defaults to ``'hashlib.sha256'``.
 
 ``RATELIMIT_ENABLE``
 --------------------
