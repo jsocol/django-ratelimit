@@ -345,7 +345,7 @@ Middleware
 There is optional middleware to use a custom view to handle ``Ratelimited``
 exceptions.
 
-To use it, add ``ratelimit.middleware.RatelimitMiddleware`` to your
+To use it, add ``django_ratelimit.middleware.RatelimitMiddleware`` to your
 ``MIDDLEWARE`` (toward the bottom of the list) and set
 ``RATELIMIT_VIEW`` to the full path of a view you want to use.
 
