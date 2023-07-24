@@ -5,6 +5,20 @@ Change Log
 UNRELEASED
 ==========
 
+v4.1
+====
+
+Additions:
+----------
+
+- Add RATELIMITE_HASH_ALGORITHM setting (#282, #285)
+
+Minor changes:
+--------------
+
+- Fixed links in docs (#277)
+- Test on Django 4.2 (#284)
+
 v4.0
 ====
 
