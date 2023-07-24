@@ -1,3 +1,4 @@
+import asyncio
 from functools import partial
 
 from django.core.cache import cache, InvalidCacheBackendError
@@ -410,6 +411,24 @@ class RatelimitTests(TestCase):
             req = rf.get('/')
             req.META['REMOTE_ADDR'] = '2001:db9::1000'
             assert not view(req)
+
+    def test_decorate_async_function(self):
+        event_loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(event_loop)
+
+        @ratelimit(key='ip', rate='1/m', block=False)
+        async def view(request):
+            await asyncio.sleep(0)
+            return request.limited
+
+        req1 = rf.get('/')
+        req1.META['REMOTE_ADDR'] = '1.2.3.4'
+
+        req2 = rf.get('/')
+        req2.META['REMOTE_ADDR'] = '1.2.3.4'
+
+        assert event_loop.run_until_complete(view(req1)) is False
+        assert event_loop.run_until_complete(view(req2)) is True
 
 
 class FunctionsTests(TestCase):
