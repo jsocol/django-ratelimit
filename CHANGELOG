@@ -11,7 +11,7 @@ v4.1
 Additions:
 ----------
 
-- Add RATELIMITE_HASH_ALGORITHM setting (#282, #285)
+- Add RATELIMIT_HASH_ALGORITHM setting (#282, #285)
 
 Minor changes:
 --------------
