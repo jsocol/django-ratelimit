@@ -72,6 +72,14 @@ class RatelimitTests(TestCase):
 
         assert not view(rf.get('/')), 'First request works.'
         assert view(rf.get('/')), 'Second request is limited'
+    
+    async def test_ip_async(self):
+        @ratelimit(key='ip', rate='1/m', block=False)
+        async def view(request):
+            return request.limited
+
+        assert not await view(rf.get('/')), 'First request works.'
+        assert await view(rf.get('/')), 'Second request is limited'
 
     def test_block(self):
         @ratelimit(key='ip', rate='1/m')
