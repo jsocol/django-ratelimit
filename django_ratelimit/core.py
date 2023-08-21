@@ -251,7 +251,11 @@ def _get_usage(request, group=None, fn=None, key=None, rate=None, method=ALL,
     if is_async:
         async def inner():
             try:
-                added = await cache.aadd(cache_key, initial_value, period + EXPIRATION_FUDGE)
+                # Some caches don't have an async implementation
+                if getattr(cache, 'aadd') is not None:
+                    added = await cache.aadd(cache_key, initial_value, period + EXPIRATION_FUDGE)
+                else:
+                    added = await cache.add(cache_key, initial_value, period + EXPIRATION_FUDGE)
             except socket.gaierror:  # for redis
                 added = False
             if added:
