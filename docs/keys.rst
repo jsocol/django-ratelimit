@@ -25,6 +25,7 @@ used ratelimit keys:
        <security-chapter>` notes.
 - ``'get:X'`` - Use the value of ``request.GET.get('X', '')``.
 - ``'post:X'`` - Use the value of ``request.POST.get('X', '')``.
+- ``'data:X'`` - Use the value of ``request.data.get('X', '')`` (useful for projects using Django REST Framework).
 - ``'header:x-x'`` - Use the value of
   ``request.META.get('HTTP_X_X', '')``.
 
