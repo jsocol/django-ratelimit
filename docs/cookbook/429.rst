@@ -38,7 +38,7 @@ must define ``RATELIMIT_VIEW`` as a dotted-path to your error view:
 
     MIDDLEWARE = (
         # ... toward the bottom ...
-        'ratelimit.middleware.RatelimitMiddleware',
+        'django_ratelimit.middleware.RatelimitMiddleware',
         # ...
     )
 
