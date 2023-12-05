@@ -20,7 +20,7 @@ jobs:
             django: '4.1'
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - uses: ./.github/actions/test
       with:
@@ -32,10 +32,10 @@ jobs:
     needs: [test]
     steps:
 
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Set up Python
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4
       with:
         python-version: 3.11
 
