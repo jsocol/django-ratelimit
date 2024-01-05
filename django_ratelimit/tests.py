@@ -1,4 +1,8 @@
+import asyncio
+
+import django
 from functools import partial
+from unittest import skipIf
 
 from django.core.cache import cache, InvalidCacheBackendError
 from django.core.exceptions import ImproperlyConfigured
@@ -12,7 +16,10 @@ from django_ratelimit.exceptions import Ratelimited
 from django_ratelimit.core import (get_usage, is_ratelimited,
                                    _split_rate, _get_ip)
 
-
+if django.VERSION >= (4, 1):
+    from asgiref.sync import iscoroutinefunction
+    from django.test import AsyncRequestFactory
+    arf = AsyncRequestFactory()
 rf = RequestFactory()
 
 
@@ -410,6 +417,26 @@ class RatelimitTests(TestCase):
             req = rf.get('/')
             req.META['REMOTE_ADDR'] = '2001:db9::1000'
             assert not view(req)
+
+    @skipIf(
+        django.VERSION < (4, 1),
+        reason="Async view support requires Django 4.1 or higher",
+    )
+    async def test_decorate_async_function(self):
+        @ratelimit(key='ip', rate='1/m', block=False)
+        async def view(request):
+            await asyncio.sleep(0)
+            return request.limited
+
+        req1 = arf.get('/')
+        req1.META['REMOTE_ADDR'] = '1.2.3.4'
+
+        req2 = arf.get('/')
+        req2.META['REMOTE_ADDR'] = '1.2.3.4'
+
+        assert iscoroutinefunction(view)
+        assert await view(req1) is False
+        assert await view(req2) is True
 
 
 class FunctionsTests(TestCase):

@@ -14,13 +14,23 @@ runs:
     with:
       python-version: ${{ inputs.python-version }}
 
-  - name: Install dependencies
+  - name: Update pip
     shell: sh
-    run: |
-      python -m pip install --upgrade pip
-      if [[ ${{ inputs.django-version }} != 'main' ]]; then pip install --pre -q "Django>=${{ inputs.django-version }},<${{ inputs.django-version }}.99"; fi
-      if [[ ${{ inputs.django-version }} == 'main' ]]; then pip install https://github.com/django/django/archive/main.tar.gz; fi
-      pip install flake8 django-redis pymemcache
+    run: python -m pip install --upgrade pip
+
+  - name: Install Django
+    shell: sh
+    run: python -m pip install "Django>=${{ inputs.django-version }},<${{ inputs.django-version }}.99"
+    if: ${{ inputs.django-version != 'main' }}
+
+  - name: Install Django main
+    shell: sh
+    run: python -m pip install https://github.com/django/django/archive/main.tar.gz
+    if: ${{ inputs.django-version == 'main' }}
+
+  - name: Install Django dependencies
+    shell: sh
+    run: pip install flake8 django-redis pymemcache
 
   - name: Test
     shell: sh
