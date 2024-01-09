@@ -10,7 +10,7 @@ runs:
   using: "composite"
   steps:
   - name: Set up Python
-    uses: actions/setup-python@v2
+    uses: actions/setup-python@v4
     with:
       python-version: ${{ inputs.python-version }}
 
