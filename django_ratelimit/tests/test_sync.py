@@ -12,6 +12,7 @@ from django_ratelimit.exceptions import Ratelimited
 from django_ratelimit.core import (get_usage, is_ratelimited,
                                    _split_rate, _get_ip)
 
+from . import my_ip, mykey, CustomRatelimitedException
 
 rf = RequestFactory()
 
@@ -38,21 +39,7 @@ class RateParsingTests(TestCase):
             assert o == _split_rate(i)
 
 
-def callable_rate(group, request):
-    if request.user.is_authenticated:
-        return None
-    return (0, 1)
-
-
-def mykey(group, request):
-    return request.META['REMOTE_ADDR'][::-1]
-
-
-class CustomRatelimitedException(Exception):
-    pass
-
-
-class RatelimitTests(TestCase):
+class RatelimitSyncTests(TestCase):
     def setUp(self):
         cache.clear()
 
@@ -627,10 +614,6 @@ class CacheFailTests(TestCase):
 
         assert view(rf.get('/'))
         assert view(rf.get('/'))
-
-
-def my_ip(req):
-    return req.META['MY_THING']
 
 
 class IpMetaTests(TestCase):

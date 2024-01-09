@@ -255,7 +255,7 @@ def _get_usage(request, group=None, fn=None, key=None, rate=None, method=ALL,
                 if getattr(cache, 'aadd') is not None:
                     added = await cache.aadd(cache_key, initial_value, period + EXPIRATION_FUDGE)
                 else:
-                    added = await cache.add(cache_key, initial_value, period + EXPIRATION_FUDGE)
+                    added = cache.add(cache_key, initial_value, period + EXPIRATION_FUDGE)
             except socket.gaierror:  # for redis
                 added = False
             if added:
@@ -270,7 +270,10 @@ def _get_usage(request, group=None, fn=None, key=None, rate=None, method=ALL,
                     except ValueError:
                         pass
                 else:
-                    count = await cache.aget(cache_key, initial_value)
+                    if getattr(cache, 'aget'):
+                        count = await cache.aget(cache_key, initial_value)
+                    else:
+                        count = cache.get(cache_key, initial_value)
 
             # Getting or setting the count from the cache failed
             if count is None or count is False:
