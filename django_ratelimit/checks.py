@@ -22,6 +22,10 @@ KNOWN_BROKEN_CACHE_BACKENDS = {
 @checks.register(checks.Tags.caches, 'django_ratelimit')
 def check_caches(app_configs, **kwargs):
     errors = []
+
+    if not getattr(settings, 'RATELIMIT_ENABLE', True):
+        return errors
+
     cache_name = getattr(settings, 'RATELIMIT_USE_CACHE', 'default')
     caches = getattr(settings, 'CACHES', None)
     if caches is None:
