@@ -252,7 +252,7 @@ def _get_usage(request, group=None, fn=None, key=None, rate=None, method=ALL,
         async def inner():
             try:
                 # Some caches don't have an async implementation
-                if getattr(cache, 'aadd') is not None:
+                if hasattr(cache, 'aadd'):
                     added = await cache.aadd(cache_key, initial_value, period + EXPIRATION_FUDGE)
                 else:
                     added = cache.add(cache_key, initial_value, period + EXPIRATION_FUDGE)
@@ -266,11 +266,14 @@ def _get_usage(request, group=None, fn=None, key=None, rate=None, method=ALL,
                         # python3-memcached will throw a ValueError if the server is
                         # unavailable or (somehow) the key doesn't exist. redis, on the
                         # other hand, simply returns None.
-                        count = cache.incr(cache_key)
+                        if hasattr(cache, 'aincr'):
+                            count = await cache.aincr(cache_key)
+                        else:
+                            count = cache.incr(cache_key)
                     except ValueError:
                         pass
                 else:
-                    if getattr(cache, 'aget'):
+                    if hasattr(cache, 'aget'):
                         count = await cache.aget(cache_key, initial_value)
                     else:
                         count = cache.get(cache_key, initial_value)
