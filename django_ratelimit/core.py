@@ -14,7 +14,7 @@ from django.utils.module_loading import import_string
 from django_ratelimit import ALL, UNSAFE
 
 
-__all__ = ['is_ratelimited', 'get_usage']
+__all__ = ['is_ratelimited', 'ais_ratelimited', 'get_usage', 'aget_usage']
 
 _PERIODS = {
     's': 1,
@@ -156,9 +156,30 @@ def is_ratelimited(request, group=None, fn=None, key=None, rate=None,
 
     return usage['should_limit']
 
+async def ais_ratelimited(request, group=None, fn=None, key=None, rate=None,
+                   method=ALL, increment=False):
+    usage = await aget_usage(request, group, fn, key, rate, method, increment)
+    if usage is None:
+        return False
+
+    return usage['should_limit']
+
 
 def get_usage(request, group=None, fn=None, key=None, rate=None, method=ALL,
               increment=False):
+    usage = _get_usage(request, group, fn, key, rate, method, increment)
+    if usage is not None:
+        return usage()
+
+async def aget_usage(request, group=None, fn=None, key=None, rate=None, method=ALL,
+              increment=False):
+    usage = _get_usage(request, group, fn, key, rate, method, increment, is_async=True)
+    if usage is not None:
+        return await usage()
+
+
+def _get_usage(request, group=None, fn=None, key=None, rate=None, method=ALL,
+              increment=False, is_async=False):
     if group is None and fn is None:
         raise ImproperlyConfigured('get_usage must be called with either '
                                    '`group` or `fn` arguments')
@@ -227,45 +248,102 @@ def get_usage(request, group=None, fn=None, key=None, rate=None, method=ALL,
     cache_key = _make_cache_key(group, window, rate, value, method)
 
     count = None
-    try:
-        added = cache.add(cache_key, initial_value, period + EXPIRATION_FUDGE)
-    except socket.gaierror:  # for redis
-        added = False
-    if added:
-        count = initial_value
-    else:
-        if increment:
+    if is_async:
+        async def inner():
             try:
-                # python3-memcached will throw a ValueError if the server is
-                # unavailable or (somehow) the key doesn't exist. redis, on the
-                # other hand, simply returns None.
-                count = cache.incr(cache_key)
-            except ValueError:
-                pass
-        else:
-            count = cache.get(cache_key, initial_value)
+                # Some caches don't have an async implementation
+                if hasattr(cache, 'aadd'):
+                    added = await cache.aadd(cache_key, initial_value, period + EXPIRATION_FUDGE)
+                else:
+                    added = cache.add(cache_key, initial_value, period + EXPIRATION_FUDGE)
+            except socket.gaierror:  # for redis
+                added = False
+            if added:
+                count = initial_value
+            else:
+                if increment:
+                    try:
+                        # python3-memcached will throw a ValueError if the server is
+                        # unavailable or (somehow) the key doesn't exist. redis, on the
+                        # other hand, simply returns None.
+                        if hasattr(cache, 'aincr'):
+                            count = await cache.aincr(cache_key)
+                        else:
+                            count = cache.incr(cache_key)
+                    except ValueError:
+                        pass
+                else:
+                    if hasattr(cache, 'aget'):
+                        count = await cache.aget(cache_key, initial_value)
+                    else:
+                        count = cache.get(cache_key, initial_value)
 
-    # Getting or setting the count from the cache failed
-    if count is None or count is False:
-        if getattr(settings, 'RATELIMIT_FAIL_OPEN', False):
-            return None
-        return {
-            'count': 0,
-            'limit': 0,
-            'should_limit': True,
-            'time_left': -1,
-        }
+            # Getting or setting the count from the cache failed
+            if count is None or count is False:
+                if getattr(settings, 'RATELIMIT_FAIL_OPEN', False):
+                    return None
+                return {
+                    'count': 0,
+                    'limit': 0,
+                    'should_limit': True,
+                    'time_left': -1,
+                }
 
-    time_left = window - int(time.time())
-    return {
-        'count': count,
-        'limit': limit,
-        'should_limit': count > limit,
-        'time_left': time_left,
-    }
+            time_left = window - int(time.time())
+            return {
+                'count': count,
+                'limit': limit,
+                'should_limit': count > limit,
+                'time_left': time_left,
+            }
+    else:
+        def inner():
+            try:
+                added = cache.add(cache_key, initial_value, period + EXPIRATION_FUDGE)
+            except socket.gaierror:  # for redis
+                added = False
+            if added:
+                count = initial_value
+            else:
+                if increment:
+                    try:
+                        # python3-memcached will throw a ValueError if the server is
+                        # unavailable or (somehow) the key doesn't exist. redis, on the
+                        # other hand, simply returns None.
+                        count = cache.incr(cache_key)
+                    except ValueError:
+                        pass
+                else:
+                    count = cache.get(cache_key, initial_value)
+
+            # Getting or setting the count from the cache failed
+            if count is None or count is False:
+                if getattr(settings, 'RATELIMIT_FAIL_OPEN', False):
+                    return None
+                return {
+                    'count': 0,
+                    'limit': 0,
+                    'should_limit': True,
+                    'time_left': -1,
+                }
+
+            time_left = window - int(time.time())
+            return {
+                'count': count,
+                'limit': limit,
+                'should_limit': count > limit,
+                'time_left': time_left,
+            }
+
+    return inner
+    
 
 
 is_ratelimited.ALL = ALL
 is_ratelimited.UNSAFE = UNSAFE
+ais_ratelimited.ALL = ALL
+ais_ratelimited.UNSAFE = UNSAFE
 get_usage.ALL = ALL
 get_usage.UNSAFE = UNSAFE
+aget_usage.ALL = ALL
+aget_usage.UNSAFE = UNSAFE
