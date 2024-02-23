@@ -160,6 +160,7 @@ def increment_ratelimit(request, group=None, fn=None, key=None,
                         rate=None, method=ALL) -> int:
     """
     Alias of is_ratelimited that just increments the rate limit.
+    This increments the usage count by one, and returns the new usage count.
 
     Requires params:
     - Either group or fn
@@ -169,7 +170,7 @@ def increment_ratelimit(request, group=None, fn=None, key=None,
     Returns the new usage count.
     """
     usage = get_usage(request, group, fn, key, rate, method, increment=True)
-    print(f"usage: {usage}\n")
+
     if usage is None:
         return 0
     return usage.get("count", 0)
