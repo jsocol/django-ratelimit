@@ -13,7 +13,6 @@ from django.utils.module_loading import import_string
 
 from django_ratelimit import ALL, UNSAFE
 
-
 __all__ = ['is_ratelimited', 'get_usage']
 
 _PERIODS = {
@@ -155,6 +154,26 @@ def is_ratelimited(request, group=None, fn=None, key=None, rate=None,
         return False
 
     return usage['should_limit']
+
+
+def increment_ratelimit(request, group=None, fn=None, key=None,
+                        rate=None, method=ALL) -> int:
+    """
+    Alias of is_ratelimited that just increments the rate limit.
+    This increments the usage count by one, and returns the new usage count.
+
+    Requires params:
+    - Either group or fn
+    - key (for example: ip)
+    - rate (for example: '10/m')
+
+    Returns the new usage count.
+    """
+    usage = get_usage(request, group, fn, key, rate, method, increment=True)
+
+    if usage is None:
+        return 0
+    return usage.get("count", 0)
 
 
 def get_usage(request, group=None, fn=None, key=None, rate=None, method=ALL,

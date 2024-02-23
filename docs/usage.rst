@@ -217,7 +217,7 @@ functionality in ``ratelimit.core``. The two major methods are
 
 .. code-block:: python
 
-    from django_ratelimit.core import get_usage, is_ratelimited
+    from django_ratelimit.core import get_usage, is_ratelimited, increment_ratelimit
 
 .. py:function:: get_usage(request, group=None, fn=None, key=None, \
                            rate=None, method=ALL, increment=False)
@@ -299,13 +299,51 @@ functionality in ``ratelimit.core``. The two major methods are
    :returns bool:
        Whether this request should be limited or not.
 
-
 ``is_ratelimited`` is a thin wrapper around ``get_usage`` that is
 maintained for compatibility. It provides strictly less information.
 
+.. py:function:: increment_ratelimit(request, group=None, fn=None, \
+                                key=None, rate=None, method=ALL)
+
+   :arg request:
+       *None* The HTTPRequest object.
+
+   :arg group:
+       *None* A group of rate limits to count together. Defaults to the
+       dotted name of the view.
+
+   :arg fn:
+       *None* A view function which can be used to calculate the group
+       as if it was decorated by :ref:`@ratelimit <usage-decorator>`.
+
+   :arg key:
+       What key to use, see :ref:`Keys <keys-chapter>`.
+
+   :arg rate:
+       *'5/m'* The number of requests per unit time allowed. Valid
+       units are:
+
+       * ``s`` - seconds
+       * ``m`` - minutes
+       * ``h`` - hours
+       * ``d`` - days
+
+       Also accepts callables. See :ref:`Rates <rates-chapter>`.
+
+   :arg method:
+       *ALL* Which HTTP method(s) to rate-limit. May be a string, a
+       list/tuple, or ``None`` for all methods.
+
+   :returns int:
+       The count of the requests in the specified unit time allowed (rate)
+
+
+``increment_ratelimit`` is an alias of is_ratelimited that is also a thin wrapper around ``get_usage`` that is
+maintained for compatibility. It provides strictly less information, and only increments the rate limit count.
+
 .. warning::
     
-    ``get_usage`` and ``is_ratelimited`` require either ``group=`` or
+    ``get_usage``, ``is_ratelimited`` and ``increment_ratelimit`` require either ``group=`` or
     ``fn=`` to be passed, or they cannot determine the rate limiting
     state and will throw.
 
