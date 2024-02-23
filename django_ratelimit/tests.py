@@ -9,9 +9,8 @@ from django.views.generic import View
 
 from django_ratelimit.decorators import ratelimit
 from django_ratelimit.exceptions import Ratelimited
-from django_ratelimit.core import (get_usage, is_ratelimited,
-                                   _split_rate, _get_ip)
-
+from django_ratelimit.core import (get_usage, is_ratelimited, increment_ratelimit,
+    _split_rate, _get_ip)
 
 rf = RequestFactory()
 
@@ -306,6 +305,7 @@ class RatelimitTests(TestCase):
 
     def test_stacked_decorator(self):
         """Allow @ratelimit to be stacked."""
+
         # Put the shorter one first and make sure the second one doesn't
         # reset request.limited back to False.
         @ratelimit(rate='1/m', block=False, key=lambda x, y: 'min')
@@ -318,6 +318,7 @@ class RatelimitTests(TestCase):
 
     def test_stacked_methods(self):
         """Different methods should result in different counts."""
+
         @ratelimit(rate='1/m', key='ip', method='GET', block=False)
         @ratelimit(rate='1/m', key='ip', method='POST', block=False)
         def view(request):
@@ -330,6 +331,7 @@ class RatelimitTests(TestCase):
 
     def test_sorted_methods(self):
         """Order of the methods shouldn't matter."""
+
         @ratelimit(rate='1/m', key='ip', method=['GET', 'POST'],
                    group='a', block=False)
         def get_post(request):
@@ -437,6 +439,34 @@ class FunctionsTests(TestCase):
 
         # Count = 2, 2 > 1.
         assert do_increment(rf.get('/'))
+
+    def test_increment_ratelimit(self):
+        rate = '1/m'
+        key = 'ip'
+        group = 'a'
+        method = is_ratelimited.ALL
+        increment = partial(increment_ratelimit, rate=rate, method=method, key=key, group=group)
+        check_is_ratelimited = partial(is_ratelimited, rate=rate, method=method, key=key, group=group, increment=False)
+
+        # Not limited because nothing is incremented.
+        assert not check_is_ratelimited(rf.get('/'))
+        assert not check_is_ratelimited(rf.get('/'))
+
+        # Make sure that the previous two didn't increment the count.
+        assert increment(rf.get('/')) == 1
+
+        # Still at count = 1, and 1 isn't greater than 1.
+        assert not check_is_ratelimited(rf.get('/'))
+
+        assert increment(rf.get('/')) == 2
+
+        # Count = 2, 2 > 1. So user is ratelimited
+        assert check_is_ratelimited(rf.get('/'))
+
+        # Make sure incrementing still works even after the user is ratelimited
+        assert increment(rf.get('/')) == 3
+
+        assert check_is_ratelimited(rf.get('/'))
 
     def test_get_usage(self):
         _get_usage = partial(get_usage, method=get_usage.ALL, key='ip',
