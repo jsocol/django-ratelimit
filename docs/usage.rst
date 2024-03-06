@@ -211,8 +211,8 @@ Core Methods
 
 In some cases the decorator is not flexible enough to, e.g.,
 conditionally apply rate limits. In these cases, you can access the core
-functionality in ``ratelimit.core``. The two major methods are
-``get_usage`` and ``is_ratelimited``.
+functionality in ``ratelimit.core``. The three major methods are
+``get_usage``, ``get_usage_extended``, and ``is_ratelimited``.
 
 
 .. code-block:: python
@@ -259,6 +259,15 @@ functionality in ``ratelimit.core``. The two major methods are
        for this request (for some reason) or returns a dict including
        the current count, limit, time left in the window, and whether
        this request should be limited.
+
+.. py:function:: get_usage_extended(request, group=None, fn=None, key=None, \
+                           rate=None, method=ALL, increment=False)
+
+   :returns dict or None:
+       The same as ``get_usage`` with additional information about the
+       rate limit, including the rate, period, group, key, value, timestamp,
+       window, cache_key, and if the cache was added.
+
 
 .. py:function:: is_ratelimited(request, group=None, fn=None, \
                                 key=None, rate=None, method=ALL, \
@@ -351,3 +360,47 @@ To use it, add ``django_ratelimit.middleware.RatelimitMiddleware`` to your
 
 The view specified in ``RATELIMIT_VIEW`` will get two arguments, the
 ``request`` object (after ratelimit processing) and the exception.
+
+
+Extension Example
+==========
+
+There are cases when you might want to extend the functionality of the
+ratelimit decorator. For example, you might want to add more information
+to the exception message. Here is an example of how to do that:
+
+.. code-block:: python
+
+    from functools import wraps
+
+    from django.conf import settings
+    from django.utils.module_loading import import_string
+    from django_ratelimit.core import get_usage_extended
+    from django_ratelimit.decorators import ALL
+    from django_ratelimit.exceptions import Ratelimited
+
+    def ratelimit(group=None, key=None, rate=None, method=ALL, block=True):
+        def decorator(fn):
+            @wraps(fn)
+            def _wrapped(request, *args, **kw):
+                old_limited = getattr(request, 'limited', False)
+                usage = get_usage_extended(
+                    request=request,
+                    group=group,
+                    fn=fn,
+                    key=key,
+                    rate=rate,
+                    method=method,
+                    increment=True
+                )
+                ratelimited = usage['should_limit'] if usage else False
+                request.limited = ratelimited or old_limited
+                if ratelimited and block:
+                    cls = getattr(
+                        settings, 'RATELIMIT_EXCEPTION_CLASS', Ratelimited)
+                    raise (import_string(cls) if isinstance(cls, str) else cls)(usage=usage)
+                return fn(request, *args, **kw)
+
+            return _wrapped
+
+        return decorator
