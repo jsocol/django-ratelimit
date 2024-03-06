@@ -107,12 +107,12 @@ def _split_rate(rate):
     return count, seconds
 
 
-def _get_window(value, period):
+def _get_window(value, period, timestamp=None):
     """
     Given a value, and time period return when the end of the current time
     period for rate evaluation is.
     """
-    ts = int(time.time())
+    ts = timestamp or int(time.time())
     if period == 1:
         return ts
     if not isinstance(value, bytes):
@@ -167,6 +167,7 @@ def get_usage(request, group=None, fn=None, key=None, rate=None, method=ALL,
         result_key: usage[result_key] for result_key in usage
         if result_key != 'internal_values'
     }
+
 
 def get_usage_extended(request, group=None, fn=None, key=None, rate=None, method=ALL,
                        increment=False):
@@ -230,7 +231,8 @@ def get_usage_extended(request, group=None, fn=None, key=None, rate=None, method
         raise ImproperlyConfigured(
             'Could not understand ratelimit key: %s' % key)
 
-    window = _get_window(value, period)
+    timestamp = int(time.time())
+    window = _get_window(value, period, timestamp)
     initial_value = 1 if increment else 0
 
     cache_name = getattr(settings, 'RATELIMIT_USE_CACHE', 'default')
@@ -256,13 +258,14 @@ def get_usage_extended(request, group=None, fn=None, key=None, rate=None, method
         else:
             count = cache.get(cache_key, initial_value)
 
-    # Collect the internal values for logging
-    internal_values = {
-        'group': group,
+    # Collect the usage details for logging
+    usage_details = {
         'rate': rate,
+        'period': period,
+        'group': group,
         'key': key,
         'value': value,
-        'period': period,
+        'timestamp': timestamp,
         'window': window,
         'cache_key': cache_key,
         'added': added,
@@ -277,7 +280,7 @@ def get_usage_extended(request, group=None, fn=None, key=None, rate=None, method
             'limit': 0,
             'should_limit': True,
             'time_left': -1,
-            'internal_values': internal_values,
+            'internal_values': usage_details,
         }
 
     time_left = window - int(time.time())
@@ -286,7 +289,7 @@ def get_usage_extended(request, group=None, fn=None, key=None, rate=None, method
         'limit': limit,
         'should_limit': count > limit,
         'time_left': time_left,
-        'internal_values': internal_values,
+        'internal_values': usage_details,
     }
 
 
