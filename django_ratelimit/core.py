@@ -1,6 +1,6 @@
-import ipaddress
 import functools
 import hashlib
+import ipaddress
 import re
 import socket
 import time
@@ -10,9 +10,7 @@ from django.conf import settings
 from django.core.cache import caches
 from django.core.exceptions import ImproperlyConfigured
 from django.utils.module_loading import import_string
-
 from django_ratelimit import ALL, UNSAFE
-
 
 __all__ = ['is_ratelimited', 'get_usage']
 
@@ -159,6 +157,19 @@ def is_ratelimited(request, group=None, fn=None, key=None, rate=None,
 
 def get_usage(request, group=None, fn=None, key=None, rate=None, method=ALL,
               increment=False):
+    """
+    Call get_usage_extended and strip out internal_values for backwards compatibility.
+    """
+    usage = get_usage_extended(request, group, fn, key, rate, method, increment)
+    if usage is None:
+        return None
+    return {
+        result_key: usage[result_key] for result_key in usage
+        if result_key != 'internal_values'
+    }
+
+def get_usage_extended(request, group=None, fn=None, key=None, rate=None, method=ALL,
+                       increment=False):
     if group is None and fn is None:
         raise ImproperlyConfigured('get_usage must be called with either '
                                    '`group` or `fn` arguments')
@@ -245,6 +256,18 @@ def get_usage(request, group=None, fn=None, key=None, rate=None, method=ALL,
         else:
             count = cache.get(cache_key, initial_value)
 
+    # Collect the internal values for logging
+    internal_values = {
+        'group': group,
+        'rate': rate,
+        'key': key,
+        'value': value,
+        'period': period,
+        'window': window,
+        'cache_key': cache_key,
+        'added': added,
+    }
+
     # Getting or setting the count from the cache failed
     if count is None or count is False:
         if getattr(settings, 'RATELIMIT_FAIL_OPEN', False):
@@ -254,6 +277,7 @@ def get_usage(request, group=None, fn=None, key=None, rate=None, method=ALL,
             'limit': 0,
             'should_limit': True,
             'time_left': -1,
+            'internal_values': internal_values,
         }
 
     time_left = window - int(time.time())
@@ -262,6 +286,7 @@ def get_usage(request, group=None, fn=None, key=None, rate=None, method=ALL,
         'limit': limit,
         'should_limit': count > limit,
         'time_left': time_left,
+        'internal_values': internal_values,
     }
 
 
