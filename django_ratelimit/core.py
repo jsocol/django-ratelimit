@@ -1,6 +1,6 @@
-import ipaddress
 import functools
 import hashlib
+import ipaddress
 import re
 import socket
 import time
@@ -10,9 +10,7 @@ from django.conf import settings
 from django.core.cache import caches
 from django.core.exceptions import ImproperlyConfigured
 from django.utils.module_loading import import_string
-
 from django_ratelimit import ALL, UNSAFE
-
 
 __all__ = ['is_ratelimited', 'get_usage']
 
@@ -109,12 +107,12 @@ def _split_rate(rate):
     return count, seconds
 
 
-def _get_window(value, period):
+def _get_window(value, period, timestamp=None):
     """
     Given a value, and time period return when the end of the current time
     period for rate evaluation is.
     """
-    ts = int(time.time())
+    ts = timestamp or int(time.time())
     if period == 1:
         return ts
     if not isinstance(value, bytes):
@@ -159,6 +157,20 @@ def is_ratelimited(request, group=None, fn=None, key=None, rate=None,
 
 def get_usage(request, group=None, fn=None, key=None, rate=None, method=ALL,
               increment=False):
+    """
+    Call get_usage_extended and strip out usage_details for backwards compatibility.
+    """
+    usage = get_usage_extended(request, group, fn, key, rate, method, increment)
+    if usage is None:
+        return None
+    return {
+        result_key: usage[result_key] for result_key in usage
+        if result_key != 'usage_details'
+    }
+
+
+def get_usage_extended(request, group=None, fn=None, key=None, rate=None, method=ALL,
+                       increment=False):
     if group is None and fn is None:
         raise ImproperlyConfigured('get_usage must be called with either '
                                    '`group` or `fn` arguments')
@@ -219,7 +231,8 @@ def get_usage(request, group=None, fn=None, key=None, rate=None, method=ALL,
         raise ImproperlyConfigured(
             'Could not understand ratelimit key: %s' % key)
 
-    window = _get_window(value, period)
+    timestamp = int(time.time())
+    window = _get_window(value, period, timestamp)
     initial_value = 1 if increment else 0
 
     cache_name = getattr(settings, 'RATELIMIT_USE_CACHE', 'default')
@@ -245,6 +258,19 @@ def get_usage(request, group=None, fn=None, key=None, rate=None, method=ALL,
         else:
             count = cache.get(cache_key, initial_value)
 
+    # Collect the usage details for logging
+    usage_details = {
+        'rate': rate,
+        'period': period,
+        'group': group,
+        'key': key,
+        'value': value,
+        'timestamp': timestamp,
+        'window': window,
+        'cache_key': cache_key,
+        'added': added,
+    }
+
     # Getting or setting the count from the cache failed
     if count is None or count is False:
         if getattr(settings, 'RATELIMIT_FAIL_OPEN', False):
@@ -254,6 +280,7 @@ def get_usage(request, group=None, fn=None, key=None, rate=None, method=ALL,
             'limit': 0,
             'should_limit': True,
             'time_left': -1,
+            'usage_details': usage_details,
         }
 
     time_left = window - int(time.time())
@@ -262,6 +289,7 @@ def get_usage(request, group=None, fn=None, key=None, rate=None, method=ALL,
         'limit': limit,
         'should_limit': count > limit,
         'time_left': time_left,
+        'usage_details': usage_details,
     }
 
 
