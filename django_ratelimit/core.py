@@ -158,14 +158,14 @@ def is_ratelimited(request, group=None, fn=None, key=None, rate=None,
 def get_usage(request, group=None, fn=None, key=None, rate=None, method=ALL,
               increment=False):
     """
-    Call get_usage_extended and strip out internal_values for backwards compatibility.
+    Call get_usage_extended and strip out usage_details for backwards compatibility.
     """
     usage = get_usage_extended(request, group, fn, key, rate, method, increment)
     if usage is None:
         return None
     return {
         result_key: usage[result_key] for result_key in usage
-        if result_key != 'internal_values'
+        if result_key != 'usage_details'
     }
 
 
@@ -280,7 +280,7 @@ def get_usage_extended(request, group=None, fn=None, key=None, rate=None, method
             'limit': 0,
             'should_limit': True,
             'time_left': -1,
-            'internal_values': usage_details,
+            'usage_details': usage_details,
         }
 
     time_left = window - int(time.time())
@@ -289,7 +289,7 @@ def get_usage_extended(request, group=None, fn=None, key=None, rate=None, method
         'limit': limit,
         'should_limit': count > limit,
         'time_left': time_left,
-        'internal_values': usage_details,
+        'usage_details': usage_details,
     }
 
 
