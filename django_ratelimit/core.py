@@ -81,6 +81,7 @@ def get_header(request, header):
 _ACCESSOR_KEYS = {
     'get': lambda r, k: r.GET.get(k, ''),
     'post': lambda r, k: r.POST.get(k, ''),
+    'data': lambda r, k: r.data.get(k, ''),
     'header': get_header,
 }
 

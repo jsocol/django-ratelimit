@@ -7,6 +7,9 @@ from django.test.utils import override_settings
 from django.utils.decorators import method_decorator
 from django.views.generic import View
 
+from rest_framework.decorators import api_view
+from rest_framework.test import APIRequestFactory
+
 from django_ratelimit.decorators import ratelimit
 from django_ratelimit.exceptions import Ratelimited
 from django_ratelimit.core import (get_usage, is_ratelimited,
@@ -14,6 +17,7 @@ from django_ratelimit.core import (get_usage, is_ratelimited,
 
 
 rf = RequestFactory()
+rest_rf = APIRequestFactory()
 
 
 class MockUser:
@@ -151,6 +155,17 @@ class RatelimitTests(TestCase):
         assert view(rf.post('/', {'foo': 'a'}))
         assert not view(rf.post('/', {'foo': 'b'}))
         assert view(rf.post('/', {'foo': 'b'}))
+
+    def test_key_data(self):
+        @api_view(['POST'])
+        @ratelimit(key='data:foo', rate='1/m', block=False)
+        def view(request):
+            return request.limited
+
+        assert not view(rest_rf.post('/', {'foo': 'a'}))
+        assert view(rest_rf.post('/', {'foo': 'a'}))
+        assert not view(rest_rf.post('/', {'foo': 'b'}))
+        assert view(rest_rf.post('/', {'foo': 'b'}))
 
     def test_key_header(self):
         def _req():
