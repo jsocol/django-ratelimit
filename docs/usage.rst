@@ -66,12 +66,12 @@ the root ``ratelimit`` module:
 
     from django_ratelimit.decorators import ratelimit
 
-    @ratelimit(key='ip', method=ratelimit.ALL)
-    @ratelimit(key='ip', method=ratelimit.UNSAFE)
+    @ratelimit(key='ip', method=django_ratelimit.ALL)
+    @ratelimit(key='ip', method=django_ratelimit.UNSAFE)
     def myview(request):
         pass
 
-``ratelimit.ALL`` applies to all HTTP methods. ``ratelimit.UNSAFE``
+``django_ratelimit.ALL`` applies to all HTTP methods. ``django_ratelimit.UNSAFE``
 is a shortcut for ``('POST', 'PUT', 'PATCH', 'DELETE')``.
 
 
