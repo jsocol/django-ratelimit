@@ -6,12 +6,14 @@ from django.utils.module_loading import import_string
 from django_ratelimit import ALL, UNSAFE
 from django_ratelimit.exceptions import Ratelimited
 from django_ratelimit.core import is_ratelimited
+from django_ratelimit.logger import RatelimitLogger
 
 
 __all__ = ['ratelimit']
 
 
-def ratelimit(group=None, key=None, rate=None, method=ALL, block=True):
+def ratelimit(group=None, key=None, rate=None, method=ALL, block=True,
+              logger: RatelimitLogger = None):
     def decorator(fn):
         @wraps(fn)
         def _wrapped(request, *args, **kw):
@@ -20,6 +22,9 @@ def ratelimit(group=None, key=None, rate=None, method=ALL, block=True):
                                          key=key, rate=rate, method=method,
                                          increment=True)
             request.limited = ratelimited or old_limited
+            if ratelimited and logger:
+                logger.log_ratelimit(request=request, group=group,
+                                     key=key, rate=rate, method=method)
             if ratelimited and block:
                 cls = getattr(
                     settings, 'RATELIMIT_EXCEPTION_CLASS', Ratelimited)
