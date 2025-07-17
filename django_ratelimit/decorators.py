@@ -11,14 +11,14 @@ from django_ratelimit.core import is_ratelimited
 __all__ = ['ratelimit']
 
 
-def ratelimit(group=None, key=None, rate=None, method=ALL, block=True):
+def ratelimit(group=None, key=None, rate=None, method=ALL, block=True, cache_name=None):
     def decorator(fn):
         @wraps(fn)
         def _wrapped(request, *args, **kw):
             old_limited = getattr(request, 'limited', False)
             ratelimited = is_ratelimited(request=request, group=group, fn=fn,
                                          key=key, rate=rate, method=method,
-                                         increment=True)
+                                         increment=True, cache_name=cache_name)
             request.limited = ratelimited or old_limited
             if ratelimited and block:
                 cls = getattr(

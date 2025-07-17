@@ -19,7 +19,7 @@ Import:
     from django_ratelimit.decorators import ratelimit
 
 
-.. py:decorator:: ratelimit(group=None, key=, rate=None, method=ALL, block=True)
+.. py:decorator:: ratelimit(group=None, key=, rate=None, method=ALL, block=True, cache_name=None)
 
    :arg group:
        *None* A group of rate limits to count together. Defaults to the
@@ -49,6 +49,11 @@ Import:
 
    :arg block:
        *True* Whether to block the request instead of annotating.
+
+   :arg cache_name:
+       *None* The cache alias to use for rate limiting. If None, uses
+       the value of ``RATELIMIT_USE_CACHE`` setting. Allows using
+       different caches for different rate limits.
 
 
 HTTP Methods
@@ -153,6 +158,21 @@ Examples
         # Use `X-Cluster-Client-IP` but fall back to REMOTE_ADDR.
         return HttpResponse()
 
+    @ratelimit(key='ip', rate='5/m', cache_name='redis_cache')
+    def redis_limited_view(request):
+        # Use a specific Redis cache for rate limiting
+        return HttpResponse()
+
+    @ratelimit(key='ip', rate='10/m', cache_name='memcached_cache')
+    def memcached_limited_view(request):
+        # Use a specific Memcached cache for rate limiting
+        return HttpResponse()
+
+    @ratelimit(key='ip', rate='1/m', cache_name=None)
+    def default_cache_view(request):
+        # Use the default cache (RATELIMIT_USE_CACHE setting)
+        return HttpResponse()
+
 
 Class-Based Views
 -----------------
@@ -220,7 +240,7 @@ functionality in ``ratelimit.core``. The two major methods are
     from django_ratelimit.core import get_usage, is_ratelimited
 
 .. py:function:: get_usage(request, group=None, fn=None, key=None, \
-                           rate=None, method=ALL, increment=False)
+                           rate=None, method=ALL, increment=False, cache_name=None)
 
    :arg request:
        *None* The HTTPRequest object.
@@ -253,6 +273,10 @@ functionality in ``ratelimit.core``. The two major methods are
 
    :arg increment:
        *False* Whether to increment the count or just check.
+
+   :arg cache_name:
+       *None* The cache alias to use for rate limiting. If None, uses
+       the value of ``RATELIMIT_USE_CACHE`` setting.
 
    :returns dict or None:
        Either returns None, indicating that ratelimiting was not active
@@ -262,7 +286,7 @@ functionality in ``ratelimit.core``. The two major methods are
 
 .. py:function:: is_ratelimited(request, group=None, fn=None, \
                                 key=None, rate=None, method=ALL, \
-                                increment=False)
+                                increment=False, cache_name=None)
 
    :arg request:
        *None* The HTTPRequest object.
@@ -295,6 +319,10 @@ functionality in ``ratelimit.core``. The two major methods are
 
    :arg increment:
        *False* Whether to increment the count or just check.
+
+   :arg cache_name:
+       *None* The cache alias to use for rate limiting. If None, uses
+       the value of ``RATELIMIT_USE_CACHE`` setting.
 
    :returns bool:
        Whether this request should be limited or not.

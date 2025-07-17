@@ -34,36 +34,43 @@ def check_caches(app_configs, **kwargs):
         )
         return errors
 
-    if cache_name not in caches:
-        errors.append(
-            checks.Error(
-                f'RATELIMIT_USE_CACHE value "{cache_name}"" does not '
-                f'appear in CACHES dictionary',
-                hint='RATELIMIT_USE_CACHE must be set to a valid cache',
-                id='django_ratelimit.E002',
-            )
-        )
-        return errors
+    # Handle multiple cache aliases
+    if isinstance(cache_name, (list, tuple)):
+        cache_names = cache_name
+    else:
+        cache_names = [cache_name]
 
-    cache_config = caches[cache_name]
-    backend = cache_config['BACKEND']
-
-    reason = KNOWN_BROKEN_CACHE_BACKENDS.get(backend, None)
-    if reason is not None:
-        errors.append(
-            checks.Error(
-                f'cache backend {backend} {reason}',
-                hint='Use a supported cache backend',
-                id='django_ratelimit.E003',
+    for cache_name in cache_names:
+        if cache_name not in caches:
+            errors.append(
+                checks.Error(
+                    f'RATELIMIT_USE_CACHE value "{cache_name}" does not '
+                    f'appear in CACHES dictionary',
+                    hint='RATELIMIT_USE_CACHE must be set to a valid cache or list of caches',
+                    id='django_ratelimit.E002',
+                )
             )
-        )
+            continue
 
-    if backend not in SUPPORTED_CACHE_BACKENDS:
-        errors.append(
-            checks.Warning(
-                f'cache backend {backend} is not officially supported',
-                id='django_ratelimit.W001',
+        cache_config = caches[cache_name]
+        backend = cache_config['BACKEND']
+
+        reason = KNOWN_BROKEN_CACHE_BACKENDS.get(backend, None)
+        if reason is not None:
+            errors.append(
+                checks.Error(
+                    f'cache backend {backend} {reason}',
+                    hint='Use a supported cache backend',
+                    id='django_ratelimit.E003',
+                )
             )
-        )
+
+        if backend not in SUPPORTED_CACHE_BACKENDS:
+            errors.append(
+                checks.Warning(
+                    f'cache backend {backend} is not officially supported',
+                    id='django_ratelimit.W001',
+                )
+            )
 
     return errors

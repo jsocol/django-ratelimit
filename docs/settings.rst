@@ -46,6 +46,25 @@ for example:
 The name of the cache (from the ``CACHES`` dict) to use. Defaults to
 ``'default'``.
 
+.. versionadded:: 4.2
+
+This setting can also be a list or tuple of cache names, which will be validated
+during Django's system checks. This is useful for applications that need to
+support multiple cache backends.
+
+``RATELIMIT_CACHE_NAME_PARAMETER``
+----------------------------------
+
+.. versionadded:: 4.2
+
+The `cache_name` parameter can be passed to the `@ratelimit` decorator and core
+functions to specify which cache to use for rate limiting. This allows different
+rate limits to use different cache backends, providing more flexibility in cache
+configuration.
+
+When `cache_name` is `None` (the default), the value of `RATELIMIT_USE_CACHE`
+setting is used.
+
 ``RATELIMIT_VIEW``
 ------------------
 

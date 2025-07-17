@@ -5,6 +5,18 @@ Change Log
 UNRELEASED
 ==========
 
+Additions:
+----------
+
+- Add cache_name parameter to @ratelimit decorator and core functions
+- Support for multiple cache aliases in RATELIMIT_USE_CACHE setting
+- Enhanced system checks to validate multiple cache configurations
+
+Minor changes:
+--------------
+
+- Updated documentation to include cache_name parameter examples
+
 v4.1
 ====
 
