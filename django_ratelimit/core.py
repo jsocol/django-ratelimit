@@ -149,8 +149,8 @@ def _make_cache_key(group, window, rate, value, methods):
 
 
 def is_ratelimited(request, group=None, fn=None, key=None, rate=None,
-                   method=ALL, increment=False):
-    usage = get_usage(request, group, fn, key, rate, method, increment)
+                   method=ALL, increment=False, cache_name=None):
+    usage = get_usage(request, group, fn, key, rate, method, increment, cache_name)
     if usage is None:
         return False
 
@@ -158,7 +158,7 @@ def is_ratelimited(request, group=None, fn=None, key=None, rate=None,
 
 
 def get_usage(request, group=None, fn=None, key=None, rate=None, method=ALL,
-              increment=False):
+              increment=False, cache_name=None):
     if group is None and fn is None:
         raise ImproperlyConfigured('get_usage must be called with either '
                                    '`group` or `fn` arguments')
@@ -222,7 +222,8 @@ def get_usage(request, group=None, fn=None, key=None, rate=None, method=ALL,
     window = _get_window(value, period)
     initial_value = 1 if increment else 0
 
-    cache_name = getattr(settings, 'RATELIMIT_USE_CACHE', 'default')
+    if cache_name is None:
+        cache_name = getattr(settings, 'RATELIMIT_USE_CACHE', 'default')
     cache = caches[cache_name]
     cache_key = _make_cache_key(group, window, rate, value, method)
 

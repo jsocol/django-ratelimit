@@ -28,6 +28,14 @@ CACHES = {
         'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
         'LOCATION': 'test-instant-expiration',
     },
+    "cache1": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "cache1",
+    },
+    "cache2": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "cache2",
+    },
 }
 
 DATABASES = {

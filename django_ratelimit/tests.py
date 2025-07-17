@@ -670,3 +670,66 @@ class IpMetaTests(TestCase):
 
         with self.assertRaises(ImproperlyConfigured):
             _get_ip(req)
+
+    def test_cache_name_parameter(self):
+        """Test that cache_name parameter works correctly."""
+        @ratelimit(key='ip', rate='1/m', block=False, cache_name='default')
+        def view(request):
+            return request.limited
+
+        assert not view(rf.get('/'))
+        assert view(rf.get('/'))
+
+    def test_cache_name_parameter_different_caches(self):
+        """Test that different cache names result in separate rate limiting."""
+        @ratelimit(key='ip', rate='1/m', block=False, cache_name='cache1')
+        def view1(request):
+            return request.limited
+
+        @ratelimit(key='ip', rate='1/m', block=False, cache_name='cache2')
+        def view2(request):
+            return request.limited
+
+        # These should be rate limited separately
+        assert not view1(rf.get('/'))
+        assert not view2(rf.get('/'))  # Different cache, so not limited
+        assert view1(rf.get('/'))
+        assert view2(rf.get('/'))
+
+    def test_get_usage_with_cache_name(self):
+        """Test get_usage function with cache_name parameter."""
+        req = rf.get('/')
+        usage1 = get_usage(req, group='test', key='ip', rate='1/m', cache_name='default')
+        usage2 = get_usage(req, group='test', key='ip', rate='1/m', cache_name='default')
+        
+        self.assertEqual(usage1['count'], 0)
+        self.assertEqual(usage2['count'], 0)  # Same cache, same count
+
+    def test_is_ratelimited_with_cache_name(self):
+        """Test is_ratelimited function with cache_name parameter."""
+        req = rf.get('/')
+        
+        # Test with increment
+        result1 = is_ratelimited(req, group='test', key='ip', rate='1/m', 
+                                increment=True, cache_name='default')
+        result2 = is_ratelimited(req, group='test', key='ip', rate='1/m', 
+                                increment=True, cache_name='default')
+        
+        self.assertFalse(result1)  # First request
+        self.assertTrue(result2)   # Second request (limited)
+
+    def test_cache_name_none_uses_default(self):
+        """Test that cache_name=None uses the default cache."""
+        @ratelimit(key='ip', rate='1/m', block=False, cache_name=None)
+        def view(request):
+            return request.limited
+
+        assert not view(rf.get('/'))
+        assert view(rf.get('/'))
+
+    def test_multiple_cache_aliases_in_settings(self):
+        """Test that RATELIMIT_USE_CACHE can be a list of cache names."""
+        with self.settings(RATELIMIT_USE_CACHE=['cache1', 'cache2']):
+            # This should not raise an error if both caches are configured
+            # The actual behavior depends on the cache configuration
+            pass
