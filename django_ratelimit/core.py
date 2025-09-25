@@ -5,6 +5,7 @@ import re
 import socket
 import time
 import zlib
+import json
 
 from django.conf import settings
 from django.core.cache import caches
@@ -207,6 +208,8 @@ def get_usage(request, group=None, fn=None, key=None, rate=None, method=ALL,
         value = key(group, request)
     elif key in _SIMPLE_KEYS:
         value = _SIMPLE_KEYS[key](request)
+    elif 'params' in key:
+        value = json.dumps({**request.GET.dict(), **request.POST.dict()})
     elif ':' in key:
         accessor, k = key.split(':', 1)
         if accessor not in _ACCESSOR_KEYS:
