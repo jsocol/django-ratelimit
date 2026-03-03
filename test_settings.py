@@ -15,11 +15,11 @@ CACHES = {
     },
     'connection-errors': {
         'BACKEND': 'django.core.cache.backends.memcached.PyMemcacheCache',
-        'LOCATION': 'test-connection-errors',
+        'LOCATION': 'test-connection-errors.invalid',
     },
     'connection-errors-redis': {
         'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': 'redis://test-connection-errors',
+        'LOCATION': 'redis://test-connection-errors.invalid',
         'OPTIONS': {
             'IGNORE_EXCEPTIONS': True,
         }
