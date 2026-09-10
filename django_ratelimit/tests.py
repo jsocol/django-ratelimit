@@ -1,3 +1,6 @@
+import os
+import re
+from datetime import datetime
 from functools import partial
 
 from django.core.cache import cache, InvalidCacheBackendError
@@ -670,3 +673,31 @@ class IpMetaTests(TestCase):
 
         with self.assertRaises(ImproperlyConfigured):
             _get_ip(req)
+
+
+class UpgradeNotesTests(TestCase):
+    def test_sliding_window_example_matches_nearly_two_minutes(self):
+        """Third request in the 0.5 upgrade example is ~2 minutes later."""
+        docs = os.path.join(
+            os.path.dirname(os.path.dirname(__file__)),
+            'docs', 'upgrading.rst',
+        )
+        if not os.path.exists(docs):
+            self.skipTest('docs/upgrading.rst is not present')
+
+        with open(docs) as fh:
+            text = fh.read()
+
+        marker = (
+            'Before 0.5, rates were counted against a *sliding* window')
+        self.assertIn(marker, text)
+        section = text.split(marker, 1)[1].split('Starting in 0.5', 1)[0]
+        times = re.findall(
+            r'\[09/Sep/2014:(\d{2}:\d{2}:\d{2})\]', section)
+        self.assertEqual(len(times), 3)
+        first = datetime.strptime(times[0], '%H:%M:%S')
+        third = datetime.strptime(times[2], '%H:%M:%S')
+        delta = (third - first).total_seconds()
+        # "nearly two minutes after the first" — 56s is not, 116s is.
+        self.assertGreaterEqual(delta, 90)
+        self.assertLess(delta, 150)

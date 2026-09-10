@@ -183,7 +183,7 @@ rate limit was ``1/m``, and three requests came in::
 
     1.2.3.4 [09/Sep/2014:12:25:03] ...
     1.2.3.4 [09/Sep/2014:12:25:53] ... <RATE LIMITED>
-    1.2.3.4 [09/Sep/2014:12:25:59] ... <RATE LIMITED>
+    1.2.3.4 [09/Sep/2014:12:26:59] ... <RATE LIMITED>
 
 Even though the third request came nearly two minutes after the first
 request, the second request moved the window. Good actors could easily

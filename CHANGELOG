@@ -5,6 +5,11 @@ Change Log
 UNRELEASED
 ==========
 
+Minor changes:
+--------------
+
+- Fix timestamp in the 0.5 upgrade notes sliding-window example (#323)
+
 v4.1
 ====
 
