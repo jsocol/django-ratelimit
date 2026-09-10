@@ -83,7 +83,7 @@ Examples
 
     @ratelimit(key='ip', rate='5/m', block=False)
     def myview(request):
-        # Will be true if the same IP makes more than 5 POST
+        # Will be true if the same IP makes more than 5
         # requests/minute.
         was_limited = getattr(request, 'limited', False)
         return HttpResponse()

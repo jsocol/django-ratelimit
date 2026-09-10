@@ -5,6 +5,12 @@ Change Log
 UNRELEASED
 ==========
 
+Minor changes:
+--------------
+
+- Correct the first usage example: default ``method`` is ``ALL``, not
+  POST (#319)
+
 v4.1
 ====
 

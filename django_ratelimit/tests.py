@@ -1,4 +1,6 @@
+import os
 from functools import partial
+from inspect import signature
 
 from django.core.cache import cache, InvalidCacheBackendError
 from django.core.exceptions import ImproperlyConfigured
@@ -118,6 +120,14 @@ class RatelimitTests(TestCase):
         assert not limit_post(rf.post('/')), 'Do not limit first POST.'
         assert limit_post(rf.post('/')), 'Limit second POST.'
         assert not limit_post(rf.get('/')), 'Do not limit GET.'
+
+    def test_default_method_counts_all_http_methods(self):
+        @ratelimit(key='ip', rate='1/m', block=False)
+        def view(request):
+            return request.limited
+
+        assert not view(rf.get('/')), 'First GET is not limited.'
+        assert view(rf.post('/')), 'POST shares the default ALL counter.'
 
     def test_unsafe_methods(self):
         @ratelimit(key='ip', method=ratelimit.UNSAFE, rate='0/m', block=False)
@@ -670,3 +680,31 @@ class IpMetaTests(TestCase):
 
         with self.assertRaises(ImproperlyConfigured):
             _get_ip(req)
+
+
+class UsageDocsTests(TestCase):
+    def test_first_example_comment_matches_all_methods_default(self):
+        """The first usage example omits method=, which defaults to ALL."""
+        self.assertIs(
+            signature(ratelimit).parameters['method'].default,
+            ratelimit.ALL,
+        )
+
+        docs = os.path.join(
+            os.path.dirname(os.path.dirname(__file__)),
+            'docs', 'usage.rst',
+        )
+        if not os.path.exists(docs):
+            self.skipTest('docs/usage.rst is not present')
+
+        with open(docs) as fh:
+            text = fh.read()
+
+        marker = "@ratelimit(key='ip', rate='5/m', block=False)"
+        self.assertIn(marker, text)
+        header, rest = text[text.index(marker):].split(
+            'def myview(request):', 1)
+        self.assertNotIn('method=', header)
+        comment = rest.split('was_limited')[0]
+        self.assertNotIn('POST', comment)
+        self.assertIn('requests/minute', comment)
