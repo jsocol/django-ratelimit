@@ -5,6 +5,12 @@ Change Log
 UNRELEASED
 ==========
 
+Bug fixes
+---------
+
+- Treat cache backend exceptions as failure so RATELIMIT_FAIL_OPEN works
+  with django-redis defaults (#333)
+
 v4.1
 ====
 

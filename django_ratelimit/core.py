@@ -2,7 +2,6 @@ import ipaddress
 import functools
 import hashlib
 import re
-import socket
 import time
 import zlib
 
@@ -229,7 +228,9 @@ def get_usage(request, group=None, fn=None, key=None, rate=None, method=ALL,
     count = None
     try:
         added = cache.add(cache_key, initial_value, period + EXPIRATION_FUDGE)
-    except socket.gaierror:  # for redis
+    except Exception:
+        # Cache backends differ: PyMemcache returns False; django-redis
+        # raises ConnectionError unless IGNORE_EXCEPTIONS is set.
         added = False
     if added:
         count = initial_value
@@ -240,10 +241,13 @@ def get_usage(request, group=None, fn=None, key=None, rate=None, method=ALL,
                 # unavailable or (somehow) the key doesn't exist. redis, on the
                 # other hand, simply returns None.
                 count = cache.incr(cache_key)
-            except ValueError:
+            except Exception:
                 pass
         else:
-            count = cache.get(cache_key, initial_value)
+            try:
+                count = cache.get(cache_key, initial_value)
+            except Exception:
+                pass
 
     # Getting or setting the count from the cache failed
     if count is None or count is False:

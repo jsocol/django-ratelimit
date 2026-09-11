@@ -56,7 +56,8 @@ Has no default - you must set this to use ``RatelimitMiddleware``.
 ``RATELIMIT_FAIL_OPEN``
 -----------------------
 
-Whether to allow requests when the cache backend fails. Defaults to ``False``.
+Whether to allow requests when the cache backend fails, including when the
+backend raises (for example a Redis connection error). Defaults to ``False``.
 
 ``RATELIMIT_IP_META_KEY``
 -------------------------

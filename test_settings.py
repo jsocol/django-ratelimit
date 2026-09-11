@@ -24,6 +24,10 @@ CACHES = {
             'IGNORE_EXCEPTIONS': True,
         }
     },
+    'connection-errors-redis-raises': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': 'redis://test-connection-errors',
+    },
     'instant-expiration': {
         'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
         'LOCATION': 'test-instant-expiration',

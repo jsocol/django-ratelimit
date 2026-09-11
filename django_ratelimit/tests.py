@@ -611,6 +611,33 @@ class CacheFailTests(TestCase):
         assert do_increment(rf.get('/'))
         assert do_increment(rf.get('/'))
 
+    @override_settings(RATELIMIT_USE_CACHE='connection-errors-redis-raises',
+                       RATELIMIT_FAIL_OPEN=True)
+    def test_fail_open_when_redis_raises(self):
+        @ratelimit(key='ip', rate='1/m', block=False)
+        def view(request):
+            return request.limited
+
+        assert not view(rf.get('/'))
+        assert not view(rf.get('/'))
+
+    @override_settings(RATELIMIT_USE_CACHE='connection-errors-redis-raises')
+    def test_limit_when_redis_raises(self):
+        @ratelimit(key='ip', rate='10/m', block=False)
+        def view(request):
+            return request.limited
+
+        assert view(rf.post('/'))
+
+    @override_settings(RATELIMIT_USE_CACHE='connection-errors-redis-raises')
+    def test_is_ratelimited_when_redis_raises_without_increment(self):
+        def not_increment(request):
+            return is_ratelimited(request, increment=False,
+                                  method=is_ratelimited.ALL, key='ip',
+                                  rate='1/m', group='a')
+
+        assert not_increment(rf.get('/'))
+
     @override_settings(RATELIMIT_USE_CACHE='instant-expiration')
     def test_cache_timeout(self):
         @ratelimit(key='ip', rate='1/m')
